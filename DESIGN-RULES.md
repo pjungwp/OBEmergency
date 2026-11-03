@@ -9,7 +9,7 @@ An active session is a **clinical cockpit**, not a scrolling dashboard. Reduce n
 ## Active-session layout (top to bottom)
 
 1. **Cockpit header** (sticky, ~85 px): mode tag (SIMULATION / CLINICAL), emergency name, elapsed clock, sound, End. One status line: overdue count + next reminder.
-2. **Simulation controls** (simulation only, one row, scrolls away).
+2. **Simulation** uses the identical cockpit. The only differences: a teal SIMULATION tag (instead of red CLINICAL), a teal top rule, and a "Sim time" button on the status line that opens Pause / +1 / +5 / Jump to next event in a sheet. The button turns solid teal and reads "Paused" while the clock is stopped.
 3. **Alert strip**: overdue reminders not tied to a task card (milestones, post-dose reassessment). Shows the most overdue item in full; `+N` opens the rest. Never collapsed.
 4. **Tool tabs**: Flowchart · Meds · Timers · Timeline (44 px).
 5. **Actions**: a `DUE NOW` group first (overdue task cards, red), then the pathway groups. Overdue tasks and the first open group are full cards with their buttons. Every later task is a one-line row (title + status + chevron); tapping it expands it into a full card, one at a time, and it collapses again once completed.

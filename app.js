@@ -170,9 +170,8 @@ function renderActiveSession(){
         <button class="cockpit-icon ${session.sound?"on":""}" data-action="toggle-sound" aria-label="${session.sound?"Sound on — tap to mute":"Sound off — tap to unmute"}">${session.sound?"🔊":"🔇"}</button>
         <button class="cockpit-end" data-action="end-session">End</button>
       </div>
-      <div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>
+      <div class="cockpit-status-row"><div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>${sim?`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time" aria-label="Simulation time controls">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`:""}</div>
     </section>
-    ${sim?renderSimulationControls():""}
     ${renderAlertStrip()}
     <nav class="cockpit-tabs" aria-label="Session tools">
       <button class="tab-flow" data-action="open-flow" data-id="${e.id}">Flowchart</button>
@@ -197,8 +196,19 @@ function renderActiveSession(){
   requestAnimationFrame(updateClockDom);
 }
 
-function renderSimulationControls(){
-  return `<section class="sim-controls" aria-label="Simulation clock controls"><button data-sim="pause">${session.running?"Pause":"Resume"}</button><button data-sim="1">+1 min</button><button data-sim="5">+5 min</button><button data-sim="next">Next event</button></section>`;
+// Simulation mirrors the clinical cockpit exactly; time controls live in a
+// sheet opened from the "Sim time" button, and the sheet stays open across taps.
+function showSimTime(){
+  const next=getFutureEvents()[0];
+  openSheet({eyebrow:"SIMULATION CLOCK",title:`Elapsed ${fmt(currentElapsed())}${session.running?"":" · paused"}`,html:`
+    <p class="lead">${next?`Next: ${esc(next.label)} at ${fmt(next.at*60000)} elapsed.`:"No upcoming timers or milestones."}</p>
+    <div class="sim-sheet-grid">
+      <button class="button ${session.running?"secondary":"primary"}" data-sim="pause">${session.running?"Pause":"Resume"}</button>
+      <button class="button secondary" data-sim="1">+1 min</button>
+      <button class="button secondary" data-sim="5">+5 min</button>
+      <button class="button primary" data-sim="next">Jump to next event</button>
+    </div>
+    <p class="microcopy">Advancing time fires any timers and team milestones it passes, exactly as they would in real time.</p>`});
 }
 
 // Overdue items are never hidden behind a tap. Task-linked reminders show on
@@ -547,13 +557,14 @@ document.addEventListener("click",e=>{
     $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
   }
-  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));}
+  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden)showSimTime();}
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
   if(a==="back-home"){selectedEmergency=null;render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
+  if(a==="sim-time")showSimTime();
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
