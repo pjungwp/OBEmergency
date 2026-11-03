@@ -9,6 +9,7 @@ export function createWorkspaceSessionStore({key="ob-emergency-assist.session.v1
   const mergeAuthoritative=remote=>{
     if(!remote)return null;
     const privateState=local.loadSession()||{};
+    if(Number(remote.revision||0)<Number(privateState.revision||0))return privateState;
     const merged={...privateState,...remote,events:privateState.events||[],doseCounts:privateState.doseCounts||{},_actionEvents:privateState._actionEvents||[]};
     return local.replaceAuthoritative(merged);
   };
