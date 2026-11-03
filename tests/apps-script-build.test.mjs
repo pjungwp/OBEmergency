@@ -15,4 +15,6 @@ test("Apps Script package builds from the shared UI without a service worker dep
   assert.doesNotMatch(html,/navigator\.serviceWorker/);
   assert.doesNotMatch(html,/manifest\.webmanifest/);
   assert.doesNotMatch(html,/type="module"/);
+  assert.doesNotMatch(html,/flowcharts\/pph\.jpg/);
+  assert.match(html,/data:image\/jpeg;base64,/);
 });

@@ -1,12 +1,14 @@
 {
   "name":"OB Emergency Assist",
   "short_name":"OB Assist",
+  "id":"./",
   "description":"Phone-first obstetric emergency guidance, timers and simulation.",
   "start_url":"./",
   "scope":"./",
   "display":"standalone",
   "background_color":"#f5f7fa",
   "theme_color":"#0b2149",
+  "categories":["medical","education","productivity"],
   "icons":[
     {"src":"icons/icon-192.png","sizes":"192x192","type":"image/png"},
     {"src":"icons/icon-512.png","sizes":"512x512","type":"image/png"},

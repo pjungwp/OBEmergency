@@ -47,8 +47,17 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 - [ ] Recurrent-seizure magnesium/benzodiazepine pathway
 - [ ] Fosphenytoin/levetiracetam/intubation pathway if added to active mode
 - [ ] Calcium gluconate rescue dose
+- [ ] Calcium chloride alternative rescue dose
 - [ ] Neuroimaging/alternate diagnosis language
 - [ ] Delivery timing and route language
+
+## Cardiac red flags in pregnancy/postpartum
+
+- [ ] Pregnancy within the last 12 months screening language
+- [ ] Symptoms, vital-sign and examination red flags
+- [ ] ECG, BNP, chest X-ray and troponin work-up
+- [ ] Echocardiography and specialist consultation thresholds
+- [ ] Admit/transfer and emergency-treatment wording
 
 ## TeamSTEPPS and simulation
 
