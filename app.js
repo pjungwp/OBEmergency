@@ -226,7 +226,7 @@ function overdueTimerFor(taskId){return getDueTimers().find(x=>x.taskId===taskId
 function renderDueGroup(e){
   const items=e.tasks.filter(t=>taskState(t.id).status!=="done"&&overdueTimerFor(t.id));
   if(!items.length)return "";
-  return `<div class="task-group due-group"><h2>DUE NOW</h2>${items.map(renderTaskCard).join("")}</div>`;
+  return `<div class="task-group due-group">${items.map(renderTaskCard).join("")}</div>`;
 }
 // Full cards: overdue tasks (DUE NOW) and the first open pathway group.
 // Everything below is a one-line row; tapping a row expands it (one at a time).
@@ -237,13 +237,14 @@ function renderTaskGroups(e){
     const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
     if(!items.length)return "";
     const primary=!primaryShown;primaryShown=true;
-    return `<div class="task-group${primary?"":" compact-group"}"><h2>${esc(group)}</h2>${items.map(t=>primary?renderTaskCard(t):expandedTask===t.id?renderTaskCard(t,true):renderTaskRow(t)).join("")}</div>`;
+    return `<div class="task-group${primary?" primary-group":" compact-group"}">${primary?"":`<h2>${esc(group)}</h2>`}${items.map(t=>primary?renderTaskCard(t):expandedTask===t.id?renderTaskCard(t,true):renderTaskRow(t)).join("")}</div>`;
   }).join("");
 }
 
 function renderTaskRow(t){
   const st=taskState(t.id);
-  return `<button class="task-row ${t.priority} ${st.status}" data-action="expand-task" data-task-id="${t.id}" aria-expanded="false"><span class="row-copy">${taskStatusHTML(t,st)}<strong>${esc(taskLabel(t))}</strong></span><span class="row-chev" aria-hidden="true">›</span></button>`;
+  const sub=TASK_SUBTITLES[t.id];
+  return `<button class="task-row ${t.priority} ${st.status}" data-action="expand-task" data-task-id="${t.id}" aria-expanded="false"><span class="row-icon" aria-hidden="true">${taskIcon(t)}</span><span class="row-copy">${taskStatusHTML(t,st)}<strong>${esc(taskLabel(t))}</strong>${sub?`<span class="row-sub">${esc(sub)}</span>`:""}</span><span class="row-chev" aria-hidden="true">›</span></button>`;
 }
 
 function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
@@ -261,17 +262,74 @@ function taskStatusHTML(t,st){
 function renderTaskCard(t,expandedRow=false){
   const st=taskState(t.id);
   const overdue=!!overdueTimerFor(t.id);
+  const sub=TASK_SUBTITLES[t.id];
+  // One primary action per card, right-aligned. "Mark started" is a quiet
+  // secondary link so the team can still see who is working on what.
+  const primaryAction=t.type==="ongoing"&&st.status==="todo"?"ongoing":"done";
+  const primaryLabel=primaryAction==="ongoing"?"Ongoing":t.type==="repeat"?"Assessed":t.type==="med"?"Record dose":"Done";
+  const canStart=st.status==="todo"&&t.type!=="ongoing";
+  const tag=overdue?"DUE NOW":expandedRow?"":esc(t.group);
   return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}${expandedRow?" expanded-row":""}" id="card-${t.id}">
-    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3></div>
-    <div class="card-tools"><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>${expandedRow?`<button class="collapse-btn" data-action="collapse-task" aria-label="Collapse">‹</button>`:""}</div>
+    <div class="card-top">
+      ${tag?`<span class="card-tag">${tag}</span>`:""}
+      <div class="card-tools"><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>${expandedRow?`<button class="collapse-btn" data-action="collapse-task" aria-label="Collapse">‹</button>`:""}</div>
+    </div>
+    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3>${sub?`<p class="card-sub">${esc(sub)}</p>`:""}</div>
     <div class="task-actions">
-      ${st.status==="todo"?`<button class="button compact secondary" data-task-action="start" data-task-id="${t.id}">Start</button>`:""}
-      ${t.type==="ongoing"&&st.status==="todo"?`<button class="button compact primary" data-task-action="ongoing" data-task-id="${t.id}">Ongoing</button>`:""}
-      ${st.status==="progress"||st.status==="ongoing"?`<button class="button compact primary" data-task-action="done" data-task-id="${t.id}">${t.type==="repeat"?"Assessed":t.type==="med"?"Meds":"Done ✓"}</button>`:""}
-      ${st.status==="todo"&&t.type!=="ongoing"?`<button class="button compact primary" data-task-action="done" data-task-id="${t.id}">${t.type==="repeat"?"Assessed":t.type==="med"?"Meds":"Done ✓"}</button>`:""}
+      ${canStart?`<button class="link-action" data-task-action="start" data-task-id="${t.id}">Mark started</button>`:"<span></span>"}
+      <button class="button primary card-primary" data-task-action="${primaryAction}" data-task-id="${t.id}"><span aria-hidden="true">✓</span> ${primaryLabel}</button>
     </div>
   </article>`;
 }
+
+// Second line under a task title: the specifics a clinician scans for.
+// Drawn from the reviewed task detail in data.js; keep them in sync.
+const TASK_SUBTITLES={
+  "pph-help":"Cart, leader, recorder, anesthesia",
+  "pph-assess":"Quantified blood loss, fundus, vitals, mental status",
+  "pph-massage":"Remove clots; continue while uterotonics are given",
+  "pph-access":"CBC, type & crossmatch, coags, fibrinogen",
+  "pph-oxytocin":"Oxytocin first; methylergonovine, carboprost or misoprostol if indicated",
+  "pph-cause":"Tone · Trauma · Tissue · Thrombin",
+  "pph-txa":"1 g IV over 10–20 min, within 3 h of birth",
+  "pph-escalate":"Massive transfusion, device, OR, IR or hysterectomy",
+  "htn-help":"SBP ≥160 or DBP ≥110",
+  "htn-bp":"Correct cuff and position; confirm persistence",
+  "htn-symptoms":"Headache, vision, RUQ pain, dyspnea, neuro",
+  "htn-labs":"CBC, platelets, AST/ALT, creatinine, urine protein",
+  "htn-treat":"Labetalol IV, hydralazine IV or nifedipine IR PO",
+  "htn-mag":"Concurrent with BP treatment when possible",
+  "htn-escalate":"Failed sequence, neuro signs, pulmonary edema, HELLP",
+  "ec-help":"Leader, recorder, airway equipment",
+  "ec-safety":"Do not restrain; prevent aspiration; monitor SpO₂",
+  "ec-mag":"4–6 g IV load, then 1–2 g/h",
+  "ec-vitals":"SBP ≥160 or DBP ≥110 → severe BP pathway",
+  "ec-recur":"Benzodiazepine after magnesium; prepare airway",
+  "ec-tox":"Respirations, reflexes, urine output; calcium ready",
+  "ec-neuro":"Focal deficit, atypical or refractory seizure",
+  "ec-delivery":"Stabilize first; route by obstetric factors"
+};
+
+const ICON_PATHS={
+  call:'<path d="M6 3h3l2 5-2 1.5a12 12 0 0 0 5.5 5.5L16 13l5 2v3a3 3 0 0 1-3 3A16 16 0 0 1 3 6a3 3 0 0 1 3-3z"/>',
+  pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+  hand:'<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11m0-6.5a1.5 1.5 0 0 1 3 0V11m0-5a1.5 1.5 0 0 1 3 0v7.5a7 7 0 0 1-7 7h-.5A6.5 6.5 0 0 1 4 15.5V12a1.5 1.5 0 0 1 3 0v1"/>',
+  iv:'<path d="M8 3h8v9a4 4 0 0 1-8 0zM8 7h4M8 10h3M12 16v5"/>',
+  syringe:'<path d="M17 3l4 4M19 5l-9 9M14 6l4 4M7 13l4 4M5 19l3-3M9 11l-4 4 4 4 4-4"/>',
+  search:'<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
+  alert:'<path d="M12 4l9 16H3zM12 10v4M12 17.5v.5"/>',
+  shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  flask:'<path d="M9 3h6M10 3v6l-5 10a1.5 1.5 0 0 0 1.4 2h11.2a1.5 1.5 0 0 0 1.4-2L14 9V3M7.5 15h9"/>',
+  brain:'<path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 3 3h1V4zM15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-3 3h-1V4z"/>',
+  baby:'<circle cx="12" cy="8" r="4"/><path d="M5 21a7 7 0 0 1 14 0"/>',
+  eye:'<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'
+};
+const TASK_ICONS={
+  "pph-help":"call","pph-assess":"pulse","pph-massage":"hand","pph-access":"iv","pph-oxytocin":"syringe","pph-cause":"search","pph-txa":"syringe","pph-escalate":"alert",
+  "htn-help":"call","htn-bp":"pulse","htn-symptoms":"eye","htn-labs":"flask","htn-treat":"syringe","htn-mag":"syringe","htn-monitor":"pulse","htn-escalate":"alert",
+  "ec-help":"call","ec-safety":"shield","ec-mag":"syringe","ec-vitals":"pulse","ec-recur":"alert","ec-tox":"eye","ec-neuro":"brain","ec-delivery":"baby"
+};
+function taskIcon(t){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[TASK_ICONS[t.id]||(t.type==="med"?"syringe":"pulse")]}</svg>`;}
 
 function completedCount(e){return e.tasks.filter(t=>taskState(t.id).status==="done").length;}
 function renderCompleted(e){

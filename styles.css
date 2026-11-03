@@ -91,6 +91,31 @@ body.in-cockpit .task-card.expanded-row{border-top-color:#8fa3bf;border-right-co
 .row-copy .task-status{font-size:14px!important;margin:0!important}
 .row-chev{flex:none;font-size:28px;color:#7d8da3;line-height:1}
 body.in-cockpit .compact-group h2{margin-top:10px}
+/* Mockup-matched cards: tag + info on top, big title, one primary action bottom-right */
+body.in-cockpit .primary-group,body.in-cockpit .due-group{padding-top:10px}
+body.in-cockpit .task-card{display:block;padding:12px 14px 14px;border:2px solid #e7cf86;border-left-width:2px;background:linear-gradient(180deg,#fffaf0,#fff6e3);border-radius:18px;box-shadow:0 6px 18px rgba(150,110,10,.10)}
+body.in-cockpit .task-card.critical{border-color:#e2c46f}
+body.in-cockpit .task-card.ongoing{background:linear-gradient(180deg,#f0faf7,#e6f6f1);border-color:#9fd4ca}
+body.in-cockpit .task-card.is-overdue{border:2px solid #c72f48;background:linear-gradient(180deg,#fff5f6,#ffeaee)}
+body.in-cockpit .task-card.expanded-row{background:#fff;border:2px solid #8fa3bf;box-shadow:0 8px 20px rgba(11,33,73,.12)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-height:40px}
+.card-tag{display:inline-block;font-size:14px;font-weight:900;letter-spacing:.08em;color:#fff;background:#b8860b;border-radius:8px;padding:4px 10px;margin-top:2px}
+.is-overdue .card-tag{background:#b4192f}
+body.in-cockpit .card-tools{flex-direction:row}
+body.in-cockpit .task-copy{margin-top:2px}
+body.in-cockpit .task-card h3{font-size:22px}
+.card-sub{margin:4px 0 0;font-size:16px;line-height:1.35;color:#4a5a72}
+body.in-cockpit .task-actions{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-height:52px;border-radius:14px;font-size:18px;padding:10px 22px}
+.card-primary span{margin-right:4px}
+.link-action{border:0;background:transparent;color:var(--navy-2);font-size:16px;font-weight:800;padding:10px 4px;min-height:44px;text-decoration:underline;text-underline-offset:3px}
+/* Rows: icon tile, title, subtitle, chevron */
+.task-row{background:#f6fbfa;border:1.5px solid #bfe3dc;border-left-width:1.5px;border-radius:16px;padding:10px 12px;margin-bottom:8px;gap:12px}
+.task-row.critical,.task-row.high{border-left-color:#bfe3dc}
+.row-icon{flex:none;width:46px;height:46px;border-radius:12px;background:#dff3ef;color:#0f6f66;display:grid;place-items:center}
+.row-icon svg{width:26px;height:26px}
+.row-copy strong{font-size:20px}
+.row-sub{font-size:16px;line-height:1.3;color:#4a5a72;font-weight:500}
 .cockpit-side{display:none}
 .side-timeline{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
 .side-timeline h2{font-size:14px;letter-spacing:.06em;color:#4a5a72;margin:0 0 6px;text-transform:uppercase}
@@ -103,7 +128,7 @@ body.in-cockpit .compact-group h2{margin-top:10px}
   .cockpit-tabs button,.sim-controls button{font-size:14px}
 }
 /* Wide/unfolded: actions left, flowchart + timeline right. Same type sizes. */
-@media(min-width:760px){
+@media(min-width:680px){
   body.in-cockpit .app-shell{width:min(100%,1200px)}
   .cockpit-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);gap:4px;align-items:start}
   .cockpit-side{display:block;position:sticky;top:104px;max-height:calc(100vh - 112px);overflow:auto;padding:12px 10px 0 0}
