@@ -1,1 +1,118 @@
-# OBEmergency
+# OB Emergency Assist — master build
+
+Phone-first, single-device clinical-reference and simulation prototype for postpartum hemorrhage, acute severe hypertension, and eclampsia.
+
+## What is included
+
+- Immediate large-text emergency actions
+- `i` explanations without leaving the active session
+- To do → In progress/Ongoing → Done task states
+- Repeating assessment timers
+- Drug-specific reassessment timers started only after confirmed administration
+- Clinical and Simulation modes
+- Simulation Pause, +1 minute, +5 minutes and Next event controls
+- Five-, ten-, and fifteen-minute team-coordination milestones
+- One-tap flowcharts
+- Searchable medication cards with dosing, cautions and monitoring
+- TeamSTEPPS, roles, 4 Ts, severe-hypertension, magnesium-safety, pregnancy-status and cardiovascular education
+- Local event timeline
+- Offline caching after the first successful load
+- Responsive phone/tablet layout
+
+## Deploy to Netlify
+
+### Drag-and-drop
+
+1. Unzip the release package.
+2. In Netlify, choose **Add new site → Deploy manually**.
+3. Drag the entire unzipped folder—not the ZIP itself—into Netlify.
+4. Open the resulting HTTPS URL once while online so the offline cache installs.
+
+### GitHub
+
+1. Commit every file in this folder to the repository root.
+2. Connect the repository in Netlify.
+3. Build command: leave blank.
+4. Publish directory: `.`
+
+## Master implementation plan
+
+### Release 0 — content governance
+
+- Assign physician, nursing, pharmacy, anesthesia, blood bank and informatics owners.
+- Replace all local-policy placeholders.
+- Approve medication preparations, timers, escalation wording and contact paths.
+- Maintain a content register with source, owner, approval date, next review and change history.
+
+### Release 1 — Netlify single-device pilot
+
+- Complete clinical review of PPH, severe hypertension and eclampsia.
+- Conduct scripted usability testing on iPhone, Android, small phone and tablet.
+- Test online/offline behavior, interrupted sessions, screen rotation and alert readiness.
+- Run simulation-only testing before any clinical pilot.
+- Display **Single-device** and **Simulation** labels unmistakably.
+
+### Release 1.1 — clinical workflow refinement
+
+- Add approved Holy Name activation language and contacts.
+- Add role-specific views only if they do not hide the complete action pathway.
+- Add local equipment/device preparation cards.
+- Add printable reviewed flowcharts and version/update notice.
+- Decide whether a session summary may be exported; never imply EHR documentation.
+
+### Release 2 — Google Workspace synchronized sessions
+
+- Preserve the UI, content model, task engine and event names.
+- Add a `WorkspaceSessionStore` beside the current browser-local store.
+- Start/join sessions through a short code and QR link.
+- Store append-only events and a revision number in a protected Workspace data store.
+- Use Apps Script locking for concurrent changes.
+- Poll for new revisions and show Connected / Syncing / Offline / Stale states.
+- Keep one authoritative start time and derive every device clock from it.
+- Add participant name/initials and role without requiring task assignment.
+- Automatically expire and delete sessions; begin without PHI.
+
+### Release 3 — validation and governance
+
+- Concurrent-device testing with 3–8 phones.
+- Network testing on hospital Wi-Fi, managed devices and cellular service.
+- Human-factors simulation with nurses, residents, attendings and anesthesia.
+- Downtime and stale-data drills.
+- Formal institutional approval, privacy/security review and release sign-off.
+- Quarterly source surveillance and defined urgent-update process.
+
+## Shared-session event contract
+
+The synchronized version should transmit events rather than overwrite an entire dashboard:
+
+- `SESSION_STARTED`
+- `TASK_STARTED`
+- `TASK_MARKED_ONGOING`
+- `TASK_COMPLETED`
+- `TASK_REOPENED`
+- `ASSESSMENT_RECORDED`
+- `MEDICATION_ADMINISTERED`
+- `TIMER_ACKNOWLEDGED`
+- `SIMULATION_TIME_ADVANCED`
+- `SESSION_ENDED`
+
+Each event requires `sessionId`, `eventId`, `revision`, `serverTimestamp`, `actor`, `role`, `type`, `targetId` and a minimal payload.
+
+## Important limitations
+
+- Prototype only; not approved clinical decision support.
+- No patient identifiers.
+- Browser timers and sounds are not guaranteed while a phone is locked or the browser is suspended.
+- Current sessions are local to one browser and are not shared.
+- The timeline is not documentation in the medical record.
+- Hospital protocols and clinician judgment supersede the prototype.
+
+## Source files used for the prototype
+
+- ACOG Practice Bulletin No. 183: Postpartum Hemorrhage (2017)
+- ACOG Clinical Practice Update: Use of Nonsurgical Hemorrhage-Control Devices (2025)
+- ACOG Practice Bulletin No. 222: Gestational Hypertension and Preeclampsia (2020)
+- ACOG emergency algorithms for postpartum hemorrhage, acute hypertension, eclampsia and cardiovascular disease
+- AHRQ TeamSTEPPS 3.0 curriculum
+
+Do not publish the supplied copyrighted PDFs inside the public repository unless distribution permission has been confirmed.
