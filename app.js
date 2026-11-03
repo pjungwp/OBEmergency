@@ -1,5 +1,7 @@
 import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
+import {PATHWAYS} from "./pathways.js";
+import {renderOverview,renderGuided,renderChart,mountChart,nodeStatus,TYPE_LABEL} from "./flowchart.js";
 
 const $ = (s,root=document)=>root.querySelector(s);
 const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
@@ -201,8 +203,9 @@ function renderActiveSession(){
           <div id="completedList" hidden>${renderCompleted(e)}</div>
         </section>
       </section>
-      <aside class="cockpit-side" aria-label="Flowchart and recent events">
-        ${flowHTML(e,true)}
+      <aside class="cockpit-side acc-${e.accent}" aria-label="Flowchart and recent events" data-pathway="${e.id}">
+        <div class="side-flow-head"><h2>Pathway</h2><button class="text-button" data-action="open-full-flow">Open full ›</button></div>
+        ${renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true})}
         <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
       </aside>
     </div>`;
@@ -407,6 +410,7 @@ function updateClockDom(){
   if(!session)return;
   const now=sessionMinute();
   const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed());
+  $$(".live-elapsed").forEach(el=>{el.textContent=fmt(currentElapsed());});
   $$(".live-overdue").forEach(el=>{el.textContent=`overdue ${fmt((now-Number(el.dataset.dueAt))*60000)}`;});
   $$(".live-countdown").forEach(el=>{el.textContent=fmt((Number(el.dataset.dueAt)-now)*60000);});
 }
@@ -455,16 +459,55 @@ function playAlert(){
   if(navigator.vibrate)navigator.vibrate([180,80,180]);
 }
 
-function renderFlowcharts(){
-  const e=EMERGENCIES[flowEmergency];
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">ONE-TAP OVERVIEW</p><h1>Clinical flowcharts</h1><p>Use the flowchart to orient the team. Return to Actions for task controls and timers.</p></section>
-    <div class="segmented emergency-tabs">${Object.values(EMERGENCIES).map(x=>`<button class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div>
-    ${flowHTML(e)}
-    <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>This is a concise implementation view, not a replacement for the complete source or local protocol.</small></div>`;
+// ---------- Flowcharts: one pathway, three views (see flowchart.js / pathways.js) ----------
+let flowView="overview";             // overview | guided | chart — UI only, never touches session state
+const guidedStep={},guidedBranch={};  // per pathway
+const localChecks=new Set();         // reference-mode checks (no session): this screen only
+let chartCtl=null,chartSaved=null;
+function flowCtx(id){
+  const active=session?.status==="active"&&session.emergencyId===id;
+  return {sessionActive:active,localChecks,step:guidedStep[id]||0,branch:guidedBranch[id]||null,
+    taskStatus:t=>active&&overdueTimerFor(t)&&taskState(t).status!=="done"?"overdue":taskState(t).status};
 }
-function flowHTML(e,embedded=false){
-  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${!embedded&&session?.status==="active"&&session.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
-    <div class="flow-track">${e.flow.map((n,i)=>`<article class="flow-node ${n.tone}"><span>${i+1}</span><div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div></article>${i<e.flow.length-1?`<div class="flow-arrow">↓</div>`:""}`).join("")}</div></section>`;
+function statusStripHTML(){
+  const e=EMERGENCIES[session.emergencyId];const due=getDueTimers().length;const sim=session.mode==="simulation";
+  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${esc(e.short.toUpperCase())} ${sim?"SIMULATION":"CLINICAL"}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} overdue</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
+}
+function renderFlowcharts(){
+  if(chartCtl){chartSaved=flowView==="chart"?{id:flowEmergency,...chartCtl.state()}:null;chartCtl.destroy();chartCtl=null;}
+  const e=EMERGENCIES[flowEmergency],p=PATHWAYS[e.id],ctx=flowCtx(e.id);
+  const drafts=Object.values(p.nodes).filter(n=>n.reviewStatus==="draft").length;
+  const views={overview:"Overview",guided:"Guided",chart:"Full chart"};
+  const body=flowView==="guided"?renderGuided(p,ctx):flowView==="chart"?renderChart(p,ctx):renderOverview(p,ctx);
+  main.innerHTML=`${session?.status==="active"?statusStripHTML():""}
+    <section class="fc-head ${e.accent}">${emergencyIcon(e.id,52)}<div><h1>${esc(p.title)}</h1>
+      <div class="fc-emerg" role="tablist" aria-label="Emergency">${Object.values(EMERGENCIES).map(x=>`<button role="tab" aria-selected="${x.id===e.id}" class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div></div></section>
+    <div class="fc-views" role="tablist" aria-label="View">${Object.entries(views).map(([k,v])=>`<button role="tab" aria-selected="${flowView===k}" class="${flowView===k?"active":""}" data-fview="${k}">${v}</button>`).join("")}</div>
+    <section class="fc-body view-${flowView} acc-${e.accent}" id="fcBody" data-pathway="${p.id}">${body}</section>
+    <div class="source-band"><span>Content basis</span>${refTags(p.sourceRefs)}<small>${drafts?`${drafts} step${drafts>1?"s":""} marked draft — needs source check before clinical use. `:""}A concise implementation view; the complete source and local protocol govern.</small></div>`;
+  if(flowView==="chart")chartCtl=mountChart($("#fcBody"),chartSaved?.id===e.id?chartSaved:null);
+}
+function openNodeDetail(pid,nid){
+  const p=PATHWAYS[pid],n=p?.nodes[nid];if(!n)return;const ctx=flowCtx(pid);const st=nodeStatus(n,ctx);
+  const items=(n.items||[]).map(it=>{
+    if(it.med){const m=getMedication(it.med);return `<button data-med-id="${it.med}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(it.text)}</small></div><b>›</b></button>`;}
+    if(it.pathway)return `<button data-fpath="${it.pathway}"><span>→</span><div><strong>${esc(it.text)}</strong><small>Open pathway</small></div><b>›</b></button>`;
+    const ts=it.task&&ctx.sessionActive?ctx.taskStatus(it.task):null;
+    return `<div class="sheet-item"><strong>${esc(it.text)}</strong>${ts?`<small class="st-${ts}">${{todo:"To do",progress:"In progress",ongoing:"Ongoing",done:"Done",overdue:"Overdue"}[ts]||ts}</small>`:""}${it.task&&ctx.sessionActive?`<button class="text-button" data-action="goto-task" data-task-id="${it.task}">Go to action ›</button>`:""}</div>`;
+  }).join("");
+  const next=(n.connections||[]).map(c=>{const t=p.nodes[c.to];const label=t?t.title:p.chart.rows.flat().find(x=>typeof x==="object"&&x.group===c.to)?.label;return `<li>${c.label?`<strong>${esc(c.label)}</strong> → `:"→ "}${esc(label||"")}</li>`;}).join("");
+  openSheet({eyebrow:`${TYPE_LABEL[n.type]||""}${n.urgency==="critical"?" · CRITICAL":""}${st?` · ${st.toUpperCase()}`:""}`,title:n.title,html:`
+    ${n.reviewStatus==="draft"?`<div class="warning-box"><strong>Draft — needs source check</strong><p>${esc(n.reviewNote)}</p></div>`:""}
+    <p class="lead">${esc(n.details||n.summary)}</p>
+    ${items?`<h3>Actions</h3><div class="sheet-link-list">${items}</div>`:""}
+    ${next?`<h3>Next</h3><ul class="sheet-next">${next}</ul>`:""}
+    <h3>Evidence basis</h3>${refTags(n.sourceRefs||p.sourceRefs)}`});
+}
+function guidedCheck(key){
+  const pid=flowEmergency;
+  if(key.startsWith("task:")){const tid=key.slice(5);if(!(session?.status==="active"&&session.emergencyId===pid))return;
+    const st=taskState(tid).status;handleTask(tid,st==="done"||st==="ongoing"?"reopen":"done");return;}
+  localChecks.has(key)?localChecks.delete(key):localChecks.add(key);render();
 }
 
 function renderMedications(query=""){
@@ -535,7 +578,7 @@ function showDue(id){
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});closeSheet();render();}
 
 function showAbout(){
-  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
+  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
 
 function openSheet({eyebrow="",title,html,wide=false}){
@@ -566,6 +609,12 @@ document.addEventListener("click",e=>{
   if(b.dataset.taskInfo)openTaskInfo(b.dataset.emergencyId,b.dataset.taskInfo);
   if(b.dataset.taskAction)handleTask(b.dataset.taskId,b.dataset.taskAction);
   if(b.dataset.flowSelect){flowEmergency=b.dataset.flowSelect;renderFlowcharts();}
+  if(b.dataset.fview){flowView=b.dataset.fview;renderFlowcharts();}
+  if(b.dataset.fpath){closeSheet();flowEmergency=b.dataset.fpath;navigate("flowcharts");}
+  if(b.dataset.gstep!=null){guidedStep[flowEmergency]=Number(b.dataset.gstep);guidedBranch[flowEmergency]=null;renderFlowcharts();requestAnimationFrame(()=>$(".g-step.current")?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
+  if(b.dataset.gbranch){const p=PATHWAYS[flowEmergency],to=b.dataset.gbranch;const k=p.steps.findIndex(st=>st.nodes.includes(to));if(k>=0){guidedStep[flowEmergency]=k;guidedBranch[flowEmergency]=null;}else guidedBranch[flowEmergency]=to;renderFlowcharts();requestAnimationFrame(()=>$(".g-step.current")?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
+  if(b.dataset.gcheck)guidedCheck(b.dataset.gcheck);
+  if(b.dataset.zoom&&chartCtl){const z=b.dataset.zoom;if(z==="print"){document.body.classList.add("print-chart");window.print();setTimeout(()=>document.body.classList.remove("print-chart"),500);}else if(z==="full")chartCtl.full();else if(z==="fit")chartCtl.fit();else chartCtl.zoom(z);}
   if(b.dataset.medFilter){
     $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
@@ -579,7 +628,10 @@ document.addEventListener("click",e=>{
   if(a==="close-sheet")closeSheet();
   if(a==="sim-time")showSimTime();
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
-  if(a==="toggle-flow"){const e=EMERGENCIES[session.emergencyId];if(WIDE.matches){flowOpen=!flowOpen;render();}else{openSheet({eyebrow:"FULL PATHWAY",title:e.name,wide:true,html:flowHTML(e,true)});}}
+  // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
+  if(a==="toggle-flow"){if(WIDE.matches){flowOpen=!flowOpen;render();}else{flowEmergency=session.emergencyId;navigate("flowcharts");}}
+  if(a==="open-full-flow"){flowEmergency=session.emergencyId;navigate("flowcharts");}
+  if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
@@ -648,3 +700,7 @@ store.subscribe(next=>{
   if(suppressStoreNotification||!next||!session||next.id!==session.id)return;
   if((next.revision||0)>(session.revision||0)){session=hydrateSession(next);render();}
 });
+
+// Flowchart nodes: tap or keyboard (SVG groups are not native buttons)
+document.addEventListener("click",e=>{const n=e.target.closest("[data-fnode]");if(!n)return;const host=n.closest("[data-pathway]");if(host)openNodeDetail(host.dataset.pathway,n.dataset.fnode);});
+document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const n=e.target.closest?.("g[data-fnode]");if(!n)return;e.preventDefault();const host=n.closest("[data-pathway]");if(host)openNodeDetail(host.dataset.pathway,n.dataset.fnode);});

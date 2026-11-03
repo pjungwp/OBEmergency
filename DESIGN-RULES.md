@@ -44,6 +44,16 @@ Never show a bare time next to the elapsed clock without one of these labels.
 - **680 px and up** (Fold unfolded, tablets): actions use the full width. The Flowchart tab opens a sticky right-hand panel (flowchart + recent events) and closes it again. Same type sizes — extra width shows more context, not smaller text.
 - **Flowchart is closed by default** on every width. On narrow screens the tab opens it in a sheet over the cockpit.
 
+## Flowcharts
+
+One pathway record per emergency (`pathways.js`) drives three views (`flowchart.js`):
+
+- **Overview** (default): every stage and branch on one scrolling map. Parallel actions sit side by side inside one "at the same time" box; decisions show labelled Yes/No outcomes. Nothing clinically essential is hidden.
+- **Guided**: numbered steps with checklists. During a session, ticking a linked item is the same as tapping Done on its action card. Without a session, ticks stay on screen only. Decisions are explicit branch buttons; escalation is always one tap away in the step list.
+- **Full chart**: SVG, sharp at any zoom; drag, pinch, wheel, ＋/−, Fit, fullscreen, Print/PDF. Every box opens its detail sheet by tap or keyboard.
+
+Switching views never changes session or task state. A status strip (mode, clock, overdue, Actions) shows on the flowchart page whenever a session is running. In the cockpit, the Flowchart tab opens the side Overview on wide screens and the full pathway page on phones.
+
 ## Alerts
 
 - Overdue items are visible without a tap (on the card or in the alert strip).

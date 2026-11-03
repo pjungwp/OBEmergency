@@ -50,6 +50,17 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 - [ ] Neuroimaging/alternate diagnosis language
 - [ ] Delivery timing and route language
 
+## Flowchart pathways (`pathways.js`)
+
+Restructured from the existing flow, task and medication text. Nodes marked `reviewStatus:"draft"` add or infer content:
+
+- [ ] PPH "PPH recognized": adds the ≥1,000 mL cumulative threshold (ACOG PB 183)
+- [ ] PPH "Controlled" outcome wording (implied by "Ongoing bleeding?", not stated)
+- [ ] Severe HTN "Not persistent" branch (not in existing content; check ACOG ED algorithm)
+- [ ] All three: parallel groupings, decision branch labels, guided step order
+- [ ] Overview bullets and chart summaries (shortened from reviewed text)
+- [ ] Mockup items intentionally **not** added pending review: "IV ×2", "treat anemia", "UOP", "IR (UAE)"
+
 ## Sim Master scenarios (`scenarios.js`)
 
 - [ ] PPH atony: vitals trajectory, event timings, expected-action targets

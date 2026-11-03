@@ -234,6 +234,143 @@ html.text-lg{zoom:1.15}
   html.text-lg .task-actions{flex-wrap:wrap}html.text-lg .task-actions .card-primary{flex:1 1 100%}
 }
 .home-label .hero-status{white-space:nowrap;flex:none}.home-label>span:first-child{min-width:0}
+.hdr-avatar{padding:0;overflow:hidden;background:#0b2a6b}.hdr-avatar picture,.hdr-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}
+
+/* =====================================================================
+   FLOWCHART ENGINE — Overview · Guided · Full chart (v0.13)
+   ===================================================================== */
+.acc-crimson{--acc:#c4314b;--acc-soft:#fff1f3}.acc-amber{--acc:#b86e00;--acc-soft:#fff6e3}.acc-violet{--acc:#6a46c2;--acc-soft:#f4f0ff}
+.fc-strip{position:sticky;top:60px;z-index:25;display:flex;align-items:center;gap:10px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line);box-shadow:0 4px 12px rgba(11,33,73,.06);min-height:52px}
+.fc-strip .mode-tag{font-size:12px}.fc-strip.simulation .mode-tag{background:var(--teal)}
+.fc-strip strong{font-size:24px;font-variant-numeric:tabular-nums;color:var(--navy)}
+.fc-strip button{margin-left:auto;min-height:44px;padding:0 16px;border-radius:12px;border:0;background:var(--navy);color:#fff;font-size:16px;font-weight:800}
+.fc-head{display:flex;gap:12px;align-items:center;padding:14px 14px 8px}
+.fc-head h1{margin:0 0 8px;font-size:24px;line-height:1.12;color:var(--navy);letter-spacing:-.02em}
+.fc-head .em-icon,.fc-head .em-icon img{width:52px;height:52px;border-radius:14px}
+.fc-emerg{display:flex;gap:6px;flex-wrap:wrap}
+.fc-emerg button{min-height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--muted);font-size:14px;font-weight:800}
+.fc-emerg button.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.fc-views{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:4px 12px 10px;padding:4px;border-radius:14px;background:#fff;border:1px solid var(--line);position:sticky;top:60px;z-index:20}
+body:has(.fc-strip) .fc-views{top:112px}
+.fc-views button{min-height:46px;border:0;border-radius:10px;background:transparent;font-size:16px;font-weight:800;color:var(--navy)}
+.fc-views button.active{background:linear-gradient(180deg,#2f6fe0,#1d55c4);color:#fff;box-shadow:0 3px 10px rgba(29,85,196,.25)}
+.fc-body{padding:0 12px 6px}
+/* Overview */
+.ov{display:flex;flex-direction:column;align-items:stretch}
+.ov-row{display:grid;gap:8px;grid-template-columns:1fr}
+.ov-row.n2{grid-template-columns:1fr 1fr}
+.ov-arrow{text-align:center;color:#2b4b7e;font-size:22px;font-weight:900;line-height:1;padding:3px 0}
+.ov-box{position:relative;text-align:left;background:#fff;border:1.5px solid #cfd8e6;border-radius:14px;padding:10px 12px;color:var(--ink);box-shadow:0 2px 8px rgba(11,33,73,.04);min-height:56px}
+.ov-box ul{margin:4px 0 0;padding-left:18px}.ov-box li,.ov-box p{font-size:16px;line-height:1.35;margin:2px 0 0;color:#34445c}
+.ov-title{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;font-size:18px;font-weight:900;line-height:1.2;color:var(--navy)}
+.ov-box.t-start{background:var(--acc,#c4314b);border-color:var(--acc,#c4314b);text-align:center;box-shadow:0 6px 16px rgba(120,20,40,.18)}
+.ov-box.t-start .ov-title{color:#fff;justify-content:center;font-size:20px}.ov-box.t-start p{color:#fff;opacity:.95}
+.ov-box.meds{background:#fff8e6;border-color:#ecc56b}
+.ov-box.t-decision{background:#e9f1ff;border:2px solid #2f6fe0;text-align:center;border-radius:18px}.ov-box.t-decision .ov-title{justify-content:center}
+.ov-box.t-endpoint{background:#eefaf3;border-color:#93d3ae}.ov-box.t-endpoint .ov-title{color:#17673e}
+.ov-box.t-escalation{background:#fff1f3;border-color:#e58c9b}.ov-box.t-escalation .ov-title{color:#a3162d}
+.ov-branch{display:inline-block;font-size:13px;font-weight:900;letter-spacing:.04em;color:#fff;background:#2f6fe0;border-radius:6px;padding:1px 8px;margin-bottom:4px}
+.t-endpoint .ov-branch{background:#1f8a5b}.t-escalation .ov-branch{background:#b4192f}
+.ov-group{border:1.5px solid #a9c1ea;background:#eef4ff;border-radius:16px;padding:0 8px 8px;overflow:hidden}
+.ov-group-head{display:flex;align-items:center;justify-content:center;gap:6px;width:calc(100% + 16px);margin:0 -8px 8px;min-height:40px;border:0;background:#1d3f7a;color:#fff;font-size:15px;font-weight:900;padding:6px 10px}
+.ov-group-cells{display:grid;gap:6px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.ov-group .ov-box{min-height:0;padding:8px 10px}.ov-group .ov-title{font-size:17px}
+.fc-status{flex:none;width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;font-size:13px;font-weight:900;color:#fff;background:#9aa8bb}
+.fc-status.done{background:#1f8a5b}.fc-status.overdue{background:#b4192f}.fc-status.active{background:#d58b0a}
+.ov-box.s-done{opacity:.82}.ov-box.s-overdue{outline:3px solid #e6a1ac}
+.ov.compact .ov-title{font-size:16px}.ov.compact .ov-box p,.ov.compact li{font-size:15px}
+/* Guided */
+.g-progress{display:flex;align-items:center;gap:10px;margin:2px 2px 4px}
+.g-progress span{font-size:16px;font-weight:900;color:var(--navy);white-space:nowrap}
+.g-progress .bar{flex:1;height:8px;border-radius:99px;background:#dde5f0;overflow:hidden}.g-progress .bar i{display:block;height:100%;background:linear-gradient(90deg,#2f6fe0,#1d55c4);border-radius:99px}
+.g-mode-note{margin:0 2px 8px;font-size:14px;color:var(--muted)}
+.g-step{display:block;width:100%;border-radius:16px;margin-bottom:8px}
+.g-step.current{background:#fff;border:2px solid #f0b8c2;box-shadow:0 8px 20px rgba(150,20,40,.08);padding:0 0 12px;overflow:hidden}
+.g-step.current h3{display:flex;align-items:center;gap:10px;margin:0 0 6px;padding:10px 14px;background:linear-gradient(180deg,#fff0f2,#ffe6ea);font-size:21px;color:#9b1a30}
+.acc-amber .g-step.current{border-color:#efcf8a}.acc-amber .g-step.current h3{background:linear-gradient(180deg,#fff8e8,#fff0d2);color:#7a4b00}
+.acc-violet .g-step.current{border-color:#cdbdf0}.acc-violet .g-step.current h3{background:linear-gradient(180deg,#f6f2ff,#ece4ff);color:#4b2d9a}
+.g-step .num{flex:none;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--acc,#c4314b);color:#fff;font-size:17px;font-weight:900}
+.g-parallel{margin:0 14px 6px;font-size:15px;font-weight:800;color:#1d55c4}
+.g-node{margin:0 10px 6px;border-top:1px solid #f0f2f6;padding-top:4px}
+.g-node:first-of-type{border-top:0}
+.g-node-head{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;padding:6px 4px;font-size:15px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#4a5a72;text-align:left}
+.g-node-head i{font-style:normal;width:28px;height:28px;border-radius:50%;border:1px solid #cbd6e4;display:grid;place-items:center;font-family:Georgia,serif;text-transform:none;color:var(--navy)}
+.g-check{display:flex;align-items:flex-start;gap:12px;width:100%;min-height:52px;padding:10px 8px;border:0;border-bottom:1px solid #eef1f5;background:transparent;text-align:left;font-size:18px;line-height:1.3;color:var(--ink)}
+.g-check .box{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid #9aa8bb;display:grid;place-items:center;color:#fff;font-weight:900;margin-top:-1px}
+.g-check.on .box{background:#1f8a5b;border-color:#1f8a5b}.g-check.on>span:last-child{color:#4a5a72;text-decoration:line-through;text-decoration-color:#9aa8bb}
+.g-check.overdue .box{border-color:#b4192f}.g-check em{font-style:normal;font-size:14px;font-weight:900;color:#b4192f}
+.g-med{display:flex;align-items:center;gap:10px;width:calc(100% - 4px);min-height:48px;margin:6px 2px 0;padding:8px 12px;border:1px solid #ecc56b;background:#fff8e6;border-radius:12px;text-align:left;font-size:17px;font-weight:700;color:#5f3c00}
+.g-med>span{flex:none;width:30px;height:30px;border-radius:8px;background:#ffe6a8;display:grid;place-items:center;font-weight:900;font-size:13px}
+.g-med b{margin-left:auto;font-size:22px;color:#a87a1a}
+.g-med.path{border-color:#a9c1ea;background:#eef4ff;color:#1d3f7a}.g-med.path>span{background:#d7e4fb}
+.g-info{display:flex;flex-direction:column;gap:2px;width:calc(100% - 20px);margin:6px 10px 0;padding:10px 12px;border:1px solid #d9cff3;background:#f7f3ff;border-radius:12px;text-align:left}
+.g-info strong{font-size:18px;color:#4b2d9a}.g-info span{font-size:16px;color:#34445c}
+.g-question{margin:6px 12px 0}.g-question p{margin:0;font-size:22px;font-weight:900;color:var(--navy);text-align:center}.g-question>span{display:block;text-align:center;font-size:16px;color:var(--muted);margin:2px 0 10px}
+.g-branches{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.g-branch{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:72px;padding:10px 12px;border-radius:14px;border:2px solid #a9c1ea;background:#eef4ff;text-align:left;color:var(--navy);width:100%}
+.g-branch strong{font-size:20px}.g-branch span{font-size:16px;line-height:1.25}
+.g-branch.good{border-color:#93d3ae;background:#eefaf3;color:#17673e}.g-branch.bad{border-color:#e58c9b;background:#fff1f3;color:#a3162d}
+.g-branch.chosen{box-shadow:0 0 0 3px rgba(31,138,91,.35)}
+.g-outcome{margin:10px 12px 0;padding:6px 0 0;border-top:1px dashed #cbd6e4;display:grid;gap:8px}
+.g-outcome .g-node{margin:0}
+.g-next{display:flex;align-items:center;justify-content:center;gap:8px;width:calc(100% - 24px);margin:12px 12px 0;min-height:56px;border:0;border-radius:14px;background:linear-gradient(180deg,#2f6fe0,#1d55c4);color:#fff;font-size:19px;font-weight:900;box-shadow:0 6px 16px rgba(29,85,196,.3)}
+.g-step.row{display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border:1px solid var(--line);background:#fff;text-align:left;font-size:18px;font-weight:800;color:var(--ink)}
+.g-step.row .num{background:#c8d2e0;color:#34445c}.g-step.row b{margin-left:auto;font-size:24px;color:#8b9ab0}
+.g-step.row.past{background:#f3f8f5;border-color:#cfe8da}.g-step.row.past .num{background:#1f8a5b;color:#fff}
+.g-step.row.esc{border-color:#efb3bd;background:#fff7f8;color:#a3162d}.g-step.row.esc .num{background:#c4314b;color:#fff}
+/* Full chart */
+.fc-tools{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 8px}
+.fc-tools button{min-height:44px;min-width:48px;padding:0 12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--navy);font-size:17px;font-weight:900}
+.fc-tools button[data-zoom=print]{margin-left:auto;font-size:15px}
+.fc-viewport{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:16px;background:#f7f9fc;touch-action:none;cursor:grab;min-height:280px}
+.fc-viewport:active{cursor:grabbing}.fc-viewport:focus-visible{outline:3px solid #2f6fe0}
+.fc-svg{display:block;user-select:none}
+.fc-svg .nb{fill:#fff;stroke:#b9c6d8;stroke-width:1.5}
+.fc-svg .nt{font:800 16px Inter,ui-sans-serif,system-ui,sans-serif;fill:#0b2149}
+.fc-svg .ns{font:500 13px Inter,ui-sans-serif,system-ui,sans-serif;fill:#34445c}
+.fc-svg .t-start .nb{fill:var(--acc,#c4314b);stroke:none}.fc-svg .t-start .nt,.fc-svg .t-start .ns{fill:#fff}
+.fc-svg .meds .nb{fill:#fff8e6;stroke:#ecc56b}
+.fc-svg .t-decision .nb{fill:#2f6fe0;stroke:none}.fc-svg .t-decision .nt,.fc-svg .t-decision .ns{fill:#fff}
+.fc-svg .t-endpoint .nb{fill:#eefaf3;stroke:#93d3ae}.fc-svg .t-endpoint .nt{fill:#17673e}
+.fc-svg .t-escalation .nb{fill:#fff1f3;stroke:#e58c9b}.fc-svg .t-escalation .nt{fill:#a3162d}
+.fc-svg .grp{fill:#eef4ff;stroke:#a9c1ea;stroke-width:1.5}.fc-svg .grp-head{fill:#1d3f7a}
+.fc-svg .grp-label{font:800 13px Inter,ui-sans-serif,system-ui,sans-serif;fill:#fff}
+.fc-svg .edge{fill:none;stroke:#2b4b7e;stroke-width:2}.fc-svg .arrowhead{fill:#2b4b7e}
+.fc-svg .edge-label rect{fill:#2f6fe0}.fc-svg .edge-label.yes rect{fill:#1f8a5b}.fc-svg .edge-label.no rect{fill:#b4192f}
+.fc-svg .edge-label text{font:800 12px Inter,ui-sans-serif,system-ui,sans-serif;fill:#fff}
+.fc-svg .svg-status circle{fill:#9aa8bb}.fc-svg .svg-status.done circle{fill:#1f8a5b}.fc-svg .svg-status.overdue circle{fill:#b4192f}.fc-svg .svg-status.active circle{fill:#d58b0a}
+.fc-svg .svg-status text{font:900 12px sans-serif;fill:#fff}
+.fc-svg [data-fnode]{cursor:pointer}.fc-svg [data-fnode]:focus{outline:none}.fc-svg [data-fnode]:focus .nb{stroke:#1d55c4;stroke-width:3}
+.fc-hint{margin:6px 2px 0;font-size:14px;color:var(--muted)}
+.view-chart:fullscreen,.fc-pseudo-full{background:#fff;padding:12px;overflow:auto}
+.fc-pseudo-full{position:fixed;inset:0;z-index:200}
+.view-chart:fullscreen .fc-viewport,.fc-pseudo-full .fc-viewport{height:calc(100vh - 120px)!important}
+/* Detail sheet extras */
+.sheet-item{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border:1px solid var(--line);border-radius:12px}
+.sheet-item strong{flex:1 1 100%;font-size:17px}.sheet-item small{font-size:14px;font-weight:800;color:var(--muted)}
+.sheet-item .st-done{color:#1f8a5b}.sheet-item .st-overdue{color:#b4192f}.sheet-item .st-progress,.sheet-item .st-ongoing{color:#a86200}
+.sheet-item .text-button{margin-left:auto;font-size:15px;min-height:40px}
+.sheet-next{margin:0;padding-left:20px;font-size:16px;line-height:1.6}
+.about-avatar{display:flex;align-items:center;gap:14px;margin-bottom:12px}.about-avatar img{width:88px;height:88px;border-radius:50%}
+.about-avatar strong{display:block;font-size:19px;color:var(--navy)}.about-avatar span{font-size:15px;color:var(--muted)}
+/* Cockpit side panel overview */
+.side-flow-head{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px}.side-flow-head h2{margin:0;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#4a5a72}
+@media(min-width:600px){.ov-row.n2{gap:12px}.fc-head h1{font-size:28px}}
+/* Print: the full chart only */
+@media print{
+  body.print-chart *{visibility:hidden}
+  body.print-chart .fc-viewport,body.print-chart .fc-viewport *{visibility:visible}
+  body.print-chart .fc-viewport{position:absolute;left:0;top:0;width:100%!important;height:auto!important;border:0;overflow:visible}
+  body.print-chart .fc-svg{transform:none!important;width:100%!important;height:auto!important}
+}
+/* Narrow-phone fit: boxes may shrink and wrap long words; nav labels never clip */
+.ov-row.n2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.ov-box,.ov-group{min-width:0;overflow-wrap:anywhere;hyphens:auto}
+.ov-group-cells{grid-template-columns:repeat(auto-fit,minmax(min(130px,100%),1fr))}
+.nav-item{min-width:0}.nav-item small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+@media(max-width:360px){.nav-item small{font-size:12px;letter-spacing:-.01em}.bottom-nav{padding-left:2px;padding-right:2px}}
+html.text-lg .ov-row.n2{grid-template-columns:1fr}
+.ov-box,.ov-group{hyphens:manual}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -254,7 +391,7 @@ html.text-lg{zoom:1.15}
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl lbl-keep">Download app</span>
         </button>
       </div>
-      <button class="hdr-avatar" data-action="show-about" aria-label="About OB Emergency Assist" title="About">OB</button>
+      <button class="hdr-avatar" data-action="show-about" aria-label="About OB Emergency Assist" title="About"><picture><source type="image/webp" srcset="img/avatar.webp"><img src="img/avatar.png" alt="" width="44" height="44"></picture></button>
     </header>
 
     <div id="clinicalNotice" class="clinical-notice">
@@ -274,7 +411,7 @@ html.text-lg{zoom:1.15}
 
   <div id="drawerBackdrop" class="sheet-backdrop" data-action="close-menu" hidden></div>
   <nav id="menuDrawer" class="menu-drawer" aria-label="Main menu" hidden>
-    <div class="drawer-head"><span class="hdr-avatar" aria-hidden="true">OB</span><div><strong>OB Emergency Assist</strong><small>Ready when seconds matter.</small></div><button class="icon-button" data-action="close-menu" aria-label="Close menu">×</button></div>
+    <div class="drawer-head"><span class="hdr-avatar" aria-hidden="true"><img src="img/avatar.png" alt="" width="44" height="44"></span><div><strong>OB Emergency Assist</strong><small>Ready when seconds matter.</small></div><button class="icon-button" data-action="close-menu" aria-label="Close menu">×</button></div>
     <button data-nav="emergency">Emergency pathways</button>
     <button data-nav="flowcharts">Flowcharts</button>
     <button data-nav="medications">Medications</button>
@@ -306,7 +443,7 @@ html.text-lg{zoom:1.15}
     </div>
   </template>
   <script>
-const APP_VERSION = "0.12.0-prototype";
+const APP_VERSION = "0.13.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -458,6 +595,422 @@ const EDUCATION = [
 function getReference(id){ return REFERENCES.find(r=>r.id===id); }
 function getMedication(id){ return MEDICATIONS.find(m=>m.id===id); }
 
+// Structured clinical pathways — one source for the Overview, Guided and Full chart views.
+// Wording is taken from the existing reviewed content in data.js (flow, task detail,
+// medication cards). Anything restructured or added is marked reviewStatus:"draft"
+// with a reviewNote, and listed in CLINICAL-REVIEW.md.
+//
+// Node fields
+//   id, title, type (start|action|decision|parallel|escalation|endpoint), urgency (routine|urgent|critical)
+//   summary      short line shown on the chart
+//   bullets      very short phrases for the Overview boxes (optional)
+//   items        checklist lines for Guided: {text, task?, med?, pathway?}
+//                  task → linked to the Emergency Assist task (shared state)
+//                  med  → opens the medication card (never a checkbox)
+//   details      expandable explanation (tap a node)
+//   connections  [{to, label}]  decision branches always carry a label
+//   medicationRefs, sourceRefs, reviewStatus ("from-content" | "draft"), reviewNote
+//
+// chart.rows: deterministic layout. Each row is a list of node ids, or {group,label,nodes}
+//   for actions that happen at the same time (drawn side by side in one box, never as a sequence).
+// steps: the Guided sequence. A step lists node ids; `decision` names its decision node.
+
+const PATHWAYS = {
+  pph:{
+    id:"pph",
+    title:"PPH – Postpartum Hemorrhage",
+    sourceRefs:["acog-pph-183","acog-pph-device"],
+    nodes:{
+      recognize:{title:"PPH recognized",type:"start",urgency:"critical",
+        summary:"≥1,000 mL cumulative, or bleeding with hypovolemia signs",
+        details:"Ongoing abnormal postpartum bleeding or blood loss with hypovolemia signs. Do not wait for hypotension.",
+        connections:[{to:"g-immediate"}],sourceRefs:["acog-pph-183"],reviewStatus:"draft",reviewNote:"Adds the ≥1,000 mL cumulative threshold from ACOG PB 183 to the existing recognition text."},
+      help:{title:"Call for help",type:"action",urgency:"critical",summary:"Activate hemorrhage response",
+        bullets:["Hemorrhage team","Leader + recorder","Anesthesia"],
+        items:[{text:"Call for help · activate hemorrhage response",task:"pph-help"}],
+        details:"Bring the hemorrhage cart, designate a leader and recorder/timekeeper, notify anesthesia and obtain additional obstetric support according to local policy.",reviewStatus:"from-content"},
+      resus:{title:"Resuscitate",type:"action",urgency:"critical",summary:"Access, labs, blood products",
+        bullets:["IV access","CBC, type & cross, coags, fibrinogen","Blood products"],
+        items:[{text:"IV access + labs: CBC, type & crossmatch, coags, fibrinogen",task:"pph-access"}],
+        details:"Use local hemorrhage protocol for IV access, CBC, type and crossmatch, coagulation studies and fibrinogen. Escalate blood-product support based on patient condition and protocol. Warming and monitoring proceed in parallel.",reviewStatus:"from-content"},
+      assess:{title:"Assess",type:"action",urgency:"critical",summary:"Blood loss, uterine tone, vitals",
+        bullets:["Quantified blood loss","Uterine tone","Vitals, mental status"],
+        items:[{text:"Quantify blood loss · check fundus, vitals, mental status",task:"pph-assess"}],
+        details:"Quantify cumulative blood loss when possible. Assess fundus, vaginal bleeding, vital signs, mental status and perfusion. Hemodynamic changes can occur late.",reviewStatus:"from-content"},
+      uterotonics:{title:"Uterotonics + medical treatment",type:"action",urgency:"critical",
+        summary:"Oxytocin first → added agents if needed · consider TXA",
+        bullets:["Massage / bimanual","Oxytocin → added agents","Consider TXA"],
+        items:[
+          {text:"Fundal massage · bimanual compression for atony",task:"pph-massage"},
+          {text:"Oxytocin first-line, then additional uterotonics if needed",task:"pph-oxytocin"},
+          {text:"Methylergonovine — avoid with hypertension / preeclampsia",med:"methylergonovine"},
+          {text:"Carboprost — avoid with asthma",med:"carboprost"},
+          {text:"Misoprostol",med:"misoprostol"},
+          {text:"Consider TXA 1 g IV within 3 h of birth",task:"pph-txa"}],
+        details:"Oxytocin is first-line for uterine atony. Select additional agents only after checking hypertension/preeclampsia, asthma and cardiac/hepatic/pulmonary contraindications. Consider early TXA for ongoing immediate postpartum hemorrhage; do not wait for a milestone.",
+        connections:[{to:"g-4ts"}],
+        medicationRefs:["oxytocin","methylergonovine","carboprost","misoprostol","txa"],sourceRefs:["acog-pph-183"],reviewStatus:"from-content"},
+      fourts:{title:"Identify & treat cause (4 Ts)",type:"parallel",urgency:"urgent",summary:"Multiple causes may coexist",
+        items:[{text:"Assess Tone · Trauma · Tissue · Thrombin",task:"pph-cause"}],
+        details:"More than one cause can coexist. Examine the uterus and genital tract, assess placental completeness/retained tissue and evaluate coagulation status. A firm uterus with ongoing bleeding should redirect attention toward Trauma, Tissue and Thrombin.",reviewStatus:"from-content"},
+      tone:{title:"Tone",type:"action",urgency:"urgent",summary:"Atony → massage + uterotonics",reviewStatus:"from-content"},
+      trauma:{title:"Trauma",type:"action",urgency:"urgent",summary:"Laceration / injury → identify + repair",reviewStatus:"from-content"},
+      tissue:{title:"Tissue",type:"action",urgency:"urgent",summary:"Retained tissue → evaluate + remove",reviewStatus:"from-content"},
+      thrombin:{title:"Thrombin",type:"action",urgency:"urgent",summary:"Coagulopathy → correct (labs, blood)",reviewStatus:"from-content"},
+      reassess:{title:"Bleeding controlled?",type:"decision",urgency:"critical",
+        summary:"Reassess response continuously",
+        details:"Reassess response continuously. Consider TXA early when indicated; do not wait for a milestone.",
+        connections:[{to:"controlled",label:"Yes"},{to:"escalate",label:"No"}],reviewStatus:"from-content"},
+      controlled:{title:"Controlled",type:"endpoint",urgency:"routine",summary:"Continue therapy + monitoring",
+        bullets:["Continue therapy","Keep reassessing bleeding, tone, vitals"],
+        items:[{text:"Keep reassessing bleeding, tone and vitals"}],
+        details:"Continue indicated therapy and repeated assessment; hemodynamic changes can occur late.",reviewStatus:"draft",reviewNote:"Endpoint wording is implied by the existing ‘Ongoing bleeding?’ step, not stated in it."},
+      escalate:{title:"Persistent → escalate",type:"escalation",urgency:"critical",
+        summary:"MTP · device · OR / IR · transfer",
+        bullets:["Massive transfusion","Balloon / vacuum device","OR, IR or hysterectomy"],
+        items:[
+          {text:"Activate massive transfusion as indicated",task:"pph-escalate"},
+          {text:"Balloon or vacuum hemorrhage-control device — must not delay definitive care"},
+          {text:"Operating room, interventional radiology or hysterectomy based on cause and response"},
+          {text:"Transfer when local resources require"}],
+        details:"Activate massive transfusion as indicated. Prepare nonsurgical hemorrhage-control device, operating room, interventional radiology or hysterectomy based on cause, response, resources and patient status. Device use must not delay definitive care or transfer.",
+        sourceRefs:["acog-pph-183","acog-pph-device"],reviewStatus:"from-content"}
+    },
+    chart:{rows:[
+      ["recognize"],
+      [{group:"g-immediate",label:"Immediate actions — at the same time",nodes:["help","resus","assess"],connections:[{to:"uterotonics"}]}],
+      ["uterotonics"],
+      [{group:"g-4ts",label:"Identify & treat cause (4 Ts)",head:"fourts",nodes:["tone","trauma","tissue","thrombin"],connections:[{to:"reassess"}]}],
+      ["reassess"],
+      ["controlled","escalate"]
+    ]},
+    steps:[
+      {title:"Initial response",nodes:["recognize","help","resus","assess"],parallel:true},
+      {title:"Uterine & medical treatment",nodes:["uterotonics"]},
+      {title:"Identify & treat the 4 Ts",nodes:["fourts","tone","trauma","tissue","thrombin"]},
+      {title:"Reassess response",nodes:["reassess"],decision:"reassess"},
+      {title:"Escalate if persistent",nodes:["escalate"],escalation:true}
+    ]
+  },
+
+  htn:{
+    id:"htn",
+    title:"Acute Severe Hypertension",
+    sourceRefs:["acog-htn","acog-ed-htn"],
+    nodes:{
+      identify:{title:"Severe BP identified",type:"start",urgency:"critical",
+        summary:"SBP ≥160 or DBP ≥110 · ≥20 wk or ≤6 wk postpartum",
+        items:[{text:"Notify OB · activate severe-BP response",task:"htn-help"}],
+        details:"≥20 weeks pregnant or ≤6 weeks postpartum with SBP ≥160 or DBP ≥110. Acute-onset persistent severe BP is an obstetric emergency during pregnancy and postpartum.",
+        connections:[{to:"confirm"}],reviewStatus:"from-content"},
+      confirm:{title:"Persistent on repeat?",type:"decision",urgency:"critical",
+        summary:"Repeat correctly within 15 min",
+        items:[{text:"Repeat BP with correct technique within 15 minutes",task:"htn-bp"}],
+        details:"Repeat correctly within 15 minutes while assessing symptoms and preparing medication. Treatment should be given promptly once persistence is established; do not wait four hours.",
+        connections:[{to:"g-treat",label:"Yes"},{to:"notpersist",label:"No"}],reviewStatus:"from-content"},
+      notpersist:{title:"Not persistent",type:"endpoint",urgency:"routine",summary:"Continue close BP monitoring",
+        items:[{text:"Continue close BP monitoring per local policy"}],
+        details:"Continue close monitoring and reassess. Confirm the local monitoring schedule.",reviewStatus:"draft",reviewNote:"‘Not persistent’ branch is not stated in the existing content; confirm against the ACOG ED algorithm."},
+      treat:{title:"Treat promptly",type:"action",urgency:"critical",summary:"Labetalol IV · hydralazine IV · nifedipine IR PO",
+        bullets:["One first-line agent","Record actual time"],
+        items:[{text:"Give one first-line antihypertensive · record the time",task:"htn-treat"},
+          {text:"Labetalol IV",med:"labetalol"},{text:"Hydralazine IV",med:"hydralazine"},{text:"Nifedipine immediate release PO",med:"nifedipine"}],
+        details:"Labetalol IV, hydralazine IV or immediate-release nifedipine PO are accepted first-line options. Choose based on access and contraindications; start the drug-specific BP timer only after confirming administration.",
+        medicationRefs:["labetalol","hydralazine","nifedipine"],reviewStatus:"from-content"},
+      symptoms:{title:"Severe features",type:"action",urgency:"urgent",summary:"Headache, vision, RUQ pain, dyspnea, neuro",
+        items:[{text:"Assess headache, vision, RUQ/epigastric pain, dyspnea, neuro",task:"htn-symptoms"}],
+        details:"Severe headache with hypertension raises concern for stroke. Evaluate oliguria and other severe features; perform focused neurologic assessment.",reviewStatus:"from-content"},
+      labs:{title:"Labs",type:"action",urgency:"urgent",summary:"CBC, platelets, AST/ALT, creatinine, urine protein",
+        items:[{text:"CBC, platelets, AST/ALT, creatinine, urine protein",task:"htn-labs"}],
+        details:"Laboratory severe features include platelets <100 × 10⁹/L, transaminases to twice normal, or creatinine >1.1 mg/dL or doubling without other renal disease.",reviewStatus:"from-content"},
+      mag:{title:"Magnesium",type:"action",urgency:"urgent",summary:"When indicated for severe features",
+        items:[{text:"Start magnesium sulfate when indicated",task:"htn-mag"},{text:"Magnesium sulfate",med:"magnesium"}],
+        details:"Antihypertensive treatment and magnesium should proceed simultaneously when possible; antihypertensive treatment takes priority if they cannot be concurrent.",
+        medicationRefs:["magnesium"],reviewStatus:"from-content"},
+      reassess:{title:"Still severe after the dose?",type:"decision",urgency:"critical",
+        summary:"Labetalol 10 min · hydralazine 20 · nifedipine 20",
+        items:[{text:"Recheck BP after every dose",task:"htn-monitor"}],
+        details:"Reassess by agent: labetalol 10 min, hydralazine 20 min, nifedipine 20 min. Repeat only if still severe and within the approved sequence.",
+        connections:[{to:"nextdose",label:"Yes"},{to:"target",label:"No"}],reviewStatus:"from-content"},
+      nextdose:{title:"Next dose in sequence",type:"action",urgency:"critical",summary:"Then reassess ↺ · sequence done → escalate",
+        items:[{text:"Give the next step of the approved sequence, then reassess"}],
+        details:"Repeat only if still severe and within the approved sequence. Each confirmed dose starts its own reassessment timer. Escalate after failure of the initial sequence.",
+        connections:[{to:"escalate",label:"Sequence complete or deteriorating"}],reviewStatus:"from-content"},
+      target:{title:"Below severe range",type:"endpoint",urgency:"routine",summary:"Target 130–150 / 80–100 · staged monitoring",
+        items:[{text:"Monitor to target per the staged schedule"}],
+        details:"The supplied ED algorithm targets 130–150/80–100 mm Hg, then uses a staged monitoring schedule. Confirm target and schedule with local policy.",reviewStatus:"from-content"},
+      escalate:{title:"Escalate + plan delivery",type:"escalation",urgency:"critical",summary:"Expert support · disposition / delivery",
+        items:[{text:"Obtain emergent higher-level consultation",task:"htn-escalate"}],
+        details:"Persistent severe BP, stroke concern, HELLP, pulmonary edema or deterioration requires urgent expert support and disposition/delivery planning.",reviewStatus:"from-content"}
+    },
+    chart:{rows:[
+      ["identify"],
+      ["confirm","notpersist"],
+      [{group:"g-treat",label:"Treat and assess — at the same time",nodes:["treat","symptoms","labs","mag"],connections:[{to:"reassess"}]}],
+      ["reassess"],
+      ["nextdose","target"],
+      ["escalate"]
+    ]},
+    steps:[
+      {title:"Confirm severe BP",nodes:["identify","confirm"],decision:"confirm"},
+      {title:"Treat and assess",nodes:["treat","symptoms","labs","mag"],parallel:true},
+      {title:"Reassess after each dose",nodes:["reassess"],decision:"reassess"},
+      {title:"Escalate + plan delivery",nodes:["escalate"],escalation:true}
+    ]
+  },
+
+  eclampsia:{
+    id:"eclampsia",
+    title:"Eclampsia / Obstetric Seizure",
+    sourceRefs:["acog-htn","acog-ed-eclampsia"],
+    nodes:{
+      start:{title:"Presumed eclamptic seizure",type:"start",urgency:"critical",
+        summary:"Pregnant or recently postpartum",
+        items:[{text:"Call for help · OB, anesthesia, emergency support",task:"ec-help"}],
+        details:"Known/suspected pregnancy or recent postpartum state. Call for help and begin usual seizure care. Designate a leader and recorder/timekeeper; prepare airway equipment.",
+        connections:[{to:"g-stabilize"}],reviewStatus:"from-content"},
+      safety:{title:"Protect + support",type:"action",urgency:"critical",summary:"Prevent injury · left lateral · airway",
+        items:[{text:"Protect from injury · left lateral · support airway",task:"ec-safety"}],
+        details:"Prevent injury and aspiration; left lateral when feasible; support airway/breathing and monitor oxygenation. Do not forcibly restrain.",reviewStatus:"from-content"},
+      mag:{title:"Magnesium sulfate",type:"action",urgency:"critical",summary:"4–6 g IV over 20–30 min → 1–2 g/h",
+        items:[{text:"Magnesium loading dose, then maintenance",task:"ec-mag"},{text:"Magnesium sulfate (incl. IM pathway)",med:"magnesium"}],
+        details:"4–6 g IV over 20–30 min → maintenance 1–2 g/h. Use the approved IM pathway when IV cannot be established; obtain expert guidance for renal dysfunction.",
+        medicationRefs:["magnesium"],reviewStatus:"from-content"},
+      vitals:{title:"Assess",type:"action",urgency:"urgent",summary:"BP, oxygenation, neuro, fetal status",
+        items:[{text:"BP, oxygenation, respirations, neuro, fetal status",task:"ec-vitals"},{text:"SBP ≥160 or DBP ≥110 → severe BP pathway",pathway:"htn"}],
+        details:"If SBP ≥160 or DBP ≥110, initiate the acute severe-hypertension pathway. Maternal stabilization comes first during fetal bradycardia associated with seizure.",reviewStatus:"from-content"},
+      recur:{title:"Persistent or recurrent seizure?",type:"decision",urgency:"critical",summary:"Continue magnesium either way",
+        details:"Continue magnesium; use the approved benzodiazepine/second-line pathway for persistent or recurrent seizure.",
+        connections:[{to:"second",label:"Yes"},{to:"after",label:"No"}],reviewStatus:"from-content"},
+      second:{title:"Second-line + airway",type:"escalation",urgency:"critical",summary:"Benzodiazepine · prepare intubation · consult",
+        items:[{text:"Approved benzodiazepine / second-line pathway",task:"ec-recur"},{text:"Lorazepam IV",med:"lorazepam"},{text:"Midazolam IM (no IV)",med:"midazolam"}],
+        details:"The supplied algorithm prefers benzodiazepine after magnesium loading, followed by additional agents and possible intubation with critical care, anesthesia, neurology or MFM consultation.",
+        connections:[{to:"after",label:"Once controlled"}],medicationRefs:["lorazepam","midazolam"],reviewStatus:"from-content"},
+      after:{title:"After the seizure",type:"action",urgency:"urgent",summary:"Severe BP, neuro deficits, consider head CT",
+        items:[{text:"Focused neuro exam · consider head imaging",task:"ec-neuro"}],
+        details:"Assess severe BP, neurologic deficits, oxygenation and fetal status; consider head CT and alternate diagnoses for focal deficits, atypical presentation, persistent altered mental status or seizure refractory to magnesium.",
+        connections:[{to:"g-ongoing"}],reviewStatus:"from-content"},
+      tox:{title:"Magnesium toxicity watch",type:"action",urgency:"urgent",summary:"Respirations, reflexes, urine · calcium ready",
+        items:[{text:"Monitor for toxicity · keep calcium available",task:"ec-tox"},{text:"Calcium gluconate",med:"calcium-gluconate"}],
+        details:"Monitor respiratory status, deep tendon reflexes, urine output and serum magnesium when indicated. Stop/adjust therapy and treat impending respiratory depression according to the approved protocol.",
+        medicationRefs:["magnesium","calcium-gluconate"],reviewStatus:"from-content"},
+      delivery:{title:"Plan delivery",type:"endpoint",urgency:"urgent",summary:"After stabilization · route by obstetric factors",
+        items:[{text:"Prepare for delivery after stabilization",task:"ec-delivery"}],
+        details:"Eclampsia is not itself an automatic indication for cesarean birth. Stabilize first; timing and route depend on maternal, fetal and obstetric factors.",reviewStatus:"from-content"}
+    },
+    chart:{rows:[
+      ["start"],
+      [{group:"g-stabilize",label:"Stabilize and treat — at the same time",nodes:["safety","mag","vitals"],connections:[{to:"recur"}]}],
+      ["recur"],
+      ["second","after"],
+      [{group:"g-ongoing",label:"Ongoing care",nodes:["tox","delivery"]}]
+    ]},
+    steps:[
+      {title:"Stabilize + magnesium",nodes:["start","safety","mag","vitals"],parallel:true},
+      {title:"Persistent or recurrent?",nodes:["recur"],decision:"recur"},
+      {title:"Second-line + airway",nodes:["second"],escalation:true},
+      {title:"After the seizure",nodes:["after"]},
+      {title:"Ongoing care",nodes:["tox","delivery"]}
+    ]
+  }
+};
+
+// Flowchart engine: one pathway record (pathways.js) → three views.
+//   Overview  — semantic HTML map of every stage and branch (default)
+//   Guided    — numbered steps with checklists, labelled decision branches
+//   Full chart— SVG diagram with pan, pinch/wheel zoom, fit, fullscreen, print
+// Rendering is pure: callers pass a ctx with task status and UI state.
+// Events are wired in app.js through data-* attributes.
+
+const fcEsc=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const TYPE_LABEL={start:"Start",action:"Action",decision:"Decision",parallel:"At the same time",escalation:"Escalation",endpoint:"Outcome"};
+
+// ---------- shared helpers ----------
+function allGroups(p){const m=new Map();p.chart.rows.forEach(r=>r.forEach(c=>{if(typeof c==="object")m.set(c.group,c);}));return m;}
+function rowOf(p,id){for(let i=0;i<p.chart.rows.length;i++){for(const c of p.chart.rows[i]){if(c===id)return i;if(typeof c==="object"&&(c.group===id||c.nodes.includes(id)||c.head===id))return i;}}return -1;}
+function incomingLabel(p,id){
+  // label of the branch that leads into `id` (e.g. "Yes", "No"), if any
+  for(const [nid,n] of Object.entries(p.nodes))for(const c of n.connections||[])if(c.to===id&&c.label)return {label:c.label,from:nid};
+  return null;
+}
+function nodeStatus(node,ctx){
+  const tasks=(node.items||[]).map(i=>i.task).filter(Boolean);
+  if(!tasks.length||!ctx.sessionActive)return null;
+  const st=tasks.map(t=>ctx.taskStatus(t));
+  if(st.includes("overdue"))return "overdue";
+  if(st.every(s=>s==="done"))return "done";
+  if(st.some(s=>s==="done"||s==="progress"||s==="ongoing"))return "active";
+  return "todo";
+}
+const STATUS_TEXT={done:"Done",active:"In progress",overdue:"Overdue",todo:"To do"};
+function statusBadge(s){return s&&s!=="todo"?`<span class="fc-status ${s}" aria-label="${STATUS_TEXT[s]}">${s==="done"?"✓":s==="overdue"?"!":s==="active"?"•":""}</span>`:"";}
+
+// ---------- Overview ----------
+function ovBox(p,id,ctx,{compact=false}={}){
+  const n=p.nodes[id];const s=nodeStatus(n,ctx);const inc=incomingLabel(p,id);
+  const body=n.bullets?.length?`<ul>${n.bullets.map(b=>`<li>${fcEsc(b)}</li>`).join("")}</ul>`:`<p>${fcEsc(n.summary)}</p>`;
+  return `<button class="ov-box t-${n.type} u-${n.urgency}${n.medicationRefs?" meds":""}${s?` s-${s}`:""}" data-fnode="${id}" aria-label="${fcEsc(n.title)}. ${fcEsc(n.summary)}${s?`. ${STATUS_TEXT[s]}`:""}">
+    ${inc&&!compact?`<span class="ov-branch">${fcEsc(inc.label)}</span>`:""}
+    <span class="ov-title">${fcEsc(n.title)}${statusBadge(s)}</span>${compact&&n.type!=="decision"?`<p>${fcEsc(n.summary)}</p>`:n.type==="decision"?`<p>${fcEsc(n.summary)}</p>`:body}
+  </button>`;
+}
+function renderOverview(p,ctx,{compact=false}={}){
+  return `<div class="ov${compact?" compact":""}">${p.chart.rows.map((row,i)=>{
+    const cells=row.map(c=>{
+      if(typeof c==="string")return ovBox(p,c,ctx,{compact});
+      const head=c.head?p.nodes[c.head]:null;const hs=head?nodeStatus(head,ctx):null;
+      return `<div class="ov-group${c.nodes.length>2?" many":""}" role="group" aria-label="${fcEsc(c.label)}">
+        <button class="ov-group-head" data-fnode="${c.head||c.nodes[0]}">${fcEsc(c.label)}${statusBadge(hs)}</button>
+        <div class="ov-group-cells n${c.nodes.length}">${c.nodes.map(id=>ovBox(p,id,ctx,{compact:true})).join("")}</div></div>`;
+    }).join("");
+    const arrow=i<p.chart.rows.length-1?`<div class="ov-arrow" aria-hidden="true">${row.length===1&&p.nodes[row[0]]?.type==="decision"?"↙ ↘":"↓"}</div>`:"";
+    return `<div class="ov-row n${row.length}">${cells}</div>${arrow}`;
+  }).join("")}</div>`;
+}
+
+// ---------- Guided ----------
+function stepOfNode(p,id){return p.steps.findIndex(s=>s.nodes.includes(id));}
+function itemHTML(p,nid,item,i,ctx){
+  if(item.med)return `<button class="g-med" data-med-id="${item.med}"><span aria-hidden="true">Rx</span>${fcEsc(item.text)}<b aria-hidden="true">›</b></button>`;
+  if(item.pathway)return `<button class="g-med path" data-fpath="${item.pathway}"><span aria-hidden="true">→</span>${fcEsc(item.text)}<b aria-hidden="true">›</b></button>`;
+  let on,key;
+  if(item.task&&ctx.sessionActive){const st=ctx.taskStatus(item.task);on=st==="done"||st==="ongoing";key=`task:${item.task}`;}
+  else{key=`local:${p.id}:${nid}:${i}`;on=ctx.localChecks.has(key);}
+  const overdue=item.task&&ctx.sessionActive&&ctx.taskStatus(item.task)==="overdue";
+  return `<button class="g-check${on?" on":""}${overdue?" overdue":""}" role="checkbox" aria-checked="${on}" data-gcheck="${key}"><span class="box" aria-hidden="true">${on?"✓":""}</span><span>${fcEsc(item.text)}${overdue?` <em>overdue</em>`:""}</span></button>`;
+}
+function nodeBlock(p,nid,ctx){
+  const n=p.nodes[nid];
+  const items=(n.items||[]).map((it,i)=>itemHTML(p,nid,it,i,ctx)).join("");
+  if(!items)return `<button class="g-info" data-fnode="${nid}"><strong>${fcEsc(n.title)}</strong><span>${fcEsc(n.summary)}</span></button>`;
+  return `<div class="g-node"><button class="g-node-head" data-fnode="${nid}"><span>${fcEsc(n.title)}</span><i aria-hidden="true">i</i></button>${items}</div>`;
+}
+function renderGuided(p,ctx){
+  const k=Math.min(ctx.step??0,p.steps.length-1);const step=p.steps[k];
+  const branch=ctx.branch;
+  const dec=step.decision?p.nodes[step.decision]:null;
+  const branchBtns=dec?`<div class="g-question"><p>${fcEsc(dec.title)}</p><span>${fcEsc(dec.summary)}</span><div class="g-branches">${dec.connections.map(c=>{const t=p.nodes[c.to]||{};const cls=t.type==="escalation"||stepOfNode(p,c.to)>=0&&p.steps[stepOfNode(p,c.to)].escalation?"bad":t.type==="endpoint"?"good":"";return `<button class="g-branch ${cls}${branch===c.to?" chosen":""}" data-gbranch="${c.to}"><strong>${fcEsc(c.label)}</strong><span>${fcEsc(t.title||"Next")}</span></button>`;}).join("")}</div></div>`:"";
+  // A chosen branch whose target is not its own step (e.g. "Controlled") is shown inline here.
+  const inline=branch&&p.nodes[branch]&&stepOfNode(p,branch)<0?(()=>{const t=p.nodes[branch];return `<div class="g-outcome t-${t.type}">${nodeBlock(p,branch,ctx)}${(t.connections||[]).map(c=>`<button class="g-branch bad" data-gbranch="${c.to}"><strong>${fcEsc(c.label||"Next")}</strong><span>${fcEsc(p.nodes[c.to]?.title||"")}</span></button>`).join("")}</div>`;})():"";
+  const body=step.nodes.filter(id=>id!==step.decision||(p.nodes[id].items||[]).length).map(id=>nodeBlock(p,id,ctx)).join("");
+  return `<div class="g">
+    <div class="g-progress"><span>Step ${k+1} of ${p.steps.length}</span><div class="bar"><i style="width:${Math.round((k+1)/p.steps.length*100)}%"></i></div></div>
+    <p class="g-mode-note">${ctx.sessionActive?"Checks update the action cards and timeline.":"Reference mode — checks stay on this screen only."}</p>
+    ${p.steps.map((s,i)=>{
+      if(i===k)return `<section class="g-step current${s.escalation?" esc":""}" aria-current="step">
+        <h3><span class="num">${i+1}</span>${fcEsc(s.title)}</h3>
+        ${s.parallel?`<p class="g-parallel">All at the same time — not in order</p>`:""}
+        ${body}${branchBtns}${inline}
+        ${i<p.steps.length-1&&!dec?`<button class="g-next" data-gstep="${i+1}"><span aria-hidden="true">✓</span> Done → Next step</button>`:""}
+      </section>`;
+      return `<button class="g-step row${i<k?" past":""}${s.escalation?" esc":""}" data-gstep="${i}"><span class="num">${i<k?"✓":i+1}</span><span>${fcEsc(s.title)}</span><b aria-hidden="true">›</b></button>`;
+    }).join("")}
+  </div>`;
+}
+
+// ---------- Full chart (SVG) ----------
+const FC_W=600,FC_GAP=14,FC_ROWGAP=46,FC_PAD=16;
+function fcWrap(text,maxChars){const words=String(text||"").split(/\s+/);const lines=[];let cur="";for(const w of words){if((cur+" "+w).trim().length>maxChars&&cur){lines.push(cur);cur=w;}else cur=(cur+" "+w).trim();}if(cur)lines.push(cur);return lines;}
+function boxSize(n,width){
+  const tl=fcWrap(n.title,Math.floor(width/9.6)),sl=fcWrap(n.summary,Math.floor(width/7.4));
+  return {tl,sl,h:18+tl.length*19+sl.length*16+12};
+}
+function renderChartSVG(p,ctx){
+  const place={};let y=FC_PAD;const parts=[];const groupsDrawn=[];
+  p.chart.rows.forEach(row=>{
+    const cellW=(FC_W-FC_PAD*2-FC_GAP*(row.length-1))/row.length;let x=FC_PAD;let rowH=0;const pending=[];
+    row.forEach(c=>{
+      if(typeof c==="string"){const n=p.nodes[c];const sz=boxSize(n,cellW);pending.push({kind:"node",id:c,x,w:cellW,sz});rowH=Math.max(rowH,sz.h);}
+      else{
+        const inner=c.nodes.length;const iw=(cellW-12-8*(inner-1))/inner;const sizes=c.nodes.map(id=>boxSize(p.nodes[id],iw));
+        const ih=Math.max(...sizes.map(s=>s.h));const gh=34+ih+10;
+        pending.push({kind:"group",g:c,x,w:cellW,iw,sizes,ih,h:gh});rowH=Math.max(rowH,gh);
+      }
+      x+=cellW+FC_GAP;
+    });
+    pending.forEach(it=>{
+      if(it.kind==="node"){const h=it.sz.h;place[it.id]={x:it.x,y,w:it.w,h};parts.push(drawNode(p,it.id,it.x,y,it.w,h,it.sz,ctx));}
+      else{
+        place[it.g.group]={x:it.x,y,w:it.w,h:it.h};
+        const head=it.g.head?p.nodes[it.g.head]:null;
+        groupsDrawn.push(`<g class="svg-group" ${it.g.head?`data-fnode="${it.g.head}" role="button" tabindex="0" aria-label="${fcEsc(it.g.label)}"`:""}><rect x="${it.x}" y="${y}" width="${it.w}" height="${it.h}" rx="14" class="grp"/><rect x="${it.x}" y="${y}" width="${it.w}" height="28" rx="14" class="grp-head"/><rect x="${it.x}" y="${y+14}" width="${it.w}" height="14" class="grp-head"/><text x="${it.x+it.w/2}" y="${y+19}" class="grp-label" text-anchor="middle">${fcEsc(it.g.label)}${head?" ⓘ":""}</text></g>`);
+        let ix=it.x+6;it.g.nodes.forEach((id,k)=>{place[id]={x:ix,y:y+34,w:it.iw,h:it.ih};parts.push(drawNode(p,id,ix,y+34,it.iw,it.ih,it.sizes[k],ctx));ix+=it.iw+8;});
+      }
+    });
+    y+=rowH+FC_ROWGAP;
+  });
+  const H=y-FC_ROWGAP+FC_PAD;
+  // edges
+  const edges=[];
+  const add=(from,c)=>{const a=place[from],b=place[c.to];if(!a||!b)return;
+    const sameRow=Math.abs(a.y-b.y)<2;
+    if(sameRow){const left=a.x<b.x;const x1=left?a.x+a.w:a.x,x2=left?b.x:b.x+b.w,yy=a.y+Math.min(a.h,b.h)/2;
+      edges.push(`<path d="M${x1} ${yy} L${x2} ${yy}" class="edge" marker-end="url(#arr)"/>`);if(c.label)edges.push(edgeLabel((x1+x2)/2,yy-8,c.label,c.label));return;}
+    const x1=a.x+a.w/2,y1=a.y+a.h,x2=b.x+b.w/2,y2=b.y,my=y1+(y2-y1)/2;
+    edges.push(`<path d="M${x1} ${y1} L${x1} ${my} L${x2} ${my} L${x2} ${y2-2}" class="edge" marker-end="url(#arr)"/>`);
+    if(c.label)edges.push(edgeLabel(x2,my+15,c.label,c.label));
+  };
+  Object.entries(p.nodes).forEach(([id,n])=>(n.connections||[]).forEach(c=>add(id,c)));
+  allGroups(p).forEach(g=>(g.connections||[]).forEach(c=>add(g.group,c)));
+  return {W:FC_W,H,svg:`<svg viewBox="0 0 ${FC_W} ${H}" width="${FC_W}" height="${H}" class="fc-svg" role="img" aria-label="${fcEsc(p.title)} full algorithm" xmlns="http://www.w3.org/2000/svg">
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" class="arrowhead"/></marker></defs>
+    ${groupsDrawn.join("")}${edges.join("")}${parts.join("")}</svg>`};
+}
+function edgeLabel(x,y,text,kind){const w=Math.max(34,text.length*7.4+16);const cls=/^yes/i.test(kind)?"yes":/^no/i.test(kind)?"no":"";return `<g class="edge-label ${cls}"><rect x="${x-w/2}" y="${y-13}" width="${w}" height="20" rx="10"/><text x="${x}" y="${y+1}" text-anchor="middle">${fcEsc(text)}</text></g>`;}
+function drawNode(p,id,x,y,w,h,sz,ctx){
+  const n=p.nodes[id];const s=nodeStatus(n,ctx);
+  const shape=n.type==="decision"
+    ?`<path d="M${x+18} ${y} H${x+w-18} L${x+w} ${y+h/2} L${x+w-18} ${y+h} H${x+18} L${x} ${y+h/2} Z" class="nb"/>`
+    :`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" class="nb"/>`;
+  let ty=y+24;const t=sz.tl.map(l=>{const r=`<text x="${x+w/2}" y="${ty}" class="nt" text-anchor="middle">${fcEsc(l)}</text>`;ty+=19;return r;}).join("");
+  ty+=2;const sm=sz.sl.map(l=>{const r=`<text x="${x+w/2}" y="${ty}" class="ns" text-anchor="middle">${fcEsc(l)}</text>`;ty+=16;return r;}).join("");
+  const badge=s&&s!=="todo"?`<g class="svg-status ${s}"><circle cx="${x+w-12}" cy="${y+12}" r="9"/><text x="${x+w-12}" y="${y+16}" text-anchor="middle">${s==="done"?"✓":s==="overdue"?"!":"•"}</text></g>`:"";
+  return `<g class="svg-node t-${n.type} u-${n.urgency}${n.medicationRefs?" meds":""}" data-fnode="${id}" role="button" tabindex="0" aria-label="${fcEsc(n.title)}. ${fcEsc(n.summary)}${s?`. ${STATUS_TEXT[s]}`:""}">${shape}${t}${sm}${badge}</g>`;
+}
+function renderChart(p,ctx){
+  const {svg}=renderChartSVG(p,ctx);
+  return `<div class="fc-tools" role="toolbar" aria-label="Chart controls">
+      <button data-zoom="in" aria-label="Zoom in">＋</button><button data-zoom="out" aria-label="Zoom out">−</button>
+      <button data-zoom="fit">Fit</button><button data-zoom="full" aria-label="Fullscreen">⛶</button><button data-zoom="print">Print / PDF</button>
+    </div>
+    <div class="fc-viewport" tabindex="0" aria-label="Full algorithm. Drag to pan, pinch or use the buttons to zoom.">${svg}</div>
+    <p class="fc-hint">Drag to pan · pinch or ＋/− to zoom · tap a box for details</p>`;
+}
+
+// ---------- pan / zoom ----------
+function mountChart(root,saved){
+  const vp=root.querySelector(".fc-viewport");const svg=vp?.querySelector("svg");if(!svg)return null;
+  const W0=+svg.getAttribute("width"),H0=+svg.getAttribute("height");
+  let s=1,tx=0,ty=0;const pts=new Map();let moved=false,start=null,pinch=null;
+  const apply=()=>{svg.style.transform=`translate(${tx}px,${ty}px) scale(${s})`;};
+  const fit=()=>{const r=vp.getBoundingClientRect();s=Math.min(r.width/W0,1.6);tx=(r.width-W0*s)/2;ty=0;vp.style.height=Math.min(Math.max(H0*s+8,280),window.innerHeight*0.78)+"px";apply();};
+  const zoomAt=(f,cx,cy)=>{const ns=Math.min(4,Math.max(0.3,s*f));tx=cx-(cx-tx)*(ns/s);ty=cy-(cy-ty)*(ns/s);s=ns;apply();};
+  svg.style.transformOrigin="0 0";svg.style.width=W0+"px";svg.style.height=H0+"px";
+  vp.addEventListener("pointerdown",e=>{pts.set(e.pointerId,{x:e.clientX,y:e.clientY});moved=false;start={x:e.clientX,y:e.clientY,tx,ty};if(pts.size===2){const [a,b]=[...pts.values()];pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s};}});
+  const onMove=e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(pts.size===2&&pinch){const [a,b]=[...pts.values()];const r=vp.getBoundingClientRect();const d=Math.hypot(a.x-b.x,a.y-b.y);zoomAt((pinch.s*d/pinch.d)/s,(a.x+b.x)/2-r.left,(a.y+b.y)/2-r.top);moved=true;return;}
+    if(start){const dx=e.clientX-start.x,dy=e.clientY-start.y;if(Math.abs(dx)+Math.abs(dy)>6)moved=true;if(moved){tx=start.tx+dx;ty=start.ty+dy;apply();}}};
+  const end=e=>{pts.delete(e.pointerId);if(pts.size<2)pinch=null;if(!pts.size)start=null;};
+  window.addEventListener("pointermove",onMove);window.addEventListener("pointerup",end);window.addEventListener("pointercancel",end);
+  vp.addEventListener("click",e=>{if(moved){e.stopPropagation();e.preventDefault();moved=false;}},true);
+  vp.addEventListener("wheel",e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomAt(e.deltaY<0?1.12:1/1.12,e.clientX-r.left,e.clientY-r.top);},{passive:false});
+  vp.addEventListener("keydown",e=>{const r=vp.getBoundingClientRect();if(e.key==="+"||e.key==="=")zoomAt(1.2,r.width/2,r.height/2);if(e.key==="-")zoomAt(1/1.2,r.width/2,r.height/2);if(e.key==="0")fit();
+    const step=40;if(e.target===vp){if(e.key==="ArrowLeft"){tx+=step;apply();}if(e.key==="ArrowRight"){tx-=step;apply();}if(e.key==="ArrowUp"){ty+=step;apply();e.preventDefault();}if(e.key==="ArrowDown"){ty-=step;apply();e.preventDefault();}}});
+  // Restore the previous pan/zoom after a re-render (e.g. a timer firing), else fit to width.
+  if(saved){s=saved.s;tx=saved.tx;ty=saved.ty;vp.style.height=saved.h;apply();}else fit();
+  let lastW=vp.parentElement.getBoundingClientRect().width;
+  const ro=new ResizeObserver(()=>{const w=vp.parentElement.getBoundingClientRect().width;if(Math.abs(w-lastW)>2){lastW=w;fit();}});ro.observe(vp.parentElement);
+  return {
+    zoom(d){const r=vp.getBoundingClientRect();zoomAt(d==="in"?1.25:1/1.25,r.width/2,r.height/2);},
+    fit,
+    state(){return {s,tx,ty,h:vp.style.height};},
+    full(){const host=root;if(document.fullscreenElement){document.exitFullscreen();return;}
+      if(host.requestFullscreen){host.requestFullscreen().then(()=>setTimeout(fit,120)).catch(()=>{host.classList.toggle("fc-pseudo-full");setTimeout(fit,50);});}
+      else{host.classList.toggle("fc-pseudo-full");setTimeout(fit,50);}},
+    destroy(){ro.disconnect();window.removeEventListener("pointermove",onMove);window.removeEventListener("pointerup",end);window.removeEventListener("pointercancel",end);}
+  };
+}
+
 const DEFAULT_KEY = "ob-emergency-assist.session.v1";
 const SCHEMA_VERSION = "1.0";
 
@@ -569,7 +1122,7 @@ function createWorkspaceSessionStore({key="ob-emergency-assist.session.v1",pollM
 
 
 const $ = (s,root=document)=>root.querySelector(s);
-const $ = (s,root=document)=>[...root.querySelectorAll(s)];
+const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
 const main = $("#main");
 const STORAGE_KEY = "ob-emergency-assist.session.v1";
 const SETTINGS_KEY = "ob-emergency-assist.settings.v1";
@@ -654,7 +1207,7 @@ function refTags(ids=[]){return `<div class="ref-tags">${ids.map(id=>{const r=ge
 function navigate(next,opts={}){
   route=next;
   if(opts.emergency) selectedEmergency=opts.emergency;
-  $(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));
+  $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));
   render();
   main.focus({preventScroll:true});
   window.scrollTo({top:0,behavior:"instant"});
@@ -768,8 +1321,9 @@ function renderActiveSession(){
           <div id="completedList" hidden>${renderCompleted(e)}</div>
         </section>
       </section>
-      <aside class="cockpit-side" aria-label="Flowchart and recent events">
-        ${flowHTML(e,true)}
+      <aside class="cockpit-side acc-${e.accent}" aria-label="Flowchart and recent events" data-pathway="${e.id}">
+        <div class="side-flow-head"><h2>Pathway</h2><button class="text-button" data-action="open-full-flow">Open full ›</button></div>
+        ${renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true})}
         <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
       </aside>
     </div>`;
@@ -974,8 +1528,9 @@ function updateClockDom(){
   if(!session)return;
   const now=sessionMinute();
   const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed());
-  $(".live-overdue").forEach(el=>{el.textContent=`overdue ${fmt((now-Number(el.dataset.dueAt))*60000)}`;});
-  $(".live-countdown").forEach(el=>{el.textContent=fmt((Number(el.dataset.dueAt)-now)*60000);});
+  $$(".live-elapsed").forEach(el=>{el.textContent=fmt(currentElapsed());});
+  $$(".live-overdue").forEach(el=>{el.textContent=`overdue ${fmt((now-Number(el.dataset.dueAt))*60000)}`;});
+  $$(".live-countdown").forEach(el=>{el.textContent=fmt((Number(el.dataset.dueAt)-now)*60000);});
 }
 function freezeClock(){
   if(session?.running){session.elapsedBase=currentElapsed();session.running=false;session.lastTickAt=Date.now();session.simulationTimeMs=session.mode==="simulation"?session.elapsedBase:null;saveSession({type:"SESSION_PAUSED",status:"active"});}
@@ -1022,16 +1577,55 @@ function playAlert(){
   if(navigator.vibrate)navigator.vibrate([180,80,180]);
 }
 
-function renderFlowcharts(){
-  const e=EMERGENCIES[flowEmergency];
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">ONE-TAP OVERVIEW</p><h1>Clinical flowcharts</h1><p>Use the flowchart to orient the team. Return to Actions for task controls and timers.</p></section>
-    <div class="segmented emergency-tabs">${Object.values(EMERGENCIES).map(x=>`<button class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div>
-    ${flowHTML(e)}
-    <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>This is a concise implementation view, not a replacement for the complete source or local protocol.</small></div>`;
+// ---------- Flowcharts: one pathway, three views (see flowchart.js / pathways.js) ----------
+let flowView="overview";             // overview | guided | chart — UI only, never touches session state
+const guidedStep={},guidedBranch={};  // per pathway
+const localChecks=new Set();         // reference-mode checks (no session): this screen only
+let chartCtl=null,chartSaved=null;
+function flowCtx(id){
+  const active=session?.status==="active"&&session.emergencyId===id;
+  return {sessionActive:active,localChecks,step:guidedStep[id]||0,branch:guidedBranch[id]||null,
+    taskStatus:t=>active&&overdueTimerFor(t)&&taskState(t).status!=="done"?"overdue":taskState(t).status};
 }
-function flowHTML(e,embedded=false){
-  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${!embedded&&session?.status==="active"&&session.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
-    <div class="flow-track">${e.flow.map((n,i)=>`<article class="flow-node ${n.tone}"><span>${i+1}</span><div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div></article>${i<e.flow.length-1?`<div class="flow-arrow">↓</div>`:""}`).join("")}</div></section>`;
+function statusStripHTML(){
+  const e=EMERGENCIES[session.emergencyId];const due=getDueTimers().length;const sim=session.mode==="simulation";
+  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${esc(e.short.toUpperCase())} ${sim?"SIMULATION":"CLINICAL"}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} overdue</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
+}
+function renderFlowcharts(){
+  if(chartCtl){chartSaved=flowView==="chart"?{id:flowEmergency,...chartCtl.state()}:null;chartCtl.destroy();chartCtl=null;}
+  const e=EMERGENCIES[flowEmergency],p=PATHWAYS[e.id],ctx=flowCtx(e.id);
+  const drafts=Object.values(p.nodes).filter(n=>n.reviewStatus==="draft").length;
+  const views={overview:"Overview",guided:"Guided",chart:"Full chart"};
+  const body=flowView==="guided"?renderGuided(p,ctx):flowView==="chart"?renderChart(p,ctx):renderOverview(p,ctx);
+  main.innerHTML=`${session?.status==="active"?statusStripHTML():""}
+    <section class="fc-head ${e.accent}">${emergencyIcon(e.id,52)}<div><h1>${esc(p.title)}</h1>
+      <div class="fc-emerg" role="tablist" aria-label="Emergency">${Object.values(EMERGENCIES).map(x=>`<button role="tab" aria-selected="${x.id===e.id}" class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div></div></section>
+    <div class="fc-views" role="tablist" aria-label="View">${Object.entries(views).map(([k,v])=>`<button role="tab" aria-selected="${flowView===k}" class="${flowView===k?"active":""}" data-fview="${k}">${v}</button>`).join("")}</div>
+    <section class="fc-body view-${flowView} acc-${e.accent}" id="fcBody" data-pathway="${p.id}">${body}</section>
+    <div class="source-band"><span>Content basis</span>${refTags(p.sourceRefs)}<small>${drafts?`${drafts} step${drafts>1?"s":""} marked draft — needs source check before clinical use. `:""}A concise implementation view; the complete source and local protocol govern.</small></div>`;
+  if(flowView==="chart")chartCtl=mountChart($("#fcBody"),chartSaved?.id===e.id?chartSaved:null);
+}
+function openNodeDetail(pid,nid){
+  const p=PATHWAYS[pid],n=p?.nodes[nid];if(!n)return;const ctx=flowCtx(pid);const st=nodeStatus(n,ctx);
+  const items=(n.items||[]).map(it=>{
+    if(it.med){const m=getMedication(it.med);return `<button data-med-id="${it.med}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(it.text)}</small></div><b>›</b></button>`;}
+    if(it.pathway)return `<button data-fpath="${it.pathway}"><span>→</span><div><strong>${esc(it.text)}</strong><small>Open pathway</small></div><b>›</b></button>`;
+    const ts=it.task&&ctx.sessionActive?ctx.taskStatus(it.task):null;
+    return `<div class="sheet-item"><strong>${esc(it.text)}</strong>${ts?`<small class="st-${ts}">${{todo:"To do",progress:"In progress",ongoing:"Ongoing",done:"Done",overdue:"Overdue"}[ts]||ts}</small>`:""}${it.task&&ctx.sessionActive?`<button class="text-button" data-action="goto-task" data-task-id="${it.task}">Go to action ›</button>`:""}</div>`;
+  }).join("");
+  const next=(n.connections||[]).map(c=>{const t=p.nodes[c.to];const label=t?t.title:p.chart.rows.flat().find(x=>typeof x==="object"&&x.group===c.to)?.label;return `<li>${c.label?`<strong>${esc(c.label)}</strong> → `:"→ "}${esc(label||"")}</li>`;}).join("");
+  openSheet({eyebrow:`${TYPE_LABEL[n.type]||""}${n.urgency==="critical"?" · CRITICAL":""}${st?` · ${st.toUpperCase()}`:""}`,title:n.title,html:`
+    ${n.reviewStatus==="draft"?`<div class="warning-box"><strong>Draft — needs source check</strong><p>${esc(n.reviewNote)}</p></div>`:""}
+    <p class="lead">${esc(n.details||n.summary)}</p>
+    ${items?`<h3>Actions</h3><div class="sheet-link-list">${items}</div>`:""}
+    ${next?`<h3>Next</h3><ul class="sheet-next">${next}</ul>`:""}
+    <h3>Evidence basis</h3>${refTags(n.sourceRefs||p.sourceRefs)}`});
+}
+function guidedCheck(key){
+  const pid=flowEmergency;
+  if(key.startsWith("task:")){const tid=key.slice(5);if(!(session?.status==="active"&&session.emergencyId===pid))return;
+    const st=taskState(tid).status;handleTask(tid,st==="done"||st==="ongoing"?"reopen":"done");return;}
+  localChecks.has(key)?localChecks.delete(key):localChecks.add(key);render();
 }
 
 function renderMedications(query=""){
@@ -1086,7 +1680,7 @@ function openEducation(id){
   const x=EDUCATION.find(e=>e.id===id);if(!x)return;
   openSheet({eyebrow:x.kicker,title:x.title,wide:true,html:`<p class="lead">${esc(x.summary)}</p><div class="lesson-sections">${x.sections.map(s=>`<section><h3>${esc(s.h)}</h3>${s.p?`<p>${esc(s.p)}</p>`:""}${s.bullets?`<ul>${s.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}</section>`).join("")}</div>${id==="teamstepps"?refTags(["ahrq-teamstepps"]):""}`});
 }
-function openFlow(id){flowEmergency=id;route="flowcharts";$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
+function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
@@ -1102,7 +1696,7 @@ function showDue(id){
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});closeSheet();render();}
 
 function showAbout(){
-  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
+  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
 
 function openSheet({eyebrow="",title,html,wide=false}){
@@ -1133,8 +1727,14 @@ document.addEventListener("click",e=>{
   if(b.dataset.taskInfo)openTaskInfo(b.dataset.emergencyId,b.dataset.taskInfo);
   if(b.dataset.taskAction)handleTask(b.dataset.taskId,b.dataset.taskAction);
   if(b.dataset.flowSelect){flowEmergency=b.dataset.flowSelect;renderFlowcharts();}
+  if(b.dataset.fview){flowView=b.dataset.fview;renderFlowcharts();}
+  if(b.dataset.fpath){closeSheet();flowEmergency=b.dataset.fpath;navigate("flowcharts");}
+  if(b.dataset.gstep!=null){guidedStep[flowEmergency]=Number(b.dataset.gstep);guidedBranch[flowEmergency]=null;renderFlowcharts();requestAnimationFrame(()=>$(".g-step.current")?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
+  if(b.dataset.gbranch){const p=PATHWAYS[flowEmergency],to=b.dataset.gbranch;const k=p.steps.findIndex(st=>st.nodes.includes(to));if(k>=0){guidedStep[flowEmergency]=k;guidedBranch[flowEmergency]=null;}else guidedBranch[flowEmergency]=to;renderFlowcharts();requestAnimationFrame(()=>$(".g-step.current")?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
+  if(b.dataset.gcheck)guidedCheck(b.dataset.gcheck);
+  if(b.dataset.zoom&&chartCtl){const z=b.dataset.zoom;if(z==="print"){document.body.classList.add("print-chart");window.print();setTimeout(()=>document.body.classList.remove("print-chart"),500);}else if(z==="full")chartCtl.full();else if(z==="fit")chartCtl.fit();else chartCtl.zoom(z);}
   if(b.dataset.medFilter){
-    $(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
+    $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
   }
   if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden)showSimTime();}
@@ -1146,7 +1746,10 @@ document.addEventListener("click",e=>{
   if(a==="close-sheet")closeSheet();
   if(a==="sim-time")showSimTime();
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
-  if(a==="toggle-flow"){const e=EMERGENCIES[session.emergencyId];if(WIDE.matches){flowOpen=!flowOpen;render();}else{openSheet({eyebrow:"FULL PATHWAY",title:e.name,wide:true,html:flowHTML(e,true)});}}
+  // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
+  if(a==="toggle-flow"){if(WIDE.matches){flowOpen=!flowOpen;render();}else{flowEmergency=session.emergencyId;navigate("flowcharts");}}
+  if(a==="open-full-flow"){flowEmergency=session.emergencyId;navigate("flowcharts");}
+  if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
@@ -1168,10 +1771,10 @@ let deferredInstall=null;
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;});
 function applyTextSize(){
   document.documentElement.classList.toggle("text-lg",!!settings.largeText);
-  $("[data-action=toggle-text]").forEach(b=>b.setAttribute("aria-pressed",String(!!settings.largeText)));
+  $$("[data-action=toggle-text]").forEach(b=>b.setAttribute("aria-pressed",String(!!settings.largeText)));
   const st=$("#drawerTextState");if(st)st.textContent=settings.largeText?"On":"Off";
 }
-function openMenu(){const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
+function openMenu(){const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
 function closeMenu(){const d=$("#menuDrawer");d.classList.remove("open");$("[data-action=open-menu]")?.setAttribute("aria-expanded","false");setTimeout(()=>{d.hidden=true;$("#drawerBackdrop").hidden=true;},160);}
 async function shareApp(){
   const url=location.origin+location.pathname.replace(/index\.html$/,"");
@@ -1214,6 +1817,10 @@ store.subscribe(next=>{
   if(suppressStoreNotification||!next||!session||next.id!==session.id)return;
   if((next.revision||0)>(session.revision||0)){session=hydrateSession(next);render();}
 });
+
+// Flowchart nodes: tap or keyboard (SVG groups are not native buttons)
+document.addEventListener("click",e=>{const n=e.target.closest("[data-fnode]");if(!n)return;const host=n.closest("[data-pathway]");if(host)openNodeDetail(host.dataset.pathway,n.dataset.fnode);});
+document.addEventListener("keydown",e=>{if(e.key!=="Enter"&&e.key!==" ")return;const n=e.target.closest?.("g[data-fnode]");if(!n)return;e.preventDefault();const host=n.closest("[data-pathway]");if(host)openNodeDetail(host.dataset.pathway,n.dataset.fnode);});
 
   </script>
 </body>

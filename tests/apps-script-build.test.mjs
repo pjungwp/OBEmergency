@@ -16,3 +16,12 @@ test("Apps Script package builds from the shared UI without a service worker dep
   assert.doesNotMatch(html,/manifest\.webmanifest/);
   assert.doesNotMatch(html,/type="module"/);
 });
+
+test("Apps Script bundle is valid JavaScript (catches $$ / replace mangling)",()=>{
+  execFileSync(process.execPath,[path.join(root,"scripts/build-google-apps-script.mjs")],{cwd:root});
+  const html=fs.readFileSync(path.join(root,"google-apps-script/Index.html"),"utf8");
+  const parts=html.split("<script>");const main=parts[parts.length-1].split("</script>")[0];
+  assert.doesNotThrow(()=>new Function(main));
+  assert.match(main,/const \$\$ =/);
+  assert.match(main,/PATHWAYS/);
+});
