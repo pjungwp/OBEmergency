@@ -8,35 +8,60 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="preload" as="image" type="image/webp" href="img/aurora-900.webp" imagesrcset="img/aurora-900.webp 900w, img/aurora-1600.webp 1600w" imagesizes="(min-width:800px) 800px, 100vw">
+  <script>try{if(JSON.parse(localStorage.getItem("ob-emergency-assist.settings.v1")||"{}").largeText)document.documentElement.classList.add("text-lg");}catch{}</script>
   <link rel="stylesheet" href="styles.css">
   <title>OB Emergency Assist</title>
 </head>
 <body>
   <div id="app" class="app-shell">
     <header class="app-header">
-      <button id="homeButton" class="brand-button" aria-label="Go to emergency home">
-        <span class="brand-mark" aria-hidden="true">OB</span>
-        <span><strong>Emergency Assist</strong><small id="headerSubtitle">Immediate guidance</small></span>
+      <button class="hdr-btn square" data-action="open-menu" aria-label="Open menu" aria-controls="menuDrawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <button id="connectionButton" class="status-pill" aria-label="Connection and offline status">
-        <span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span>
-      </button>
+      <div class="hdr-actions">
+        <button class="hdr-btn pill" data-action="toggle-text" aria-pressed="false" title="Larger text" aria-label="Larger text">
+          <span class="aa" aria-hidden="true">A<b>A</b></span><span class="lbl">Larger text</span>
+        </button>
+        <button class="hdr-btn pill" data-action="share" title="Share this" aria-label="Share this">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2zM18 14h2v2h-2z"/></svg><span class="lbl">Share this</span>
+        </button>
+        <button class="hdr-btn pill primary" data-action="install" title="Download app" aria-label="Download app">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl lbl-keep">Download app</span>
+        </button>
+      </div>
+      <button class="hdr-avatar" data-action="show-about" aria-label="About OB Emergency Assist" title="About">OB</button>
     </header>
 
     <div id="clinicalNotice" class="clinical-notice">
-      <strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.
+      <span><strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.</span>
       <button data-action="dismiss-notice" aria-label="Dismiss notice">×</button>
     </div>
 
     <main id="main" tabindex="-1"></main>
 
     <nav class="bottom-nav" aria-label="Primary navigation">
-      <button data-nav="emergency" class="nav-item active"><span aria-hidden="true">✚</span><small>Emergency</small></button>
-      <button data-nav="flowcharts" class="nav-item"><span aria-hidden="true">↳</span><small>Flowcharts</small></button>
-      <button data-nav="medications" class="nav-item"><span aria-hidden="true">Rx</span><small>Medications</small></button>
-      <button data-nav="education" class="nav-item"><span aria-hidden="true">i</span><small>Education</small></button>
+      <button data-nav="emergency" class="nav-item active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z"/></svg><small>Emergency</small></button>
+      <button data-nav="flowcharts" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg><small>Flowcharts</small></button>
+      <button data-nav="medications" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg><small>Medications</small></button>
+      <button data-nav="education" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1 6-1 9 1.5 3-2.5 6-2.5 9-1.5V19c-3-1-6-1-9 1.5C9 18 6 18 3 19z"/><path d="M12 7v13.5"/></svg><small>Education</small></button>
     </nav>
   </div>
+
+  <div id="drawerBackdrop" class="sheet-backdrop" data-action="close-menu" hidden></div>
+  <nav id="menuDrawer" class="menu-drawer" aria-label="Main menu" hidden>
+    <div class="drawer-head"><span class="hdr-avatar" aria-hidden="true">OB</span><div><strong>OB Emergency Assist</strong><small>Ready when seconds matter.</small></div><button class="icon-button" data-action="close-menu" aria-label="Close menu">×</button></div>
+    <button data-nav="emergency">Emergency pathways</button>
+    <button data-nav="flowcharts">Flowcharts</button>
+    <button data-nav="medications">Medications</button>
+    <button data-nav="education">Education &amp; TeamSTEPPS</button>
+    <a href="sim-master.html">Sim Master <small>facilitator, on a laptop</small></a>
+    <hr>
+    <button data-action="toggle-text">Larger text <small id="drawerTextState">Off</small></button>
+    <button data-action="share">Share this app</button>
+    <button data-action="install">Download app</button>
+    <button data-action="show-about">About &amp; sources</button>
+  </nav>
 
   <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
   <aside id="infoSheet" class="info-sheet" aria-modal="true" role="dialog" aria-labelledby="sheetTitle" hidden>

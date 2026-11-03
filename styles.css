@@ -147,3 +147,81 @@ body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-he
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 .sim-master-link{background:#e3f5f2}.sim-master-link strong{color:#0f6f66}.sim-master-link small{color:#2f6f68}.sim-master-link a{white-space:nowrap;align-self:center;text-decoration:none;font-size:15px}
+
+/* =====================================================================
+   CLINICAL AURORA — header, hero and landing (v0.12)
+   ===================================================================== */
+/* Header: compact, sticky; controls only (the title lives in the hero) */
+.app-header{height:60px;padding:8px 12px;gap:8px;justify-content:space-between;background:linear-gradient(180deg,#fdf8f1,#f8efe3);border-bottom:1px solid #eadfce;backdrop-filter:none}
+.hdr-actions{display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end}
+.hdr-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;border-radius:999px;border:1.5px solid #c9d4e5;background:#fff;color:var(--navy);font-size:16px;font-weight:800;padding:0 14px;white-space:nowrap}
+.hdr-btn.square{border-radius:12px;padding:0;width:44px;flex:none;border-color:#e2d6c4}
+.hdr-btn.primary{background:linear-gradient(180deg,#2f6fe0,#1d55c4);border-color:#1d55c4;color:#fff;box-shadow:0 4px 12px rgba(29,85,196,.28)}
+.hdr-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hdr-btn .aa{font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1}.hdr-btn .aa b{font-size:20px}
+.hdr-btn[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.hdr-avatar{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:var(--navy);color:#fff;font-weight:900;font-size:14px;box-shadow:0 0 0 1.5px #c9d4e5;display:grid;place-items:center}
+@media(max-width:559px){.hdr-btn .lbl:not(.lbl-keep){display:none}.hdr-btn:not(.primary){padding:0;width:44px}}
+@media(max-width:399px){.hdr-btn .lbl{display:none}.hdr-btn{padding:0;width:44px}}
+.clinical-notice{align-items:center;justify-content:space-between;padding:6px 8px 6px 12px;gap:8px;text-align:left}
+.clinical-notice button{position:static;flex:none;width:36px;height:36px;font-size:22px}
+/* Drawer */
+.menu-drawer{position:fixed;z-index:95;top:0;left:0;bottom:0;width:min(86vw,330px);background:#fff;box-shadow:12px 0 40px rgba(5,15,35,.25);transform:translateX(-102%);transition:transform .16s ease;display:flex;flex-direction:column;padding:10px 10px calc(14px + var(--safe-bottom));overflow:auto}
+.menu-drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:4px 4px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.drawer-head>div{flex:1;display:flex;flex-direction:column}.drawer-head strong{font-size:17px;color:var(--navy)}.drawer-head small{font-size:14px;color:var(--muted)}
+.menu-drawer>button,.menu-drawer>a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;padding:0 12px;border:0;border-radius:12px;background:transparent;text-align:left;font-size:17px;font-weight:700;color:var(--ink);text-decoration:none}
+.menu-drawer>button:hover,.menu-drawer>a:hover,.menu-drawer>button.active{background:#eef3fa;color:var(--navy)}
+.menu-drawer small{font-size:14px;color:var(--muted);font-weight:600}
+.menu-drawer hr{border:0;border-top:1px solid var(--line);margin:6px 4px;width:calc(100% - 8px)}
+.install-steps{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}.install-steps h3{margin:0 0 6px;font-size:16px}.install-steps ol{margin:0;padding-left:20px;font-size:16px;line-height:1.5}
+/* Hero */
+.hero-aurora{position:relative;height:132px;overflow:hidden;background:linear-gradient(120deg,#0a2a6b,#0b4f8a 55%,#0f8b98)}
+.hero-aurora picture,.hero-aurora img{position:absolute;inset:0;width:100%;height:100%}
+.hero-aurora img{object-fit:cover;object-position:84% 50%}
+.hero-copy{position:relative;z-index:1;height:100%;max-width:60%;padding:0 16px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.hero-copy h1{margin:0;color:#fff;font-size:26px;line-height:1.08;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,10,40,.45)}
+.hero-copy p{margin:0;color:#d6ecff;font-size:16px;font-weight:600;text-shadow:0 1px 8px rgba(0,10,40,.5)}
+.hero-status{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:700;color:#e6f4ff;background:rgba(5,20,60,.35);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:3px 10px}
+.hero-status .status-dot{box-shadow:0 0 0 3px rgba(41,168,107,.3)}
+@media(min-width:600px){.hero-aurora{height:170px}.hero-copy{padding:0 26px;max-width:58%}.hero-copy h1{font-size:34px}.hero-copy p{font-size:18px}}
+@media(min-width:800px){.hero-aurora{height:190px}}
+/* Landing */
+.home-label{margin:14px 16px 8px;font-size:14px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#4a5a72}
+.emergency-grid{padding:0 12px;gap:10px;grid-template-columns:1fr}
+.emergency-grid .emergency-card{min-height:86px;padding:12px 14px;grid-template-columns:56px minmax(0,1fr) 16px;gap:14px;border-radius:16px;border-left-width:6px;box-shadow:0 4px 14px rgba(11,33,73,.06)}
+.emergency-grid .emergency-card:first-child{grid-column:auto}
+.emergency-card.crimson{background:linear-gradient(90deg,#fff5f6,#fff 70%)}.emergency-card.amber{background:linear-gradient(90deg,#fff9ec,#fff 70%)}.emergency-card.violet{background:linear-gradient(90deg,#f7f3ff,#fff 70%)}
+.em-icon,.em-icon img{display:block;width:56px;height:56px;border-radius:14px}
+.em-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.emergency-grid .emergency-card strong{font-size:20px;line-height:1.15}
+.emergency-grid .emergency-card small{font-size:16px;line-height:1.3}
+@media(min-width:760px){.emergency-grid{grid-template-columns:repeat(3,1fr)}.emergency-grid .emergency-card{grid-template-columns:56px minmax(0,1fr);align-content:start}.emergency-grid .emergency-card .chevron{display:none}}
+.home-foot{margin:14px 12px 6px;background:#e3f5f2;padding:12px 14px;align-items:center}
+.home-foot strong{color:#0f6f66;font-size:15px}.home-foot small{color:#2f6f68;font-size:14px}
+.home-foot a{white-space:nowrap;text-decoration:none;font-size:15px}
+.home-meta{margin:6px 16px 14px;font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.home-meta .text-button{font-size:14px;min-height:36px}
+.preview-title .em-icon,.preview-title .em-icon img{width:64px;height:64px;border-radius:16px}
+/* Bottom nav icons */
+.nav-item svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item small{font-size:13px}
+/* Larger text: scales the whole interface, cockpit and sheets included */
+html.text-lg{zoom:1.15}
+/* Hero grows with its text (larger text, narrow phones) instead of clipping */
+.hero-aurora{height:auto;min-height:132px;display:flex;align-items:center}
+.hero-copy{height:auto;padding-top:14px;padding-bottom:14px;max-width:64%}
+.hero-copy h1{font-size:clamp(22px,6.6vw,26px)}
+@media(min-width:600px){.hero-aurora{min-height:170px}.hero-copy h1{font-size:34px}}
+@media(min-width:800px){.hero-aurora{min-height:190px}}
+.home-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.home-label .hero-status{margin:0;color:#2f5f3f;background:#eaf7f1;border-color:#bfe6d1;text-transform:none;letter-spacing:0;font-size:13px}
+/* Larger text on small phones: two-row cockpit header and 2x2 tools — never smaller type */
+@media(max-width:400px){
+  html.text-lg .cockpit-row{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"id sound end" "clock clock clock";row-gap:2px}
+  html.text-lg .cockpit-id{grid-area:id}html.text-lg .cockpit-icon{grid-area:sound}html.text-lg .cockpit-end{grid-area:end}
+  html.text-lg .cockpit-clock{grid-area:clock;flex-direction:row;align-items:baseline;justify-content:center;gap:8px}
+  html.text-lg .cockpit-tabs{grid-template-columns:1fr 1fr}
+  html.text-lg .task-actions{flex-wrap:wrap}html.text-lg .task-actions .card-primary{flex:1 1 100%}
+}
+.home-label .hero-status{white-space:nowrap;flex:none}.home-label>span:first-child{min-width:0}

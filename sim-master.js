@@ -256,5 +256,12 @@ document.addEventListener("input",ev=>{
 });
 window.addEventListener("beforeunload",()=>{if(run?.running){run.elapsedBase=elapsed();run.lastTickAt=Date.now();save();}});
 
+// Larger text shares the main app's setting.
+const SETTINGS_KEY="ob-emergency-assist.settings.v1";
+function textSetting(){try{return JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");}catch{return {};}}
+function syncText(){const on=!!textSetting().largeText;document.documentElement.classList.toggle("text-lg",on);$("#smText").setAttribute("aria-pressed",String(on));}
+$("#smText").addEventListener("click",()=>{const s=textSetting();s.largeText=!s.largeText;try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(s));}catch{}syncText();});
+syncText();
+
 // A running scenario keeps its clock across a page reload (elapsed is derived from wall time).
 render();startTick();

@@ -13,10 +13,16 @@ const SHORT_TASKS = {
   "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization."
 };
 const SHORT_SUMMARIES = {
-  pph:"Bleeding · resuscitation · 4 Ts",
-  hypertension:"Confirm · treat · reassess",
-  eclampsia:"Protect · magnesium · airway"
+  pph:"Resuscitation · 4 Ts · MTP",
+  htn:"Treat urgently · Maternal safety",
+  eclampsia:"Stabilize · Magnesium · Airway"
 };
+// Emergency icons (cropped from the supplied icon set). They identify the pathway at a glance.
+const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia"};
+function emergencyIcon(id,size=56){
+  const n=EMERGENCY_ICONS[id];if(!n)return "";
+  return `<picture class="em-icon"><source type="image/webp" srcset="img/${n}.webp"><img src="img/${n}.png" alt="" width="${size}" height="${size}" decoding="async"></picture>`;
+}
 
 let route = "emergency";
 let selectedEmergency = null;
@@ -99,39 +105,40 @@ function render(){
 }
 
 function updateHeader(){
-  const sub=$("#headerSubtitle");
+  const sub=$("#headerSubtitle");if(!sub)return;
   sub.textContent=session?.status==="active"?`${session.mode==="simulation"?"Simulation":"Clinical"} · ${EMERGENCIES[session.emergencyId].short}`:"Immediate guidance";
 }
 
 function renderEmergency(){
   if(session?.status==="active") return renderActiveSession();
   if(selectedEmergency) return renderEmergencyPreview(selectedEmergency);
+  // Hero: text-free Clinical Aurora art with HTML title overlay (kept clear of the silhouette on the right).
   main.innerHTML=`
-    <section class="hero">
-      <p class="eyebrow">I'M IN AN EMERGENCY—WHAT DO I DO?</p>
-      <h1>Choose an emergency</h1>
-      <p>Tap once. See what to do now.</p>
+    <section class="hero-aurora">
+      <picture>
+        <source type="image/webp" srcset="img/aurora-900.webp 900w, img/aurora-1600.webp 1600w" sizes="(min-width:800px) 800px, 100vw">
+        <img src="img/aurora-900.jpg" srcset="img/aurora-900.jpg 900w, img/aurora-1600.jpg 1600w" sizes="(min-width:800px) 800px, 100vw" alt="" width="1600" height="533" fetchpriority="high">
+      </picture>
+      <div class="hero-copy">
+        <h1>OB Emergency Assist</h1>
+        <p>Ready when seconds matter.</p>
+      </div>
     </section>
-    <section class="emergency-grid" aria-label="Emergency choices">
+    <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
+    <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
         <button class="emergency-card ${e.accent}" data-emergency="${e.id}">
-          <span class="emergency-icon" aria-hidden="true">${e.icon}</span>
-          <span><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span>
+          ${emergencyIcon(e.id)}
+          <span class="em-copy"><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span>
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <section class="quick-strip">
-      <button data-nav-jump="medications"><span>Rx</span><strong>Medications</strong><small>Dose · caution · timer</small></button>
-      <button data-education="teamstepps"><span>◎</span><strong>TeamSTEPPS</strong><small>Roles · huddle · check-back</small></button>
-    </section>
     <section class="home-foot">
-      <div><strong>Works offline after first load</strong><small>This prototype stores sessions only on this device.</small></div>
-      <button class="text-button" data-action="show-about">About & sources</button>
-    </section>
-    <section class="home-foot sim-master-link">
-      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Open it on a laptop.</small></div>
+      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Best on a laptop.</small></div>
       <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
-    </section>`;
+    </section>
+    <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
+  updateConnectivity(true);
 }
 
 function renderEmergencyPreview(id){
@@ -139,7 +146,7 @@ function renderEmergencyPreview(id){
   main.innerHTML=`
     <section class="preview-head ${e.accent}">
       <button class="back-button" data-action="back-home">‹ Emergencies</button>
-      <div class="preview-title"><span class="emergency-icon">${e.icon}</span><div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
+      <div class="preview-title">${emergencyIcon(e.id,64)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
     </section>
     <section class="preview-actions">
       <button class="button primary large" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>
@@ -589,12 +596,50 @@ document.addEventListener("click",e=>{
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
 $("#sheetBackdrop").addEventListener("click",closeSheet);
-$("#homeButton").addEventListener("click",()=>navigate("emergency"));
-
-function updateConnectivity(){
-  const online=navigator.onLine;$("#connectionDot").classList.toggle("offline",!online);$("#connectionLabel").textContent=online?"Ready":"Offline";if(!online)toast("Offline · this device continues locally","alert");
+// ---------- Header controls ----------
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;});
+function applyTextSize(){
+  document.documentElement.classList.toggle("text-lg",!!settings.largeText);
+  $$("[data-action=toggle-text]").forEach(b=>b.setAttribute("aria-pressed",String(!!settings.largeText)));
+  const st=$("#drawerTextState");if(st)st.textContent=settings.largeText?"On":"Off";
 }
-window.addEventListener("online",updateConnectivity);window.addEventListener("offline",updateConnectivity);
+function openMenu(){const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
+function closeMenu(){const d=$("#menuDrawer");d.classList.remove("open");$("[data-action=open-menu]")?.setAttribute("aria-expanded","false");setTimeout(()=>{d.hidden=true;$("#drawerBackdrop").hidden=true;},160);}
+async function shareApp(){
+  const url=location.origin+location.pathname.replace(/index\.html$/,"");
+  const data={title:"OB Emergency Assist",text:"Phone-first OB emergency guidance, timers and simulation.",url};
+  if(navigator.share){try{await navigator.share(data);}catch{}return;}
+  try{await navigator.clipboard.writeText(url);toast("Link copied");}
+  catch{openSheet({eyebrow:"SHARE",title:"Copy this link",html:`<p class="lead">${esc(url)}</p>`});}
+}
+function installApp(){
+  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone){toast("Already installed on this device");return;}
+  if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.finally(()=>{deferredInstall=null;});return;}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  openSheet({eyebrow:"DOWNLOAD APP",title:"Add to your home screen",html:`
+    <p class="lead">Installing keeps the app one tap away and available offline after the first load.</p>
+    <div class="install-steps ${ios?"":"dim-ios"}"><h3>iPhone / iPad (Safari)</h3><ol><li>Tap the Share button.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>.</li></ol></div>
+    <div class="install-steps"><h3>Android (Chrome)</h3><ol><li>Tap the ⋮ menu.</li><li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li></ol></div>
+    <div class="install-steps"><h3>Laptop (Chrome / Edge)</h3><ol><li>Click the install icon in the address bar, or the browser menu → <strong>Install</strong>.</li></ol></div>`});
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");if(!b)return;const a=b.dataset.action;
+  if(a==="open-menu")openMenu();
+  if(a==="close-menu")closeMenu();
+  if(a==="toggle-text"){settings.largeText=!settings.largeText;saveSettings();applyTextSize();toast(settings.largeText?"Larger text on":"Larger text off");}
+  if(a==="share"){closeMenu();shareApp();}
+  if(a==="install"){closeMenu();installApp();}
+  if(a==="show-about"&&!$("#menuDrawer").hidden)closeMenu();
+});
+document.addEventListener("click",e=>{const b=e.target.closest("#menuDrawer [data-nav], #menuDrawer a");if(b)closeMenu();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#menuDrawer").hidden)closeMenu();});
+applyTextSize();
+
+function updateConnectivity(quiet=false){
+  const online=navigator.onLine;$("#connectionDot")?.classList.toggle("offline",!online);const l=$("#connectionLabel");if(l)l.textContent=online?"Ready":"Offline";if(!online&&!quiet)toast("Offline · this device continues locally","alert");
+}
+window.addEventListener("online",()=>updateConnectivity());window.addEventListener("offline",()=>updateConnectivity());
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session?.status==="active"){checkMilestones();render();}});
 
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));

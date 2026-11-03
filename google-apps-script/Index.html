@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b2149">
   <meta name="description" content="Phone-first obstetric emergency guidance, timers, flowcharts, medications, and simulation.">
+  <link rel="preload" as="image" type="image/webp" href="img/aurora-900.webp" imagesrcset="img/aurora-900.webp 900w, img/aurora-1600.webp 1600w" imagesizes="(min-width:800px) 800px, 100vw">
+  <script>try{if(JSON.parse(localStorage.getItem("ob-emergency-assist.settings.v1")||"{}").largeText)document.documentElement.classList.add("text-lg");}catch{}</script>
   <style>:root{--navy:#0b2149;--navy-2:#173d70;--ink:#132035;--muted:#607087;--line:#dce3ec;--paper:#f5f7fa;--white:#fff;--crimson:#bc2e47;--crimson-soft:#fff0f2;--amber:#bb6b00;--amber-soft:#fff6df;--violet:#6546b8;--violet-soft:#f3efff;--teal:#0e8077;--teal-soft:#e8f8f5;--shadow:0 12px 34px rgba(11,33,73,.12);--radius:18px;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}html{background:#e9edf3}body{margin:0;color:var(--ink);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--paper);font-size:16px}.app-shell{width:min(100%,800px);min-height:100vh;margin:auto;background:var(--paper);padding-bottom:calc(84px + var(--safe-bottom));box-shadow:0 0 45px rgba(11,33,73,.09)}button,input{font:inherit}button{cursor:pointer}.app-header{height:68px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:30;backdrop-filter:blur(18px)}.brand-button{border:0;background:transparent;display:flex;align-items:center;gap:10px;text-align:left;padding:0;color:var(--navy)}.brand-button>span:last-child{display:flex;flex-direction:column}.brand-button strong{font-size:16px}.brand-button small{font-size:11px;color:var(--muted);font-weight:600;margin-top:2px}.brand-mark{width:39px;height:39px;display:grid;place-items:center;border-radius:12px;background:var(--navy);color:white;font-size:12px;font-weight:900;letter-spacing:.05em}.status-pill{display:flex;align-items:center;gap:7px;border:1px solid var(--line);background:white;border-radius:999px;padding:8px 11px;color:var(--muted);font-size:12px;font-weight:800}.status-dot{width:8px;height:8px;border-radius:50%;background:#29a86b;box-shadow:0 0 0 3px #dbf5e8}.status-dot.offline{background:#d27700;box-shadow:0 0 0 3px #fff0cf}.clinical-notice{background:#fff2cf;color:#674300;padding:9px 14px;font-size:12px;line-height:1.35;display:flex;justify-content:center;gap:5px;position:relative}.clinical-notice button{position:absolute;right:9px;top:4px;border:0;background:transparent;font-size:22px;color:#8b650b}.clinical-notice strong{font-weight:900}.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,800px);height:calc(72px + var(--safe-bottom));padding:7px 8px var(--safe-bottom);display:grid;grid-template-columns:repeat(4,1fr);background:rgba(255,255,255,.97);border-top:1px solid var(--line);z-index:35;backdrop-filter:blur(18px)}.nav-item{border:0;background:transparent;color:#718096;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:12px;font-weight:800}.nav-item>span{font-size:19px;line-height:1}.nav-item small{font-size:11px}.nav-item.active{color:var(--navy);background:#eef3fa}.hero{padding:30px 20px 20px;background:linear-gradient(160deg,#fff 0%,#eef4fb 100%)}.eyebrow{margin:0 0 7px;font-size:11px;font-weight:900;letter-spacing:.13em;color:var(--navy-2)}h1,h2,h3,p{margin-top:0}.hero h1,.page-head h1,.preview-head h1{font-size:clamp(30px,7vw,45px);line-height:1.03;letter-spacing:-.04em;margin-bottom:10px;color:var(--navy)}.hero p:last-child,.page-head>p:last-child{color:var(--muted);line-height:1.5;margin:0;max-width:600px}.emergency-grid{padding:14px;display:grid;gap:11px}.emergency-card{border:1px solid var(--line);border-left:6px solid;background:white;border-radius:17px;padding:17px 15px;display:grid;grid-template-columns:48px 1fr 20px;gap:12px;align-items:center;text-align:left;box-shadow:0 5px 14px rgba(11,33,73,.04)}.emergency-card:active{transform:scale(.99)}.emergency-card.crimson{border-left-color:var(--crimson)}.emergency-card.amber{border-left-color:var(--amber)}.emergency-card.violet{border-left-color:var(--violet)}.emergency-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;font-weight:900}.crimson .emergency-icon{background:var(--crimson-soft);color:var(--crimson)}.amber .emergency-icon{background:var(--amber-soft);color:var(--amber)}.violet .emergency-icon{background:var(--violet-soft);color:var(--violet)}.emergency-card>span:nth-child(2){display:flex;flex-direction:column;gap:5px}.emergency-card strong{font-size:19px;color:var(--ink)}.emergency-card small{font-size:13px;color:var(--muted);line-height:1.35}.chevron{font-size:28px;color:#90a0b5}.quick-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:2px 14px 14px}.quick-strip button{border:1px solid var(--line);background:white;border-radius:15px;padding:14px;text-align:left;display:grid;grid-template-columns:34px 1fr;gap:2px 8px}.quick-strip button>span{grid-row:1/3;width:30px;height:30px;display:grid;place-items:center;border-radius:10px;background:#eaf0f8;color:var(--navy);font-weight:900}.quick-strip strong{font-size:13px}.quick-strip small{font-size:11px;color:var(--muted)}.home-foot{margin:5px 14px;padding:15px;border-radius:15px;background:#eaf7f1;display:flex;justify-content:space-between;gap:12px}.home-foot>div{display:flex;flex-direction:column;gap:3px}.home-foot strong{font-size:12px;color:#176341}.home-foot small{font-size:11px;color:#477566}.text-button{border:0;background:transparent;color:var(--navy-2);font-size:12px;font-weight:900;padding:0}.preview-head{padding:15px 18px 23px;background:white;border-bottom:1px solid var(--line)}.back-button{border:0;background:transparent;padding:0 0 20px;color:var(--navy-2);font-size:13px;font-weight:800}.preview-title{display:flex;gap:14px;align-items:flex-start}.preview-title h1{font-size:31px;margin-bottom:8px}.preview-title p:last-child{color:var(--muted);line-height:1.4;margin:0}.preview-actions{padding:16px;display:grid;grid-template-columns:1fr 1fr;gap:9px}.button{border:0;border-radius:12px;padding:13px 16px;font-weight:900}.button.primary{background:var(--navy);color:white}.button.secondary{background:#e8eef6;color:var(--navy)}.button.simulation{background:var(--teal);color:white}.button.ghost{background:white;border:1px solid var(--line);color:var(--navy)}.button.danger{background:#a51f35;color:white}.button.large{min-height:52px}.button.full{width:100%;margin:8px 0}.button.compact{padding:9px 12px;font-size:12px}.preview-actions .full{grid-column:1/-1;margin:0}.preview-list{padding:4px 15px 18px}.section-heading h2{font-size:21px;letter-spacing:-.02em}.preview-task{position:relative;background:white;border:1px solid var(--line);border-radius:14px;padding:14px 48px 14px 14px;margin:9px 0}.preview-task>span{font-size:9px;letter-spacing:.12em;color:var(--muted);font-weight:900}.preview-task strong{display:block;font-size:15px;line-height:1.35;margin-top:4px}.info-dot{width:30px;height:30px;border-radius:50%;border:1px solid #cbd6e4;background:white;color:var(--navy);font-family:Georgia,serif;font-weight:900}.preview-task .info-dot{position:absolute;right:11px;top:50%;transform:translateY(-50%)}.source-band{margin:5px 15px 18px;padding:14px;background:white;border:1px solid var(--line);border-radius:14px}.source-band>span{display:block;font-size:10px;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}.source-band>small{display:block;color:var(--muted);font-size:11px;line-height:1.4;margin-top:8px}.ref-tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.ref-tags span{background:#edf2f8;color:var(--navy);border-radius:999px;padding:5px 8px;font-size:10px;font-weight:800}.session-banner{padding:8px 15px;color:white;display:flex;align-items:center;justify-content:space-between}.session-banner.clinical{background:#8c1f32}.session-banner.simulation{background:var(--teal)}.session-banner>div{display:flex;flex-direction:column}.session-banner span{font-size:9px;letter-spacing:.14em;font-weight:900;opacity:.85}.session-banner strong{font-size:14px}.text-button.light{color:white}.timer-console{background:white;padding:15px;display:grid;grid-template-columns:1.35fr 1fr auto;align-items:center;border-bottom:1px solid var(--line);box-shadow:0 7px 20px rgba(11,33,73,.07);position:sticky;top:68px;z-index:20}.timer-console.crimson{border-top:4px solid var(--crimson)}.timer-console.amber{border-top:4px solid var(--amber)}.timer-console.violet{border-top:4px solid var(--violet)}.main-clock,.next-clock{display:flex;flex-direction:column}.main-clock small,.next-clock small{font-size:9px;color:var(--muted);font-weight:900;letter-spacing:.12em}.main-clock strong{font-variant-numeric:tabular-nums;font-size:27px;letter-spacing:.02em}.next-clock strong{font-variant-numeric:tabular-nums;font-size:16px;margin-top:5px}.alarm-button{border:1px solid var(--line);background:#f3f5f8;border-radius:11px;padding:7px 9px;display:flex;flex-direction:column;align-items:center;font-size:16px}.alarm-button small{font-size:9px;font-weight:800;color:var(--muted)}.alarm-button.on{background:#e8f7f0;border-color:#a4dec2}.sim-controls{padding:9px 12px;background:#dff6f2;display:flex;gap:6px;overflow-x:auto;align-items:center;border-bottom:1px solid #b9e2dc}.sim-controls span{font-size:9px;font-weight:900;letter-spacing:.1em;color:#126b63;white-space:nowrap}.sim-controls button{border:1px solid #9bcfc7;background:white;color:#126b63;border-radius:9px;padding:7px 9px;white-space:nowrap;font-size:11px;font-weight:900}.due-panel{background:#fff2cf;padding:12px 14px;border-bottom:1px solid #e4c66e}.due-panel>strong{font-size:11px;color:#6a4800;text-transform:uppercase}.due-panel button{width:100%;border:0;background:white;margin-top:7px;border-radius:10px;padding:10px;text-align:left;font-weight:800;display:flex;justify-content:space-between}.due-panel button span{font-size:11px;color:#a76400}.active-toolbar{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 12px}.active-toolbar button{border:1px solid var(--line);background:white;border-radius:11px;padding:10px 5px;font-size:12px;color:var(--navy);display:flex;align-items:center;justify-content:center;gap:4px}.active-toolbar button>span{background:var(--navy);color:white;border-radius:999px;min-width:17px;height:17px;display:grid;place-items:center;font-size:9px}.task-workspace{padding:1px 12px}.task-group h2{font-size:10px;letter-spacing:.14em;color:var(--muted);margin:15px 3px 7px}.task-card{background:white;border:1px solid var(--line);border-left:5px solid #7e8ba0;border-radius:15px;margin-bottom:9px;padding:13px;display:grid;grid-template-columns:1fr auto;gap:9px;box-shadow:0 3px 10px rgba(11,33,73,.035)}.task-card.critical{border-left-color:#c72f48}.task-card.high{border-left-color:#d78300}.task-card.progress{background:#fffdf5;border-color:#e5c874}.task-card.ongoing{background:#edf8f5;border-color:#9fd4ca}.task-status{font-size:9px;letter-spacing:.11em;font-weight:900;color:var(--muted);margin-bottom:5px}.task-card.progress .task-status{color:#9a6300}.task-card.ongoing .task-status{color:#13776d}.task-card h3{font-size:16px;line-height:1.34;margin:0}.task-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:7px;border-top:1px solid #e8edf3;padding-top:9px}.completed-panel{margin:14px 12px 20px;border:1px solid var(--line);border-radius:14px;background:white;overflow:hidden}.completed-panel>button{border:0;background:white;width:100%;padding:14px;display:flex;justify-content:space-between}.completed-panel>button span{color:var(--muted);font-size:12px}.completed-item{display:flex;gap:10px;justify-content:space-between;padding:11px 14px;border-top:1px solid var(--line)}.completed-item>div{display:flex;flex-direction:column}.completed-item strong{font-size:12px}.completed-item small{font-size:10px;color:var(--muted);margin-top:3px}.completed-item button{border:0;background:#eef3f8;color:var(--navy);border-radius:8px;font-size:10px;font-weight:800}.page-head{padding:27px 18px 18px;background:white;border-bottom:1px solid var(--line)}.page-head h1{font-size:34px}.segmented{display:flex;padding:4px;border:1px solid var(--line);border-radius:13px;background:white}.emergency-tabs{margin:13px;overflow:auto}.segmented button{border:0;background:transparent;border-radius:9px;padding:10px 12px;color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;flex:1}.segmented button.active{background:var(--navy);color:white}.flowchart{margin:0 13px 15px;background:white;border:1px solid var(--line);border-radius:18px;overflow:hidden}.flowchart-head{padding:16px;display:flex;align-items:center;gap:11px;background:#edf2f8}.flowchart-head>span{font-size:24px}.flowchart-head>div{flex:1}.flowchart-head small{font-size:9px;font-weight:900;letter-spacing:.1em;color:var(--muted)}.flowchart-head h2{font-size:18px;margin:2px 0 0}.flowchart-head button{border:0;background:white;color:var(--navy);font-size:10px;font-weight:900;border-radius:9px;padding:8px}.flow-track{padding:16px}.flow-node{border:2px solid #aab8ca;border-radius:13px;padding:13px;display:flex;gap:11px}.flow-node>span{width:28px;height:28px;border-radius:50%;background:#e7edf5;display:grid;place-items:center;font-size:11px;font-weight:900;flex:none}.flow-node h3{font-size:15px;margin-bottom:4px}.flow-node p{font-size:12px;color:var(--muted);line-height:1.45;margin:0}.flow-node.critical{border-color:#bd2c45;background:#fff3f5}.flow-node.decision{border-color:#d58b0a;background:#fff9eb}.flow-node.action{border-color:#1a887b;background:#effaf8}.flow-arrow{text-align:center;color:#78889e;font-size:23px;height:31px}.search-box{margin:14px;display:flex;align-items:center;gap:8px;background:white;border:1px solid var(--line);border-radius:13px;padding:0 12px}.search-box input{border:0;outline:0;background:transparent;padding:13px 0;width:100%}.filter-chips{display:flex;gap:6px;padding:0 14px 12px;overflow-x:auto}.filter-chips button{border:1px solid var(--line);background:white;border-radius:999px;padding:7px 10px;font-size:10px;font-weight:800;white-space:nowrap}.filter-chips button.active{background:var(--navy);color:white}.med-list{padding:0 14px 18px;display:grid;gap:9px}.med-card{border:1px solid var(--line);border-left:5px solid;background:white;border-radius:14px;padding:14px;display:flex;justify-content:space-between;text-align:left}.med-card.crimson{border-left-color:var(--crimson)}.med-card.amber{border-left-color:var(--amber)}.med-card.violet{border-left-color:var(--violet)}.med-card>div{display:flex;flex-direction:column}.med-card small{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:900}.med-card strong{font-size:16px;margin:4px 0}.med-card p{font-size:12px;line-height:1.4;color:var(--muted);margin:0;max-width:620px}.med-card>span{font-size:25px;color:#8797aa}.education-grid{padding:14px;display:grid;gap:10px}.education-card{border:1px solid var(--line);border-top:5px solid;background:white;border-radius:16px;padding:15px;text-align:left}.education-card.navy{border-top-color:var(--navy)}.education-card.crimson{border-top-color:var(--crimson)}.education-card.amber{border-top-color:var(--amber)}.education-card.violet{border-top-color:var(--violet)}.education-card.teal{border-top-color:var(--teal)}.education-card small{font-size:9px;letter-spacing:.11em;color:var(--muted);font-weight:900}.education-card strong{display:block;font-size:17px;margin:5px 0}.education-card p{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:9px}.education-card>span{font-size:11px;color:var(--navy-2);font-weight:900}.references{padding:15px}.reference-list article{background:white;border:1px solid var(--line);border-radius:13px;padding:13px;margin-bottom:8px;display:flex;gap:10px;justify-content:space-between}.reference-list article>div{display:flex;flex-direction:column}.reference-list strong{font-size:13px}.reference-list small{font-size:10px;color:var(--muted);margin-top:3px}.reference-list p{font-size:11px;color:var(--muted);line-height:1.35;margin:7px 0 0}.reference-list a,.reference-list article>span{font-size:10px;color:var(--navy-2);font-weight:900;white-space:nowrap}.version-card{padding:15px;border-radius:14px;background:var(--navy);color:white;margin-top:14px}.version-card strong,.version-card span{display:block}.version-card span{font-size:11px;opacity:.75;margin-top:3px}.version-card p{font-size:11px;line-height:1.45;margin:11px 0 0;opacity:.85}.sheet-backdrop{position:fixed;inset:0;background:rgba(5,15,35,.55);z-index:80}.info-sheet{position:fixed;z-index:90;left:50%;bottom:0;transform:translate(-50%,105%);width:min(100%,800px);max-height:88vh;background:white;border-radius:22px 22px 0 0;padding-bottom:var(--safe-bottom);box-shadow:0 -20px 50px rgba(0,0,0,.2);transition:transform .18s ease;overflow:hidden}.info-sheet.open{transform:translate(-50%,0)}.sheet-grabber{width:48px;height:5px;border-radius:99px;background:#ccd4df;margin:8px auto}.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 17px 12px;border-bottom:1px solid var(--line)}.sheet-head small{font-size:9px;letter-spacing:.12em;color:var(--muted);font-weight:900}.sheet-head h2{font-size:21px;line-height:1.2;margin:4px 0 0;max-width:650px}.icon-button{border:0;background:#edf1f6;border-radius:50%;width:34px;height:34px;font-size:21px;color:var(--navy)}.sheet-body{padding:17px;overflow:auto;max-height:calc(88vh - 82px)}.lead{font-size:15px;line-height:1.55;color:#42536b}.warning-box{padding:13px;background:#fff4d9;border:1px solid #ebcf87;border-radius:12px;margin:13px 0}.warning-box strong{font-size:12px;color:#785000}.warning-box p{font-size:12px;color:#785000;margin:5px 0 0}.sheet-body h3{font-size:13px;margin:19px 0 8px}.sheet-link-list{display:grid;gap:7px}.sheet-link-list button{border:1px solid var(--line);background:white;border-radius:12px;padding:11px;display:grid;grid-template-columns:33px 1fr auto;gap:9px;align-items:center;text-align:left}.sheet-link-list button>span{width:31px;height:31px;border-radius:9px;background:#edf2f8;display:grid;place-items:center;font-weight:900;color:var(--navy)}.sheet-link-list button>div{display:flex;flex-direction:column}.sheet-link-list small{font-size:10px;color:var(--muted)}.dose-callout{padding:14px;border-radius:13px;margin-bottom:13px}.dose-callout.crimson{background:var(--crimson-soft);color:#76182a}.dose-callout.amber{background:var(--amber-soft);color:#6d4000}.dose-callout.violet{background:var(--violet-soft);color:#3d2879}.dose-callout small{display:block;font-size:9px;font-weight:900;letter-spacing:.1em;margin-bottom:5px}.dose-callout strong{font-size:15px;line-height:1.45}.med-detail{margin:0}.med-detail>div{padding:11px 0;border-bottom:1px solid var(--line)}.med-detail dt{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.med-detail dd{font-size:13px;line-height:1.48;margin:5px 0 0}.med-detail .avoid{background:#fff6e6;margin:0 -10px;padding:11px 10px;border-radius:10px}.source-note{padding:11px;border-radius:11px;background:#eef2f7;display:flex;flex-direction:column;margin-top:14px}.source-note strong{font-size:10px}.source-note span{font-size:10px;color:var(--muted);margin-top:3px}.microcopy{font-size:10px;text-align:center;color:var(--muted);line-height:1.4}.lesson-sections section{padding:12px 0;border-top:1px solid var(--line)}.lesson-sections h3{font-size:15px;margin:0 0 6px}.lesson-sections p,.lesson-sections li{font-size:13px;line-height:1.5;color:#42536b}.lesson-sections ul{margin:7px 0;padding-left:20px}.timer-list article{padding:12px;border:1px solid var(--line);border-radius:11px;display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.timer-list article.due{border-color:#d89b29;background:#fff7e5}.timer-list article>div{display:flex;flex-direction:column}.timer-list small{font-size:10px;color:var(--muted);margin-top:3px}.timer-list button{border:0;background:var(--navy);color:white;border-radius:8px;padding:7px;font-size:10px;font-weight:800}.timeline-list article{display:grid;grid-template-columns:58px 1fr;gap:10px;border-left:2px solid #ccd6e3;padding:0 0 14px 12px}.timeline-list time{font-size:10px;font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}.timeline-list>article>div{display:flex;flex-direction:column}.timeline-list strong{font-size:12px}.timeline-list small{font-size:9px;text-transform:uppercase;color:var(--muted);margin-top:3px}.due-callout{padding:16px;background:#fff2cf;border-radius:13px;display:flex;flex-direction:column}.due-callout strong{font-size:16px;line-height:1.4}.due-callout span{font-size:11px;color:#875a00;margin-top:7px}.about-list>div{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.about-list span{color:var(--muted);text-align:right}.confirm-card h2{font-size:22px}.confirm-card p{color:var(--muted);line-height:1.5}.button-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}.toast-region{position:fixed;z-index:120;top:80px;left:50%;transform:translateX(-50%);width:min(calc(100% - 24px),520px);display:grid;gap:7px;pointer-events:none}.toast{background:var(--navy);color:white;border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);font-size:12px;font-weight:800;animation:toastIn .2s ease}.toast.alert{background:#8b4e00}@keyframes toastIn{from{transform:translateY(-8px);opacity:0}}.empty{padding:18px;text-align:center;color:var(--muted);font-size:12px}body.sheet-open{overflow:hidden}
 @media(min-width:680px){.emergency-grid{grid-template-columns:1fr 1fr}.emergency-card:first-child{grid-column:1/-1}.education-grid{grid-template-columns:1fr 1fr}.info-sheet.wide{max-width:800px}.task-workspace{display:grid;grid-template-columns:1fr 1fr;gap:12px}.task-group{min-width:0}.quick-strip{max-width:520px}.page-head{padding:35px 30px}.flowchart,.source-band{margin-left:30px;margin-right:30px}.emergency-tabs{margin-left:30px;margin-right:30px}.med-list{grid-template-columns:1fr 1fr}}
@@ -154,35 +156,136 @@ body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-he
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 .sim-master-link{background:#e3f5f2}.sim-master-link strong{color:#0f6f66}.sim-master-link small{color:#2f6f68}.sim-master-link a{white-space:nowrap;align-self:center;text-decoration:none;font-size:15px}
+
+/* =====================================================================
+   CLINICAL AURORA — header, hero and landing (v0.12)
+   ===================================================================== */
+/* Header: compact, sticky; controls only (the title lives in the hero) */
+.app-header{height:60px;padding:8px 12px;gap:8px;justify-content:space-between;background:linear-gradient(180deg,#fdf8f1,#f8efe3);border-bottom:1px solid #eadfce;backdrop-filter:none}
+.hdr-actions{display:flex;align-items:center;gap:8px;min-width:0;flex:1;justify-content:flex-end}
+.hdr-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;border-radius:999px;border:1.5px solid #c9d4e5;background:#fff;color:var(--navy);font-size:16px;font-weight:800;padding:0 14px;white-space:nowrap}
+.hdr-btn.square{border-radius:12px;padding:0;width:44px;flex:none;border-color:#e2d6c4}
+.hdr-btn.primary{background:linear-gradient(180deg,#2f6fe0,#1d55c4);border-color:#1d55c4;color:#fff;box-shadow:0 4px 12px rgba(29,85,196,.28)}
+.hdr-btn svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.hdr-btn .aa{font-weight:900;font-size:15px;letter-spacing:-.02em;line-height:1}.hdr-btn .aa b{font-size:20px}
+.hdr-btn[aria-pressed=true]{background:var(--navy);color:#fff;border-color:var(--navy)}
+.hdr-avatar{flex:none;width:44px;height:44px;border-radius:50%;border:2px solid #fff;background:var(--navy);color:#fff;font-weight:900;font-size:14px;box-shadow:0 0 0 1.5px #c9d4e5;display:grid;place-items:center}
+@media(max-width:559px){.hdr-btn .lbl:not(.lbl-keep){display:none}.hdr-btn:not(.primary){padding:0;width:44px}}
+@media(max-width:399px){.hdr-btn .lbl{display:none}.hdr-btn{padding:0;width:44px}}
+.clinical-notice{align-items:center;justify-content:space-between;padding:6px 8px 6px 12px;gap:8px;text-align:left}
+.clinical-notice button{position:static;flex:none;width:36px;height:36px;font-size:22px}
+/* Drawer */
+.menu-drawer{position:fixed;z-index:95;top:0;left:0;bottom:0;width:min(86vw,330px);background:#fff;box-shadow:12px 0 40px rgba(5,15,35,.25);transform:translateX(-102%);transition:transform .16s ease;display:flex;flex-direction:column;padding:10px 10px calc(14px + var(--safe-bottom));overflow:auto}
+.menu-drawer.open{transform:none}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:4px 4px 12px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.drawer-head>div{flex:1;display:flex;flex-direction:column}.drawer-head strong{font-size:17px;color:var(--navy)}.drawer-head small{font-size:14px;color:var(--muted)}
+.menu-drawer>button,.menu-drawer>a{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:52px;padding:0 12px;border:0;border-radius:12px;background:transparent;text-align:left;font-size:17px;font-weight:700;color:var(--ink);text-decoration:none}
+.menu-drawer>button:hover,.menu-drawer>a:hover,.menu-drawer>button.active{background:#eef3fa;color:var(--navy)}
+.menu-drawer small{font-size:14px;color:var(--muted);font-weight:600}
+.menu-drawer hr{border:0;border-top:1px solid var(--line);margin:6px 4px;width:calc(100% - 8px)}
+.install-steps{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}.install-steps h3{margin:0 0 6px;font-size:16px}.install-steps ol{margin:0;padding-left:20px;font-size:16px;line-height:1.5}
+/* Hero */
+.hero-aurora{position:relative;height:132px;overflow:hidden;background:linear-gradient(120deg,#0a2a6b,#0b4f8a 55%,#0f8b98)}
+.hero-aurora picture,.hero-aurora img{position:absolute;inset:0;width:100%;height:100%}
+.hero-aurora img{object-fit:cover;object-position:84% 50%}
+.hero-copy{position:relative;z-index:1;height:100%;max-width:60%;padding:0 16px;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.hero-copy h1{margin:0;color:#fff;font-size:26px;line-height:1.08;letter-spacing:-.02em;text-shadow:0 2px 12px rgba(0,10,40,.45)}
+.hero-copy p{margin:0;color:#d6ecff;font-size:16px;font-weight:600;text-shadow:0 1px 8px rgba(0,10,40,.5)}
+.hero-status{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:13px;font-weight:700;color:#e6f4ff;background:rgba(5,20,60,.35);border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:3px 10px}
+.hero-status .status-dot{box-shadow:0 0 0 3px rgba(41,168,107,.3)}
+@media(min-width:600px){.hero-aurora{height:170px}.hero-copy{padding:0 26px;max-width:58%}.hero-copy h1{font-size:34px}.hero-copy p{font-size:18px}}
+@media(min-width:800px){.hero-aurora{height:190px}}
+/* Landing */
+.home-label{margin:14px 16px 8px;font-size:14px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#4a5a72}
+.emergency-grid{padding:0 12px;gap:10px;grid-template-columns:1fr}
+.emergency-grid .emergency-card{min-height:86px;padding:12px 14px;grid-template-columns:56px minmax(0,1fr) 16px;gap:14px;border-radius:16px;border-left-width:6px;box-shadow:0 4px 14px rgba(11,33,73,.06)}
+.emergency-grid .emergency-card:first-child{grid-column:auto}
+.emergency-card.crimson{background:linear-gradient(90deg,#fff5f6,#fff 70%)}.emergency-card.amber{background:linear-gradient(90deg,#fff9ec,#fff 70%)}.emergency-card.violet{background:linear-gradient(90deg,#f7f3ff,#fff 70%)}
+.em-icon,.em-icon img{display:block;width:56px;height:56px;border-radius:14px}
+.em-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.emergency-grid .emergency-card strong{font-size:20px;line-height:1.15}
+.emergency-grid .emergency-card small{font-size:16px;line-height:1.3}
+@media(min-width:760px){.emergency-grid{grid-template-columns:repeat(3,1fr)}.emergency-grid .emergency-card{grid-template-columns:56px minmax(0,1fr);align-content:start}.emergency-grid .emergency-card .chevron{display:none}}
+.home-foot{margin:14px 12px 6px;background:#e3f5f2;padding:12px 14px;align-items:center}
+.home-foot strong{color:#0f6f66;font-size:15px}.home-foot small{color:#2f6f68;font-size:14px}
+.home-foot a{white-space:nowrap;text-decoration:none;font-size:15px}
+.home-meta{margin:6px 16px 14px;font-size:14px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.home-meta .text-button{font-size:14px;min-height:36px}
+.preview-title .em-icon,.preview-title .em-icon img{width:64px;height:64px;border-radius:16px}
+/* Bottom nav icons */
+.nav-item svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-item small{font-size:13px}
+/* Larger text: scales the whole interface, cockpit and sheets included */
+html.text-lg{zoom:1.15}
+/* Hero grows with its text (larger text, narrow phones) instead of clipping */
+.hero-aurora{height:auto;min-height:132px;display:flex;align-items:center}
+.hero-copy{height:auto;padding-top:14px;padding-bottom:14px;max-width:64%}
+.hero-copy h1{font-size:clamp(22px,6.6vw,26px)}
+@media(min-width:600px){.hero-aurora{min-height:170px}.hero-copy h1{font-size:34px}}
+@media(min-width:800px){.hero-aurora{min-height:190px}}
+.home-label{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.home-label .hero-status{margin:0;color:#2f5f3f;background:#eaf7f1;border-color:#bfe6d1;text-transform:none;letter-spacing:0;font-size:13px}
+/* Larger text on small phones: two-row cockpit header and 2x2 tools — never smaller type */
+@media(max-width:400px){
+  html.text-lg .cockpit-row{grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"id sound end" "clock clock clock";row-gap:2px}
+  html.text-lg .cockpit-id{grid-area:id}html.text-lg .cockpit-icon{grid-area:sound}html.text-lg .cockpit-end{grid-area:end}
+  html.text-lg .cockpit-clock{grid-area:clock;flex-direction:row;align-items:baseline;justify-content:center;gap:8px}
+  html.text-lg .cockpit-tabs{grid-template-columns:1fr 1fr}
+  html.text-lg .task-actions{flex-wrap:wrap}html.text-lg .task-actions .card-primary{flex:1 1 100%}
+}
+.home-label .hero-status{white-space:nowrap;flex:none}.home-label>span:first-child{min-width:0}
 </style>
   <title>OB Emergency Assist</title>
 </head>
 <body>
   <div id="app" class="app-shell">
     <header class="app-header">
-      <button id="homeButton" class="brand-button" aria-label="Go to emergency home">
-        <span class="brand-mark" aria-hidden="true">OB</span>
-        <span><strong>Emergency Assist</strong><small id="headerSubtitle">Immediate guidance</small></span>
+      <button class="hdr-btn square" data-action="open-menu" aria-label="Open menu" aria-controls="menuDrawer" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
-      <button id="connectionButton" class="status-pill" aria-label="Connection and offline status">
-        <span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span>
-      </button>
+      <div class="hdr-actions">
+        <button class="hdr-btn pill" data-action="toggle-text" aria-pressed="false" title="Larger text" aria-label="Larger text">
+          <span class="aa" aria-hidden="true">A<b>A</b></span><span class="lbl">Larger text</span>
+        </button>
+        <button class="hdr-btn pill" data-action="share" title="Share this" aria-label="Share this">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2zM18 14h2v2h-2z"/></svg><span class="lbl">Share this</span>
+        </button>
+        <button class="hdr-btn pill primary" data-action="install" title="Download app" aria-label="Download app">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg><span class="lbl lbl-keep">Download app</span>
+        </button>
+      </div>
+      <button class="hdr-avatar" data-action="show-about" aria-label="About OB Emergency Assist" title="About">OB</button>
     </header>
 
     <div id="clinicalNotice" class="clinical-notice">
-      <strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.
+      <span><strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.</span>
       <button data-action="dismiss-notice" aria-label="Dismiss notice">×</button>
     </div>
 
     <main id="main" tabindex="-1"></main>
 
     <nav class="bottom-nav" aria-label="Primary navigation">
-      <button data-nav="emergency" class="nav-item active"><span aria-hidden="true">✚</span><small>Emergency</small></button>
-      <button data-nav="flowcharts" class="nav-item"><span aria-hidden="true">↳</span><small>Flowcharts</small></button>
-      <button data-nav="medications" class="nav-item"><span aria-hidden="true">Rx</span><small>Medications</small></button>
-      <button data-nav="education" class="nav-item"><span aria-hidden="true">i</span><small>Education</small></button>
+      <button data-nav="emergency" class="nav-item active"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5z"/></svg><small>Emergency</small></button>
+      <button data-nav="flowcharts" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/></svg><small>Flowcharts</small></button>
+      <button data-nav="medications" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg><small>Medications</small></button>
+      <button data-nav="education" class="nav-item"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5.5c3-1 6-1 9 1.5 3-2.5 6-2.5 9-1.5V19c-3-1-6-1-9 1.5C9 18 6 18 3 19z"/><path d="M12 7v13.5"/></svg><small>Education</small></button>
     </nav>
   </div>
+
+  <div id="drawerBackdrop" class="sheet-backdrop" data-action="close-menu" hidden></div>
+  <nav id="menuDrawer" class="menu-drawer" aria-label="Main menu" hidden>
+    <div class="drawer-head"><span class="hdr-avatar" aria-hidden="true">OB</span><div><strong>OB Emergency Assist</strong><small>Ready when seconds matter.</small></div><button class="icon-button" data-action="close-menu" aria-label="Close menu">×</button></div>
+    <button data-nav="emergency">Emergency pathways</button>
+    <button data-nav="flowcharts">Flowcharts</button>
+    <button data-nav="medications">Medications</button>
+    <button data-nav="education">Education &amp; TeamSTEPPS</button>
+    <a href="sim-master.html">Sim Master <small>facilitator, on a laptop</small></a>
+    <hr>
+    <button data-action="toggle-text">Larger text <small id="drawerTextState">Off</small></button>
+    <button data-action="share">Share this app</button>
+    <button data-action="install">Download app</button>
+    <button data-action="show-about">About &amp; sources</button>
+  </nav>
 
   <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
   <aside id="infoSheet" class="info-sheet" aria-modal="true" role="dialog" aria-labelledby="sheetTitle" hidden>
@@ -203,7 +306,7 @@ body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-he
     </div>
   </template>
   <script>
-const APP_VERSION = "0.11.0-prototype";
+const APP_VERSION = "0.12.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -477,10 +580,16 @@ const SHORT_TASKS = {
   "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization."
 };
 const SHORT_SUMMARIES = {
-  pph:"Bleeding · resuscitation · 4 Ts",
-  hypertension:"Confirm · treat · reassess",
-  eclampsia:"Protect · magnesium · airway"
+  pph:"Resuscitation · 4 Ts · MTP",
+  htn:"Treat urgently · Maternal safety",
+  eclampsia:"Stabilize · Magnesium · Airway"
 };
+// Emergency icons (cropped from the supplied icon set). They identify the pathway at a glance.
+const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia"};
+function emergencyIcon(id,size=56){
+  const n=EMERGENCY_ICONS[id];if(!n)return "";
+  return `<picture class="em-icon"><source type="image/webp" srcset="img/${n}.webp"><img src="img/${n}.png" alt="" width="${size}" height="${size}" decoding="async"></picture>`;
+}
 
 let route = "emergency";
 let selectedEmergency = null;
@@ -563,39 +672,40 @@ function render(){
 }
 
 function updateHeader(){
-  const sub=$("#headerSubtitle");
+  const sub=$("#headerSubtitle");if(!sub)return;
   sub.textContent=session?.status==="active"?`${session.mode==="simulation"?"Simulation":"Clinical"} · ${EMERGENCIES[session.emergencyId].short}`:"Immediate guidance";
 }
 
 function renderEmergency(){
   if(session?.status==="active") return renderActiveSession();
   if(selectedEmergency) return renderEmergencyPreview(selectedEmergency);
+  // Hero: text-free Clinical Aurora art with HTML title overlay (kept clear of the silhouette on the right).
   main.innerHTML=`
-    <section class="hero">
-      <p class="eyebrow">I'M IN AN EMERGENCY—WHAT DO I DO?</p>
-      <h1>Choose an emergency</h1>
-      <p>Tap once. See what to do now.</p>
+    <section class="hero-aurora">
+      <picture>
+        <source type="image/webp" srcset="img/aurora-900.webp 900w, img/aurora-1600.webp 1600w" sizes="(min-width:800px) 800px, 100vw">
+        <img src="img/aurora-900.jpg" srcset="img/aurora-900.jpg 900w, img/aurora-1600.jpg 1600w" sizes="(min-width:800px) 800px, 100vw" alt="" width="1600" height="533" fetchpriority="high">
+      </picture>
+      <div class="hero-copy">
+        <h1>OB Emergency Assist</h1>
+        <p>Ready when seconds matter.</p>
+      </div>
     </section>
-    <section class="emergency-grid" aria-label="Emergency choices">
+    <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
+    <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
         <button class="emergency-card ${e.accent}" data-emergency="${e.id}">
-          <span class="emergency-icon" aria-hidden="true">${e.icon}</span>
-          <span><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span>
+          ${emergencyIcon(e.id)}
+          <span class="em-copy"><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span>
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <section class="quick-strip">
-      <button data-nav-jump="medications"><span>Rx</span><strong>Medications</strong><small>Dose · caution · timer</small></button>
-      <button data-education="teamstepps"><span>◎</span><strong>TeamSTEPPS</strong><small>Roles · huddle · check-back</small></button>
-    </section>
     <section class="home-foot">
-      <div><strong>Works offline after first load</strong><small>This prototype stores sessions only on this device.</small></div>
-      <button class="text-button" data-action="show-about">About & sources</button>
-    </section>
-    <section class="home-foot sim-master-link">
-      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Open it on a laptop.</small></div>
+      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Best on a laptop.</small></div>
       <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
-    </section>`;
+    </section>
+    <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
+  updateConnectivity(true);
 }
 
 function renderEmergencyPreview(id){
@@ -603,7 +713,7 @@ function renderEmergencyPreview(id){
   main.innerHTML=`
     <section class="preview-head ${e.accent}">
       <button class="back-button" data-action="back-home">‹ Emergencies</button>
-      <div class="preview-title"><span class="emergency-icon">${e.icon}</span><div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
+      <div class="preview-title">${emergencyIcon(e.id,64)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
     </section>
     <section class="preview-actions">
       <button class="button primary large" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>
@@ -1053,12 +1163,50 @@ document.addEventListener("click",e=>{
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
 $("#sheetBackdrop").addEventListener("click",closeSheet);
-$("#homeButton").addEventListener("click",()=>navigate("emergency"));
-
-function updateConnectivity(){
-  const online=navigator.onLine;$("#connectionDot").classList.toggle("offline",!online);$("#connectionLabel").textContent=online?"Ready":"Offline";if(!online)toast("Offline · this device continues locally","alert");
+// ---------- Header controls ----------
+let deferredInstall=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;});
+function applyTextSize(){
+  document.documentElement.classList.toggle("text-lg",!!settings.largeText);
+  $("[data-action=toggle-text]").forEach(b=>b.setAttribute("aria-pressed",String(!!settings.largeText)));
+  const st=$("#drawerTextState");if(st)st.textContent=settings.largeText?"On":"Off";
 }
-window.addEventListener("online",updateConnectivity);window.addEventListener("offline",updateConnectivity);
+function openMenu(){const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
+function closeMenu(){const d=$("#menuDrawer");d.classList.remove("open");$("[data-action=open-menu]")?.setAttribute("aria-expanded","false");setTimeout(()=>{d.hidden=true;$("#drawerBackdrop").hidden=true;},160);}
+async function shareApp(){
+  const url=location.origin+location.pathname.replace(/index\.html$/,"");
+  const data={title:"OB Emergency Assist",text:"Phone-first OB emergency guidance, timers and simulation.",url};
+  if(navigator.share){try{await navigator.share(data);}catch{}return;}
+  try{await navigator.clipboard.writeText(url);toast("Link copied");}
+  catch{openSheet({eyebrow:"SHARE",title:"Copy this link",html:`<p class="lead">${esc(url)}</p>`});}
+}
+function installApp(){
+  if(matchMedia("(display-mode: standalone)").matches||navigator.standalone){toast("Already installed on this device");return;}
+  if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.finally(()=>{deferredInstall=null;});return;}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  openSheet({eyebrow:"DOWNLOAD APP",title:"Add to your home screen",html:`
+    <p class="lead">Installing keeps the app one tap away and available offline after the first load.</p>
+    <div class="install-steps ${ios?"":"dim-ios"}"><h3>iPhone / iPad (Safari)</h3><ol><li>Tap the Share button.</li><li>Choose <strong>Add to Home Screen</strong>.</li><li>Tap <strong>Add</strong>.</li></ol></div>
+    <div class="install-steps"><h3>Android (Chrome)</h3><ol><li>Tap the ⋮ menu.</li><li>Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>.</li></ol></div>
+    <div class="install-steps"><h3>Laptop (Chrome / Edge)</h3><ol><li>Click the install icon in the address bar, or the browser menu → <strong>Install</strong>.</li></ol></div>`});
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-action]");if(!b)return;const a=b.dataset.action;
+  if(a==="open-menu")openMenu();
+  if(a==="close-menu")closeMenu();
+  if(a==="toggle-text"){settings.largeText=!settings.largeText;saveSettings();applyTextSize();toast(settings.largeText?"Larger text on":"Larger text off");}
+  if(a==="share"){closeMenu();shareApp();}
+  if(a==="install"){closeMenu();installApp();}
+  if(a==="show-about"&&!$("#menuDrawer").hidden)closeMenu();
+});
+document.addEventListener("click",e=>{const b=e.target.closest("#menuDrawer [data-nav], #menuDrawer a");if(b)closeMenu();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#menuDrawer").hidden)closeMenu();});
+applyTextSize();
+
+function updateConnectivity(quiet=false){
+  const online=navigator.onLine;$("#connectionDot")?.classList.toggle("offline",!online);const l=$("#connectionLabel");if(l)l.textContent=online?"Ready":"Offline";if(!online&&!quiet)toast("Offline · this device continues locally","alert");
+}
+window.addEventListener("online",()=>updateConnectivity());window.addEventListener("offline",()=>updateConnectivity());
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session?.status==="active"){checkMilestones();render();}});
 
 updateConnectivity();if(session?.status==="active")startClock();render();

@@ -6,13 +6,14 @@
   <meta name="theme-color" content="#0e8077">
   <meta name="robots" content="noindex">
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <script>try{if(JSON.parse(localStorage.getItem("ob-emergency-assist.settings.v1")||"{}").largeText)document.documentElement.classList.add("text-lg");}catch{}</script>
   <link rel="stylesheet" href="sim-master.css">
   <title>Sim Master · OB Emergency Assist</title>
 </head>
 <body>
   <header class="sm-top">
     <a class="sm-brand" href="./" aria-label="Back to OB Emergency Assist"><span>OB</span><div><strong>Sim Master</strong><small>Facilitator view · do not show learners</small></div></a>
-    <div id="smTopRight" class="sm-top-right"></div>
+    <div class="sm-top-right"><div id="smTopRight" class="sm-top-right"></div><button id="smText" class="sm-btn ghost" aria-pressed="false" title="Larger text"><b>A</b>A Larger text</button></div>
   </header>
   <main id="sm" tabindex="-1"></main>
   <div id="smToast" class="sm-toast" aria-live="polite"></div>
