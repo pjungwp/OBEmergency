@@ -1,4 +1,4 @@
-import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
+import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,APPROVALS,INSTITUTIONAL_PLACEHOLDERS,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
 
 const $ = (s,root=document)=>root.querySelector(s);
@@ -10,12 +10,20 @@ const store = createLocalSessionStore({key:STORAGE_KEY});
 const SHORT_TASKS = {
   "pph-help":"Call hemorrhage response.","pph-assess":"Check bleeding, tone + vitals.","pph-massage":"Massage uterus. Start bimanual compression.","pph-access":"Get IV access, labs + blood.","pph-oxytocin":"Give oxytocin. Add uterotonics.","pph-cause":"Check 4 Ts.","pph-txa":"Consider TXA now.","pph-escalate":"Escalate ongoing bleeding.",
   "htn-help":"Call OB. Activate severe-BP response.","htn-bp":"Repeat BP within 15 minutes.","htn-symptoms":"Check severe symptoms.","htn-labs":"Get preeclampsia labs.","htn-treat":"Give first-line BP medication.","htn-mag":"Start magnesium if indicated.","htn-monitor":"Recheck BP after every dose.","htn-escalate":"Escalate persistent severe BP.",
-  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization."
+  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization.",
+  "cv-pregnancy":"Ask: pregnant in last 12 months?","cv-redflags":"Check cardiac red flags + vitals.","cv-help":"Call emergency, OB + cardiac support.","cv-workup":"Get ECG, BNP, CXR + troponin.","cv-echo":"Abnormal tests: echo + consult.","cv-treat":"Treat life threats. Admit or transfer."
 };
 const SHORT_SUMMARIES = {
   pph:"Bleeding · resuscitation · 4 Ts",
-  hypertension:"Confirm · treat · reassess",
-  eclampsia:"Protect · magnesium · airway"
+  htn:"Confirm · treat · reassess",
+  eclampsia:"Protect · magnesium · airway",
+  cardiac:"Red flags · work-up · consult"
+};
+const FLOW_IMAGES = {
+  pph:"flowcharts/pph.jpg",
+  htn:"flowcharts/htn.jpg",
+  eclampsia:"flowcharts/eclampsia.jpg",
+  cardiac:"flowcharts/cardiac.jpg"
 };
 
 let route = "emergency";
@@ -26,13 +34,21 @@ let clockHandle = null;
 let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
+let deferredInstallPrompt = null;
+let wakeLock = null;
+let hiddenAtElapsed = null;
+let missedReminderCount = 0;
+let refreshingForUpdate = false;
+let swRegistration = null;
 
 function loadSettings(){
-  try{return {...{noticeDismissed:false,sound:true},...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")};}catch{return {noticeDismissed:false,sound:true};}
+  try{return {...{noticeDismissed:false,sound:true,largeText:false},...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")};}catch{return {noticeDismissed:false,sound:true,largeText:false};}
 }
 function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}
 function hydrateSession(s){
   if(!s) return null;
+  s.doseCounts=s.doseCounts||{};
+  s.medicationStates=s.medicationStates||{};
   if(s.status==="active" && s.mode==="clinical" && s.running) s.elapsedBase += Math.max(0,Date.now()-s.lastSavedAt);
   s.lastSavedAt=Date.now();
   return s;
@@ -85,7 +101,8 @@ function navigate(next,opts={}){
 }
 
 function render(){
-  $("#clinicalNotice").hidden=settings.noticeDismissed;
+  applyDisplaySettings();
+  $("#clinicalNotice").hidden=false;
   if(route==="emergency") renderEmergency();
   if(route==="flowcharts") renderFlowcharts();
   if(route==="medications") renderMedications();
@@ -95,7 +112,14 @@ function render(){
 
 function updateHeader(){
   const sub=$("#headerSubtitle");
-  sub.textContent=session?.status==="active"?`${session.mode==="simulation"?"Simulation":"Clinical"} · ${EMERGENCIES[session.emergencyId].short}`:"Immediate guidance";
+  const label=session?.status==="active"?`${session.mode==="simulation"?"Simulation":"Clinical"} · ${EMERGENCIES[session.emergencyId].short}`:"Immediate guidance";
+  sub.textContent=`${label}${navigator.onLine?"":" · Offline"}`;
+}
+
+function applyDisplaySettings(){
+  document.body.classList.toggle("large-text",!!settings.largeText);
+  const button=$("#textSizeButton");
+  if(button)button.setAttribute("aria-pressed",String(!!settings.largeText));
 }
 
 function renderEmergency(){
@@ -122,7 +146,8 @@ function renderEmergency(){
     <section class="home-foot">
       <div><strong>Works offline after first load</strong><small>This prototype stores sessions only on this device.</small></div>
       <button class="text-button" data-action="show-about">About & sources</button>
-    </section>`;
+    </section>
+    <section class="release-strip" aria-label="App version"><strong>${APP_VERSION}</strong><span>Clinical content reviewed ${CONTENT_REVIEW_DATE}</span></section>`;
 }
 
 function renderEmergencyPreview(id){
@@ -146,11 +171,11 @@ function renderEmergencyPreview(id){
 
 function newSession(emergencyId,mode){
   const now=Date.now();
-  return {id:uid(),schemaVersion:"1.0",revision:0,emergencyId,mode,status:"active",startedAt:new Date().toISOString(),elapsedBase:0,simulationTimeMs:mode==="simulation"?0:null,lastTickAt:now,lastSavedAt:now,running:true,sound:settings.sound,tasks:{},timers:[],events:[{id:uid(),at:0,type:"session",text:`${mode==="simulation"?"Simulation":"Clinical"} assist started`}],firedMilestones:[],doseCounts:{}};
+  return {id:uid(),schemaVersion:"1.0",revision:0,emergencyId,mode,status:"active",startedAt:new Date().toISOString(),elapsedBase:0,simulationTimeMs:mode==="simulation"?0:null,lastTickAt:now,lastSavedAt:now,running:true,sound:settings.sound,tasks:{},timers:[],events:[{id:uid(),at:0,type:"session",text:`${mode==="simulation"?"Simulation":"Clinical"} assist started`}],firedMilestones:[],doseCounts:{},medicationStates:{}};
 }
 
 function startSession(id,mode){
-  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render(); toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
+  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock();requestWakeLock();render();toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
 }
 
 function renderActiveSession(){
@@ -162,13 +187,14 @@ function renderActiveSession(){
       <div><span>${session.mode==="simulation"?"SIMULATION":"CLINICAL ASSIST"}</span><strong>${esc(e.name)}</strong></div>
       <button class="text-button light" data-action="end-session">End</button>
     </div>
+    ${missedReminderCount?`<section class="missed-alert" role="alert" aria-live="assertive"><div><strong>${missedReminderCount} reminder${missedReminderCount===1?" was":"s were"} missed while the screen was off.</strong><span>Review overdue timers now.</span></div><button data-action="dismiss-missed" aria-label="Dismiss missed-reminder message">×</button></section>`:""}
     <section class="timer-console ${e.accent}">
       <div class="main-clock"><small>ELAPSED</small><strong id="elapsedClock">${fmt(elapsed,true)}</strong></div>
       <div class="next-clock"><small>NEXT DUE</small><strong id="nextDue">${nextDueLabel()}</strong></div>
       <button class="alarm-button ${session.sound?"on":""}" data-action="toggle-sound" aria-label="Toggle sound">${session.sound?"🔊":"🔇"}<small>${session.sound?"Sound on":"Sound off"}</small></button>
     </section>
     ${session.mode==="simulation"?renderSimulationControls():""}
-    ${dueTimers.length?`<section class="due-panel"><strong>${dueTimers.length} reminder${dueTimers.length>1?"s":""} due</strong>${dueTimers.map(t=>`<button data-action="open-due" data-timer-id="${t.id}">${esc(t.label)} <span>Due ${formatDue(t)}</span></button>`).join("")}</section>`:""}
+    ${dueTimers.length?`<section class="due-panel" role="alert" aria-live="assertive" aria-atomic="true"><strong>${dueTimers.length} reminder${dueTimers.length>1?"s":""} due</strong>${dueTimers.map(t=>`<button data-action="open-due" data-timer-id="${t.id}">${esc(t.label)} <span>Due ${formatDue(t)}</span></button>`).join("")}</section>`:""}
     <div class="active-toolbar">
       <button data-action="open-flow" data-id="${e.id}">↳ <strong>Flowchart</strong></button>
       <button data-action="show-timers">◷ <strong>Timers</strong><span>${session.timers.filter(t=>!t.cancelled).length}</span></button>
@@ -262,6 +288,13 @@ function startClock(){
   session.lastTickAt=Date.now();
   clockHandle=setInterval(()=>{updateClockDom();checkMilestones();checkDueTransitions();},500);
 }
+async function requestWakeLock(){
+  if(!session||session.status!=="active"||document.hidden||!navigator.wakeLock?.request)return;
+  try{wakeLock=await navigator.wakeLock.request("screen");wakeLock.addEventListener("release",()=>{wakeLock=null;});}catch{}
+}
+async function releaseWakeLock(){
+  try{await wakeLock?.release();}catch{}wakeLock=null;
+}
 function updateClockDom(){
   if(!session)return;
   const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed(),true);
@@ -313,39 +346,61 @@ function playAlert(){
 }
 
 function renderFlowcharts(){
-  const e=EMERGENCIES[flowEmergency];
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">ONE-TAP OVERVIEW</p><h1>Clinical flowcharts</h1><p>Use the flowchart to orient the team. Return to Actions for task controls and timers.</p></section>
-    <div class="segmented emergency-tabs">${Object.values(EMERGENCIES).map(x=>`<button class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div>
-    ${flowHTML(e)}
-    <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>This is a concise implementation view, not a replacement for the complete source or local protocol.</small></div>`;
+  main.innerHTML=`<section class="page-head dashboard-head"><p class="eyebrow">ALL PATHWAYS</p><h1>Clinical flowcharts</h1><p>Tap a pathway. Tap its image to magnify.</p></section>
+    <section class="dashboard-stack flow-dashboard">${Object.values(EMERGENCIES).map(flowHTML).join("")}</section>
+    <div class="source-band compact-source"><span>Clinical prototype</span><small>Concise orientation views. Verify against the complete source and current institutional protocol.</small></div>`;
 }
 function flowHTML(e){
-  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${session?.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
-    <div class="flow-track">${e.flow.map((n,i)=>`<article class="flow-node ${n.tone}"><span>${i+1}</span><div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div></article>${i<e.flow.length-1?`<div class="flow-arrow">↓</div>`:""}`).join("")}</div></section>`;
+  return `<details class="dashboard-section flow-panel ${e.accent}" ${e.id===flowEmergency?"open":""}>
+    <summary><span class="summary-icon">${e.icon}</span><span><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span><b>⌄</b></summary>
+    <div class="flow-panel-body">
+      <button class="flow-image-button" data-action="zoom-flow" data-id="${e.id}" aria-label="Magnify ${esc(e.name)} flowchart"><img src="${FLOW_IMAGES[e.id]}" alt="${esc(e.name)} quick clinical pathway"><span>Tap to magnify</span></button>
+      <div class="flow-panel-actions"><button class="button secondary" data-action="zoom-flow" data-id="${e.id}">Magnify</button>${session?.emergencyId===e.id?`<button class="button primary" data-nav-jump="emergency">Actions</button>`:""}</div>
+      ${refTags(e.source)}
+    </div>
+  </details>`;
 }
 
 function renderMedications(query=""){
-  const q=query.toLowerCase();const meds=MEDICATIONS.filter(m=>!q||`${m.name} ${m.context} ${m.dose} ${m.avoid}`.toLowerCase().includes(q));
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">DIRECT LOOKUP</p><h1>Medication reference</h1><p>Opening a card never records a dose. Confirm actual administration to start any medication-specific timer.</p></section>
+  main.innerHTML=`<section class="page-head dashboard-head"><p class="eyebrow">MEDICATION DASHBOARD</p><h1>Medication reference</h1><p>Grouped by emergency. Tap a group, then a medication.</p></section>
     <label class="search-box"><span>⌕</span><input id="medSearch" type="search" placeholder="Search medication or contraindication" value="${esc(query)}"></label>
     <div class="filter-chips"><button class="active" data-med-filter="">All</button><button data-med-filter="PPH">PPH</button><button data-med-filter="hypertension">Severe BP</button><button data-med-filter="eclampsia">Eclampsia</button></div>
-    <section class="med-list">${meds.map(m=>medCard(m)).join("")||`<p class="empty">No medication matched that search.</p>`}</section>`;
+    <section id="medDashboard" class="dashboard-stack medication-dashboard">${renderMedicationGroups(query)}</section>`;
 }
 function updateMedicationList(query){
-  const q=query.toLowerCase();
-  const meds=MEDICATIONS.filter(m=>!q||`${m.name} ${m.context} ${m.dose} ${m.avoid}`.toLowerCase().includes(q));
-  const list=$(".med-list");if(list)list.innerHTML=meds.map(m=>medCard(m)).join("")||`<p class="empty">No medication matched that search.</p>`;
+  const list=$("#medDashboard");if(list)list.innerHTML=renderMedicationGroups(query);
+}
+function renderMedicationGroups(query=""){
+  const groups=[
+    {title:"PPH medications",subtitle:"Uterotonics + TXA",accent:"crimson",ids:["oxytocin","methylergonovine","carboprost","misoprostol","txa"]},
+    {title:"Severe BP medications",subtitle:"Labetalol · hydralazine · nifedipine",accent:"amber",ids:["labetalol","hydralazine","nifedipine"]},
+    {title:"Eclampsia + magnesium safety",subtitle:"Magnesium · rescue · recurrent seizure",accent:"violet",ids:["magnesium","calcium-gluconate","calcium-chloride","lorazepam","diazepam","midazolam","fosphenytoin","levetiracetam","propofol-airway"]}
+  ];
+  const q=query.trim().toLowerCase();
+  let visible=0;
+  const html=groups.map((group,index)=>{
+    const meds=group.ids.map(getMedication).filter(m=>m&&(!q||`${m.name} ${m.context} ${m.dose} ${m.avoid}`.toLowerCase().includes(q)));
+    if(!meds.length)return "";
+    visible+=meds.length;
+    return `<details class="dashboard-section medication-group ${group.accent}" ${q||index===0?"open":""}><summary><span><strong>${esc(group.title)}</strong><small>${esc(group.subtitle)} · ${meds.length}</small></span><b>⌄</b></summary><div class="med-list">${meds.map(m=>medCard(m)).join("")}</div></details>`;
+  }).join("");
+  return visible?html:`<p class="empty dashboard-empty">No medication matched that search.</p>`;
 }
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
 function renderEducation(){
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">INFORMATION & EDUCATION</p><h1>Understand the response</h1><p>Operational detail lives here so the emergency workspace stays concise.</p></section>
-    <section class="education-grid">${EDUCATION.map(x=>`<button class="education-card ${x.accent}" data-education="${x.id}"><small>${esc(x.kicker)}</small><strong>${esc(x.title)}</strong><p>${esc(x.summary)}</p><span>Open ›</span></button>`).join("")}</section>
-    <section class="references"><div class="section-heading"><p class="eyebrow">CONTENT GOVERNANCE</p><h2>Sources and review status</h2></div>
-      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">Open source ↗</a>`:"<span>Supplied PDF</span>"}</article>`).join("")}</div>
-      <div class="version-card"><strong>Prototype ${APP_VERSION}</strong><span>Content review: ${CONTENT_REVIEW_DATE}</span><p>Before clinical release: pharmacy, nursing, obstetric, anesthesia, blood bank, risk/compliance and informatics review; replace all institutional placeholders.</p></div>
+  const groups=[
+    {title:"Team response",subtitle:"TeamSTEPPS + roles",accent:"navy",ids:["teamstepps","roles"]},
+    {title:"Emergency concepts",subtitle:"4 Ts · severe BP · magnesium",accent:"crimson",ids:["four-ts","severe-htn","mag-safety"]},
+    {title:"Screening + simulation",subtitle:"Pregnancy status · training mode",accent:"teal",ids:["pregnancy-status","simulation"]}
+  ];
+  main.innerHTML=`<section class="page-head dashboard-head"><p class="eyebrow">EDUCATION DASHBOARD</p><h1>Understand the response</h1><p>All guides, grouped and collapsible.</p></section>
+    <section class="dashboard-stack education-dashboard">${groups.map((group,index)=>`<details class="dashboard-section education-group ${group.accent}" ${index===0?"open":""}><summary><span><strong>${esc(group.title)}</strong><small>${esc(group.subtitle)} · ${group.ids.length}</small></span><b>⌄</b></summary><div class="education-grid">${group.ids.map(id=>EDUCATION.find(x=>x.id===id)).filter(Boolean).map(x=>educationCard(x)).join("")}</div></details>`).join("")}
+      <details class="dashboard-section governance-group"><summary><span><strong>Clinical sign-off</strong><small>${APPROVALS.filter(x=>x.status==="Approved").length} of ${APPROVALS.length} approvals complete</small></span><b>⌄</b></summary><div class="governance-list">${APPROVALS.map(x=>`<article><span class="approval-state ${x.status.toLowerCase()}">${esc(x.status)}</span><div><strong>${esc(x.role)}</strong><small>${x.approvedBy?`${esc(x.approvedBy)} · ${esc(x.date)}`:"Reviewer and date required"}</small></div></article>`).join("")}<div class="institution-list"><strong>Institutional fields</strong>${INSTITUTIONAL_PLACEHOLDERS.map(x=>`<div><span>${esc(x.label)}</span><b>${esc(x.value||"Not configured")}</b></div>`).join("")}</div></div></details>
+      <details class="dashboard-section references-group"><summary><span><strong>Sources + review status</strong><small>${REFERENCES.length} references · prototype ${APP_VERSION}</small></span><b>⌄</b></summary><div class="references"><div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">Open ↗</a>`:"<span>PDF</span>"}</article>`).join("")}</div><div class="version-card"><strong>Clinical review required</strong><span>Content review: ${CONTENT_REVIEW_DATE}</span><p>Institutional approval is required before clinical release.</p></div></div></details>
     </section>`;
 }
+function educationCard(x){return `<button class="education-card ${x.accent}" data-education="${x.id}"><small>${esc(x.kicker)}</small><strong>${esc(x.title)}</strong><span>Open ›</span></button>`;}
 
 function openTaskInfo(emergencyId,taskId){
   const e=EMERGENCIES[emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
@@ -353,9 +408,18 @@ function openTaskInfo(emergencyId,taskId){
 }
 function openMedication(id,recordable=!!session){
   const m=getMedication(id),r=getReference(m.source);if(!m)return;
-  openSheet({eyebrow:m.context,title:m.name,html:`<div class="dose-callout ${m.accent}"><small>DOSE / SEQUENCE</small><strong>${esc(m.dose)}</strong></div>
+  const belongsToActiveEmergency=!!session&&EMERGENCIES[session.emergencyId].tasks.some(task=>task.meds?.includes(id));
+  const canRecord=recordable&&belongsToActiveEmergency;
+  const prior=session?.doseCounts?.[id]||0,steps=m.workflowSteps||m.doseSteps||[],step=steps.length?steps[Math.min(prior,steps.length-1)]:null,limit=m.maxDoses||steps.length||null,reached=!!limit&&prior>=limit;
+  const stepLabel=reached?"PATHWAY LIMIT REACHED":step?`NEXT · ${step.label}`:"DOSE / SEQUENCE";
+  const stepDose=reached?(m.nextAction||"Do not record another dose from this pathway."):(step?.dose||m.dose);
+  openSheet({eyebrow:m.context,title:m.name,html:`<div class="dose-callout ${m.accent}"><small>${esc(stepLabel)}</small><strong>${esc(stepDose)}</strong>${limit?`<span>${prior} of ${limit} step${limit===1?"":"s"} recorded</span>`:""}</div>
+    ${steps.length?`<ol class="dose-steps">${Array.from({length:limit||steps.length},(_,i)=>{const s=steps[Math.min(i,steps.length-1)];return `<li class="${i<prior?"done":i===prior?"next":""}"><b>${i<prior?"✓":i+1}</b><span><strong>${esc(s.label)}</strong><small>${esc(s.dose)}</small></span></li>`;}).join("")}</ol>`:""}
     <dl class="med-detail"><div><dt>Administration</dt><dd>${esc(m.administration)}</dd></div><div><dt>Repeat / reassessment</dt><dd>${esc(m.repeat)}</dd></div><div class="avoid"><dt>Avoid / use caution</dt><dd>${esc(m.avoid)}</dd></div><div><dt>Monitor</dt><dd>${esc(m.watch)}</dd></div></dl>
-    ${recordable&&session.status==="active"?`<button class="button primary full" data-action="record-med" data-med-id="${m.id}">Confirm medication given now</button><p class="microcopy">Only tap after actual administration. This records time and starts any applicable reassessment timer.</p>`:""}
+    ${m.toxicityTable?`<h3>Serum magnesium effects</h3><div class="toxicity-table">${m.toxicityTable.map(row=>`<div><strong>${esc(row.range)}</strong><span>${esc(row.effect)}</span></div>`).join("")}</div>`:""}
+    ${canRecord&&session.status==="active"&&m.recordable!==false&&!reached?`<button class="button primary full" data-action="record-med" data-med-id="${m.id}">Confirm ${esc(step?.label||"medication given")}</button><p class="microcopy">Only tap after actual administration. This records the exact step and starts the applicable reassessment timer.</p>`:""}
+    ${canRecord&&session.status==="active"&&m.doseSteps&&prior>0&&!reached?`<button class="button secondary full" data-action="finish-med-pathway" data-med-id="${m.id}">BP controlled · finish this pathway</button>`:""}
+    ${m.nextAction&&reached?`<div class="warning-box"><strong>Next action</strong><p>${esc(m.nextAction)}</p></div>`:""}
     <div class="source-note"><strong>${esc(r?.short||"")}</strong><span>${esc(r?.title||"")}</span></div>`});
 }
 function openMedicationChooser(task){
@@ -365,11 +429,22 @@ function recordMedication(id){
   const m=getMedication(id);if(!session||!m)return;
   const prior=session.doseCounts[id]||0;
   if(m.maxDoses&&prior>=m.maxDoses){toast(`${m.name}: pathway dose limit reached—escalate and verify orders`,"alert");return;}
+  const steps=m.workflowSteps||m.doseSteps||[],step=steps.length?steps[Math.min(prior,steps.length-1)]:null,doseText=step?.dose||m.dose;
   session.doseCounts[id]=(session.doseCounts[id]||0)+1;
-  logEvent(`${m.name} administered · dose ${session.doseCounts[id]}`,"medication");
+  session.medicationStates[id]={step:session.doseCounts[id],label:step?.label||"Medication given",dose:doseText,updatedAt:currentElapsed()};
+  logEvent(`${m.name}: ${step?.label||"administered"} · ${doseText}`,"medication");
   if(m.timer)addTimer({label:m.timerLabel||`Reassess after ${m.name}`,dueAt:sessionMinute()+m.timer,kind:"medication",medId:id});
   const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
-  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:session.doseCounts[id]}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${m.timer} min`:""}`);
+  const limit=m.maxDoses||steps.length||1,sequenceComplete=session.doseCounts[id]>=limit;
+  if(task&&!sequenceComplete)session.tasks[task.id]={status:"progress",startedAt:taskState(task.id).startedAt||currentElapsed()};
+  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:sequenceComplete?"completed":"in_progress",payload:{medId:id,doseNumber:session.doseCounts[id],dose:doseText,stepLabel:step?.label||null}});closeSheet();render();toast(`${m.name}: ${step?.label||"recorded"}${m.timer?` · reassess in ${m.timer} min`:""}${sequenceComplete&&m.nextAction?" · pathway limit reached":""}`);
+}
+function finishMedicationPathway(id){
+  const m=getMedication(id);if(!session||!m)return;
+  const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));
+  if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
+  logEvent(`${m.name} pathway finished after ${session.doseCounts[id]||0} recorded dose(s)`,"medication");
+  saveSession({type:"MEDICATION_PATHWAY_FINISHED",taskId:task?.id||null,status:"completed",payload:{medId:id,doses:session.doseCounts[id]||0}});closeSheet();render();toast(`${m.name} pathway finished`);
 }
 function openEducation(id){
   const x=EDUCATION.find(e=>e.id===id);if(!x)return;
@@ -390,8 +465,33 @@ function showDue(id){
 }
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});closeSheet();render();}
 
+function openFlowZoom(id){
+  const e=EMERGENCIES[id];if(!e)return;
+  const image=FLOW_IMAGES[e.id];
+  openSheet({eyebrow:"PINCH OR USE CONTROLS",title:e.name,wide:true,html:`<div class="flow-zoom-controls"><button data-action="zoom-step" data-step="-0.25" aria-label="Zoom out">−</button><button data-action="zoom-reset">Fit</button><button data-action="zoom-step" data-step="0.25" aria-label="Zoom in">+</button><a href="${image}" target="_blank" rel="noopener">Open image ↗</a></div><div class="flow-zoom-viewport"><img id="flowZoomImage" src="${image}" alt="${esc(e.name)} quick clinical pathway"></div><p class="microcopy">Image is optimized to fit a phone screen. Magnify for detail.</p>`});
+}
+function zoomFlow(delta){
+  const image=$("#flowZoomImage");if(!image)return;
+  const current=Number(image.dataset.zoom||1),next=Math.min(3,Math.max(.75,current+delta));
+  image.dataset.zoom=String(next);image.style.width=`${next*100}%`;
+}
+function resetFlowZoom(){const image=$("#flowZoomImage");if(image){image.dataset.zoom="1";image.style.width="100%";}}
+
+async function shareApp(){
+  const data={title:"OB Emergency Assist",text:"Phone-first obstetric emergency guidance and simulation.",url:location.href};
+  try{
+    if(navigator.share){await navigator.share(data);return;}
+    await navigator.clipboard.writeText(location.href);toast("App link copied");
+  }catch(error){if(error?.name!=="AbortError")toast("Share unavailable—copy the page address","alert");}
+}
+async function installApp(){
+  if(deferredInstallPrompt){deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;return;}
+  openSheet({eyebrow:"INSTALL APP",title:"Add to your phone",html:`<div class="install-help"><strong>iPhone / iPad</strong><p>Tap Safari Share, then <b>Add to Home Screen</b>.</p><strong>Android / computer</strong><p>Open the browser menu and choose <b>Install app</b> or <b>Add to Home screen</b>.</p></div>`});
+}
+function toggleTextSize(){settings.largeText=!settings.largeText;saveSettings();applyDisplaySettings();toast(settings.largeText?"Larger text on":"Standard text on");}
+
 function showAbout(){
-  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
+  openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-creator"><img src="icons/ping-avatar.png" alt="Dr. Weiping Lin"><div><strong>Designed by Dr. Weiping Lin</strong><span>OB-GYN physician and medical educator</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored in this browser</span></div><div><strong>Offline</strong><span>Available after first load</span></div></div><h3>Shared-session transition</h3><p>The included Google Workspace adapter can later synchronize task state, timers and timelines across approved devices without rebuilding the clinical interface.</p>`});
 }
 
 function openSheet({eyebrow="",title,html,wide=false}){
@@ -399,15 +499,15 @@ function openSheet({eyebrow="",title,html,wide=false}){
 }
 function closeSheet(){$("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");setTimeout(()=>{$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
-  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),4200);
+  const el=document.createElement("div");el.className=`toast ${type}`;el.setAttribute("role",type==="alert"?"alert":"status");el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),4200);
 }
 function confirmAction(title,text,onConfirm){
   const tpl=$("#confirmTemplate").content.cloneNode(true),card=tpl.querySelector(".confirm-card");card.querySelector("h2").textContent=title;card.querySelector("p").textContent=text;openSheet({eyebrow:"CONFIRM",title:"",html:""});$("#sheetBody").replaceChildren(card);card.addEventListener("click",e=>{if(e.target.dataset.confirm==="cancel")closeSheet();if(e.target.dataset.confirm==="yes"){closeSheet();onConfirm();}});
 }
 function endSession(){
-  confirmAction("End this assist session?","This stops all alerts. The timeline will be cleared when you leave this session.",()=>{clearInterval(clockHandle);freezeClock();session.status="ended";saveSession({type:"SESSION_ENDED",status:"ended"});openSheet({eyebrow:"SESSION ENDED",title:`Elapsed ${fmt(currentElapsed(),true)}`,html:`<p class="lead">Ending the app session does not label the clinical emergency resolved.</p><button class="button secondary full" data-action="show-timeline">View timeline</button><button class="button primary full" data-action="clear-session">Return to emergency home</button>`});render();});
+  confirmAction("End this assist session?","This stops all alerts. The timeline will be cleared when you leave this session.",()=>{clearInterval(clockHandle);freezeClock();releaseWakeLock();session.status="ended";saveSession({type:"SESSION_ENDED",status:"ended"});openSheet({eyebrow:"SESSION ENDED",title:`Elapsed ${fmt(currentElapsed(),true)}`,html:`<p class="lead">Ending the app session does not label the clinical emergency resolved.</p><button class="button secondary full" data-action="show-timeline">View timeline</button><button class="button primary full" data-action="clear-session">Return to emergency home</button>`});render();});
 }
-function clearSession(){session=null;store.clear();selectedEmergency=null;closeSheet();navigate("emergency");}
+function clearSession(){releaseWakeLock();session=null;store.clear();selectedEmergency=null;missedReminderCount=0;closeSheet();navigate("emergency");}
 
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,a");if(!b)return;
@@ -425,7 +525,9 @@ document.addEventListener("click",e=>{
   }
   if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));}
   const a=b.dataset.action;
-  if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
+  if(a==="toggle-text-size")toggleTextSize();
+  if(a==="share-app")shareApp();
+  if(a==="install-app")installApp();
   if(a==="back-home"){selectedEmergency=null;render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
@@ -437,6 +539,12 @@ document.addEventListener("click",e=>{
   if(a==="open-due")showDue(b.dataset.timerId);
   if(a==="ack-timer")acknowledgeTimer(b.dataset.timerId);
   if(a==="record-med")recordMedication(b.dataset.medId);
+  if(a==="finish-med-pathway")finishMedicationPathway(b.dataset.medId);
+  if(a==="dismiss-missed"){missedReminderCount=0;render();}
+  if(a==="apply-update")applyUpdate();
+  if(a==="zoom-flow")openFlowZoom(b.dataset.id);
+  if(a==="zoom-step")zoomFlow(Number(b.dataset.step));
+  if(a==="zoom-reset")resetFlowZoom();
   if(a==="show-about")showAbout();
   if(a==="end-session")endSession();
   if(a==="clear-session")clearSession();
@@ -447,13 +555,51 @@ $("#sheetBackdrop").addEventListener("click",closeSheet);
 $("#homeButton").addEventListener("click",()=>navigate("emergency"));
 
 function updateConnectivity(){
-  const online=navigator.onLine;$("#connectionDot").classList.toggle("offline",!online);$("#connectionLabel").textContent=online?"Ready":"Offline";if(!online)toast("Offline · this device continues locally","alert");
+  const online=navigator.onLine;document.body.classList.toggle("offline",!online);updateHeader();if(!online)toast("Offline · this device continues locally","alert");
 }
 window.addEventListener("online",updateConnectivity);window.addEventListener("offline",updateConnectivity);
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session?.status==="active"){checkMilestones();render();}});
+window.addEventListener("beforeinstallprompt",event=>{event.preventDefault();deferredInstallPrompt=event;});
+window.addEventListener("appinstalled",()=>{deferredInstallPrompt=null;toast("App installed");});
+document.addEventListener("visibilitychange",()=>{
+  if(!session||session.status!=="active")return;
+  if(document.hidden){hiddenAtElapsed=currentElapsed();return;}
+  const hiddenAt=hiddenAtElapsed??currentElapsed();
+  requestWakeLock();
+  checkMilestones();
+  checkDueTransitions();
+  const now=currentElapsed();
+  missedReminderCount=session.timers.filter(t=>!t.cancelled&&!t.ack&&(t.dueAtElapsedMs??t.dueAt*60000)>hiddenAt&&(t.dueAtElapsedMs??t.dueAt*60000)<=now).length;
+  hiddenAtElapsed=null;
+  render();
+});
 
-if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-updateConnectivity();if(session?.status==="active")startClock();render();
+// SERVICE_WORKER_START
+function showUpdateBanner(){
+  const banner=$("#updateBanner");if(!banner)return;
+  banner.hidden=false;
+}
+function watchServiceWorker(registration){
+  swRegistration=registration;
+  if(registration.waiting&&navigator.serviceWorker.controller)showUpdateBanner();
+  registration.addEventListener("updatefound",()=>{
+    const worker=registration.installing;if(!worker)return;
+    worker.addEventListener("statechange",()=>{if(worker.state==="installed"&&navigator.serviceWorker.controller)showUpdateBanner();});
+  });
+}
+function applyUpdate(){
+  if(!swRegistration?.waiting){swRegistration?.update();toast("Checking for an update");return;}
+  refreshingForUpdate=true;
+  swRegistration.waiting.postMessage({type:"SKIP_WAITING"});
+}
+if("serviceWorker" in navigator){
+  window.addEventListener("load",async()=>{
+    try{watchServiceWorker(await navigator.serviceWorker.register("./sw.js"));await swRegistration.update();setInterval(()=>swRegistration?.update(),60*60*1000);}catch{}
+  });
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{if(refreshingForUpdate)location.reload();});
+  window.addEventListener("online",()=>swRegistration?.update());
+}
+// SERVICE_WORKER_END
+updateConnectivity();if(session?.status==="active"){startClock();requestWakeLock();}render();
 store.subscribe(next=>{
   if(suppressStoreNotification||!next||!session||next.id!==session.id)return;
   if((next.revision||0)>(session.revision||0)){session=hydrateSession(next);render();}

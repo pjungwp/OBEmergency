@@ -1,6 +1,6 @@
 # OB Emergency Assist — master build
 
-Phone-first clinical-reference and simulation prototype for postpartum hemorrhage, acute severe hypertension, and eclampsia. The first release is a Netlify-hosted, single-device app. Google Workspace synchronization is packaged as the next-stage target.
+Phone-first clinical-reference and simulation prototype for postpartum hemorrhage, acute severe hypertension, eclampsia and cardiac red flags in pregnancy/postpartum. The first release is a Netlify-hosted, single-device app. Google Workspace synchronization is intentionally parked until the one-phone simulation pilot is validated.
 
 ## What is included
 
@@ -9,6 +9,8 @@ Phone-first clinical-reference and simulation prototype for postpartum hemorrhag
 - To do → In progress/Ongoing → Done task states
 - Repeating assessment timers
 - Drug-specific reassessment timers started only after confirmed administration
+- Step-by-step severe-BP medication pathways with enforced limits
+- Magnesium loading/maintenance status and toxicity table
 - Clinical and Simulation modes
 - Simulation Pause, +1 minute, +5 minutes and Next event controls
 - Five-, ten-, and fifteen-minute team-coordination milestones
@@ -17,12 +19,17 @@ Phone-first clinical-reference and simulation prototype for postpartum hemorrhag
 - TeamSTEPPS, roles, 4 Ts, severe-hypertension, magnesium-safety, pregnancy-status and cardiovascular education
 - Local event timeline
 - Offline caching after the first successful load
+- Network-first clinical updates with an explicit reload banner
+- Screen wake lock during active sessions, with missed-reminder recovery on return
 - Tiny-iPhone-first layout with large action text and 44 px minimum controls
+- Bridge-style header with larger-text, share, install and avatar/About controls
+- Collapsible dashboard landing pages for flowcharts, medications and education
+- Phone-first JPEG flowcharts with fit-to-screen and magnification controls
 
 ## Release order
 
 1. **Netlify first:** deploy the repository root as a static app. No build command is required.
-2. **Google Workspace next:** build the same interface into `google-apps-script/Index.html`, then deploy it as an Apps Script web app when shared-session testing is approved.
+2. **Google Workspace later:** keep the adapter packaged but do not deploy synchronized sessions until the single-device simulation gate and institutional approvals are complete.
 
 This implements the groundwork in [OBEmergency issue #1](https://github.com/pjungwp/OBEmergency/issues/1) without delaying the Netlify release.
 
@@ -49,7 +56,7 @@ npm test
 npm run build:gas
 ```
 
-The tests cover duplicate-event idempotency, stale-revision rejection, timer restoration and simulation-time restoration.
+The tests cover clinical dose sequences and limits, magnesium thresholds, emergency content, safer offline routing, duplicate-event idempotency, stale-revision rejection, timer restoration and simulation-time restoration.
 
 ## Optional Google Workspace build
 
@@ -61,6 +68,8 @@ cd google-apps-script
 clasp create --type webapp --title "OB Emergency Assist"
 clasp push
 ```
+
+`google-apps-script/Index.html` is generated locally and intentionally not committed because the flowchart images are embedded into that file for Apps Script hosting.
 
 To link an existing Apps Script project instead, create a local `.clasp.json` with its Script ID, then run `clasp push`. The file is ignored by Git. In Apps Script, deploy as a web app only after approving execution identity and access settings for the intended Workspace group.
 
@@ -133,7 +142,7 @@ Each event requires `eventId`, `sessionId`, `taskId`, `type`, `status`, `actor`,
 
 - Prototype only; not approved clinical decision support.
 - No patient identifiers.
-- Browser timers and sounds are not guaranteed while a phone is locked or the browser is suspended.
+- The app requests a screen wake lock during an active session and reports reminders crossed while hidden. The browser or operating system can still suspend audio/background execution, so it is not a replacement for approved clinical alarms.
 - Current sessions are local to one browser and are not shared.
 - The timeline is not documentation in the medical record.
 - Hospital protocols and clinician judgment supersede the prototype.

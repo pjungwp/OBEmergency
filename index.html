@@ -18,14 +18,21 @@
         <span class="brand-mark" aria-hidden="true">OB</span>
         <span><strong>Emergency Assist</strong><small id="headerSubtitle">Immediate guidance</small></span>
       </button>
-      <button id="connectionButton" class="status-pill" aria-label="Connection and offline status">
-        <span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span>
-      </button>
+      <div class="header-tools" aria-label="App tools">
+        <button id="textSizeButton" class="header-tool" data-action="toggle-text-size" aria-label="Larger text" aria-pressed="false"><b>AA</b><span>Larger text</span></button>
+        <button id="shareButton" class="header-tool" data-action="share-app" aria-label="Share this app"><b>⌁</b><span>Share</span></button>
+        <button id="installButton" class="header-tool primary" data-action="install-app" aria-label="Download app"><b>↓</b><span>Download</span></button>
+        <button id="aboutButton" class="avatar-button" data-action="show-about" aria-label="About Dr. Weiping Lin"><img src="icons/ping-avatar.png" alt=""></button>
+      </div>
     </header>
 
     <div id="clinicalNotice" class="clinical-notice">
       <strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.
-      <button data-action="dismiss-notice" aria-label="Dismiss notice">×</button>
+    </div>
+
+    <div id="updateBanner" class="update-banner" role="status" aria-live="polite" hidden>
+      <span><strong>Update available</strong><small>A newer clinical build is ready.</small></span>
+      <button data-action="apply-update">Reload now</button>
     </div>
 
     <main id="main" tabindex="-1"></main>
@@ -48,7 +55,7 @@
     <div id="sheetBody" class="sheet-body"></div>
   </aside>
 
-  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+  <div id="toastRegion" class="toast-region" aria-live="assertive" aria-atomic="true"></div>
 
   <template id="confirmTemplate">
     <div class="confirm-card">
