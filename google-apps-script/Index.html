@@ -12,6 +12,99 @@
   body{font-size:17px}.app-header{height:62px;padding:8px 12px}.brand-mark{width:38px;height:38px}.brand-button strong{font-size:15px}.status-pill{padding:8px 9px}.clinical-notice{font-size:11px;padding:8px 34px 8px 10px;text-align:left;justify-content:flex-start}.hero{padding:24px 16px 16px}.hero h1,.page-head h1{font-size:34px}.hero p:last-child,.page-head>p:last-child{font-size:16px}.emergency-grid{padding:11px}.emergency-card{min-height:92px;padding:15px 12px;grid-template-columns:44px 1fr 14px;gap:10px}.emergency-card strong{font-size:20px;line-height:1.15}.emergency-card small{font-size:14px}.quick-strip{padding:0 11px 11px}.quick-strip button{min-height:66px}.home-foot{margin:4px 11px;padding:13px}.preview-head{padding:12px 15px 19px}.preview-title h1{font-size:30px}.preview-title p:last-child{font-size:14px}.preview-actions{padding:12px}.button.large{min-height:52px}.preview-list{padding:3px 12px 16px}.preview-task{padding:16px 50px 16px 14px}.preview-task strong{font-size:18px}.session-banner{padding:8px 12px}.timer-console{top:62px;padding:12px;grid-template-columns:1.25fr .9fr auto}.main-clock strong{font-size:27px}.next-clock strong{font-size:15px}.alarm-button{min-width:50px;min-height:48px}.active-toolbar{padding:8px 10px}.active-toolbar button{min-height:46px}.task-workspace{padding:0 10px}.task-card{padding:14px 12px;grid-template-columns:1fr 36px}.task-card h3{font-size:20px;line-height:1.22;letter-spacing:-.015em}.task-status{font-size:10px}.info-dot{width:36px;height:36px;font-size:17px}.task-actions{gap:8px}.button.compact{min-height:44px;padding:10px 14px;font-size:14px}.completed-panel{margin:13px 10px 18px}.page-head{padding:23px 15px 16px}.emergency-tabs{margin:11px}.segmented button{min-height:44px;padding:9px}.flowchart{margin:0 11px 14px}.flowchart-head{padding:13px}.flow-track{padding:12px}.flow-node{padding:13px 11px}.flow-node h3{font-size:18px}.flow-node p{font-size:14px;line-height:1.38}.search-box{margin:11px;min-height:48px}.filter-chips{padding:0 11px 10px}.filter-chips button{min-height:40px;font-size:12px}.med-list{padding:0 11px 16px}.med-card{padding:14px 12px}.med-card strong{font-size:19px}.med-card p{font-size:14px}.education-grid{padding:11px}.education-card{padding:15px}.education-card strong{font-size:19px}.education-card p{font-size:14px}.info-sheet{max-height:94vh}.sheet-head{padding:7px 14px 11px}.sheet-head h2{font-size:22px}.sheet-body{padding:14px;max-height:calc(94vh - 76px)}.lead{font-size:17px}.dose-callout strong{font-size:17px}.med-detail dd,.lesson-sections p,.lesson-sections li{font-size:15px}.bottom-nav{height:calc(70px + var(--safe-bottom));padding-left:4px;padding-right:4px}.nav-item{min-height:52px}.nav-item small{font-size:11px}
 }
 @media(max-width:380px){.preview-actions{grid-template-columns:1fr}.preview-actions .full{grid-column:auto}.timer-console{grid-template-columns:1.1fr .82fr auto}.quick-strip{grid-template-columns:1fr}.home-foot{display:block}.home-foot .text-button{margin-top:10px}.task-card h3{font-size:19px}.task-actions{justify-content:stretch}.task-actions .button{flex:1}.sim-controls{padding:7px 8px}.sim-controls button{min-height:40px}.active-toolbar button{font-size:11px}.preview-title{gap:10px}.preview-title .emergency-icon{width:42px;height:42px}.status-pill span:last-child{display:none}}
+/* =====================================================================
+   GLOBAL COMPACT CLINICAL LAYOUT — see DESIGN-RULES.md
+   Reduce nonclinical vertical space; never shrink clinical text to fit.
+   ===================================================================== */
+/* Type floor: labels ≥13px, supporting text ≥16px, everywhere */
+.eyebrow{font-size:13px;letter-spacing:.1em}
+.hero{padding:18px 16px 12px}.page-head{padding:18px 16px 14px}
+.hero p:last-child,.page-head>p:last-child{font-size:16px}
+.emergency-card small,.med-card p,.education-card p,.flow-node p,.lesson-sections p,.lesson-sections li,.med-detail dd,.lead,.dose-callout strong{font-size:16px}
+.med-card small,.education-card small,.flowchart-head small,.sheet-head small,.med-detail dt,.dose-callout small,.source-band>span,.preview-task>span{font-size:13px}
+.source-band>small,.ref-tags span,.reference-list small,.reference-list p,.version-card span,.version-card p{font-size:13px}
+.quick-strip strong{font-size:16px}.quick-strip small,.home-foot small,.home-foot strong{font-size:14px}
+.filter-chips button,.segmented button{font-size:15px;min-height:44px}
+.timer-list strong{font-size:17px}.timer-list small{font-size:15px}.timer-list button{font-size:15px;padding:10px 12px;min-height:44px}
+.timeline-list article{grid-template-columns:64px 1fr}.timeline-list time,.timeline-list strong{font-size:15px}.timeline-list small{font-size:12px}
+.due-callout strong{font-size:19px}.due-callout span{font-size:15px}
+.microcopy,.about-list>div{font-size:14px}.toast{font-size:15px}
+.completed-item strong{font-size:16px}.completed-item small{font-size:14px}.completed-item button{font-size:15px;min-height:44px;padding:0 14px}
+/* Compact chrome */
+.app-header{height:56px;padding:6px 12px}.brand-mark{width:36px;height:36px}
+.clinical-notice{font-size:13px;padding:6px 36px 6px 12px}
+.app-shell{padding-bottom:calc(68px + var(--safe-bottom))}
+.bottom-nav{height:calc(60px + var(--safe-bottom));padding-top:4px}.nav-item{min-height:48px}.nav-item small{font-size:12px}
+
+/* ---------- Active session: clinical cockpit ---------- */
+[hidden]{display:none!important}
+body.in-cockpit .app-header,body.in-cockpit .bottom-nav,body.in-cockpit .clinical-notice{display:none}
+body.in-cockpit .toast{padding:10px 12px;font-size:15px}
+body.in-cockpit .app-shell{padding-bottom:calc(16px + var(--safe-bottom))}
+body.in-cockpit .toast-region{top:auto;bottom:calc(14px + var(--safe-bottom))}
+.cockpit-head{position:sticky;top:0;z-index:30;background:#fff;border-bottom:1px solid var(--line);border-top:4px solid var(--navy);box-shadow:0 6px 16px rgba(11,33,73,.08);padding:4px 10px 6px}
+.cockpit-head.crimson{border-top-color:var(--crimson)}.cockpit-head.amber{border-top-color:var(--amber)}.cockpit-head.violet{border-top-color:var(--violet)}
+.cockpit-head.simulation{background:repeating-linear-gradient(-45deg,#e4f6f3 0 14px,#d6f0ec 14px 28px);border-top-color:var(--teal)}
+.cockpit-row{display:grid;grid-template-columns:minmax(0,auto) 1fr auto auto;align-items:center;gap:8px;min-height:54px}
+.cockpit-id{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mode-tag{align-self:flex-start;font-size:12px;font-weight:900;letter-spacing:.08em;padding:3px 8px;border-radius:6px;background:#8c1f32;color:#fff}
+.simulation .mode-tag{background:var(--teal)}
+.cockpit-id strong{font-size:17px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cockpit-clock{display:flex;flex-direction:column;align-items:center;line-height:1}
+.cockpit-clock strong{font-size:34px;font-variant-numeric:tabular-nums;letter-spacing:.01em;color:var(--navy)}
+.cockpit-clock small{font-size:13px;font-weight:700;color:var(--muted);margin-top:2px}
+.cockpit-icon{width:48px;height:48px;border-radius:12px;border:1px solid var(--line);background:#f3f5f8;font-size:20px}
+.cockpit-icon.on{background:#e8f7f0;border-color:#a4dec2}
+.cockpit-end{height:48px;padding:0 14px;border-radius:12px;border:1px solid #d9b3ba;background:#fff;color:#8c1f32;font-size:16px;font-weight:900}
+.cockpit-status{display:flex;align-items:center;gap:8px;min-height:28px;font-size:16px;color:#34445c;white-space:nowrap;overflow:hidden}
+.cockpit-status .next-up{overflow:hidden;text-overflow:ellipsis;font-weight:600}
+.overdue-count{flex:none;background:#b4192f;color:#fff;border-radius:7px;padding:2px 8px;font-size:15px;font-weight:900}
+.live-countdown,.live-overdue{font-variant-numeric:tabular-nums}
+.sim-controls{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:6px 10px;background:#dff6f2;border-bottom:1px solid #b9e2dc;overflow:visible}
+.sim-controls button{min-height:44px;padding:4px;font-size:15px;font-weight:900;border:1px solid #9bcfc7;background:#fff;color:#126b63;border-radius:10px;white-space:nowrap}
+.alert-strip{display:flex;gap:6px;margin:8px 10px 0}
+.alert-strip button{border:2px solid #c72f48;background:#fff1f3;border-radius:12px;color:#8c1f32;text-align:left}
+.alert-main{flex:1;min-width:0;padding:8px 12px;display:flex;flex-direction:column;gap:2px}
+.alert-main strong{font-size:17px;color:#6f1424;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alert-main>span{font-size:15px;font-weight:700}
+.alert-more{flex:none;min-width:52px;font-size:17px;font-weight:900;text-align:center!important}
+.cockpit-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px 2px}
+.cockpit-tabs button{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:11px;font-size:15px;font-weight:800;color:var(--navy);padding:0 4px;display:flex;align-items:center;justify-content:center;gap:5px}
+.cockpit-tabs button span{background:var(--navy);color:#fff;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;font-size:12px;padding:0 5px}
+body.in-cockpit .task-workspace{display:block;padding:0 10px}
+body.in-cockpit .task-group h2{font-size:14px;letter-spacing:.08em;color:#4a5a72;margin:12px 2px 6px}
+body.in-cockpit .due-group h2{color:#b4192f}
+body.in-cockpit .task-card{padding:12px;margin-bottom:7px;gap:8px;grid-template-columns:1fr 40px;border-radius:14px}
+body.in-cockpit .task-card h3{font-size:21px;font-weight:800;line-height:1.22;letter-spacing:-.01em}
+body.in-cockpit .task-status{font-size:15px;letter-spacing:0;font-weight:800;margin-bottom:4px;color:#5a6a80}
+body.in-cockpit .task-status.overdue{color:#b4192f}
+body.in-cockpit .task-card.is-overdue{border:2px solid #c72f48;border-left:7px solid #c72f48;background:#fff3f5}
+body.in-cockpit .info-dot{width:40px;height:40px;font-size:18px}
+body.in-cockpit .task-actions{border-top:0;padding-top:0;gap:8px}
+body.in-cockpit .task-actions .button{flex:1;min-height:48px;font-size:17px;padding:10px 14px}
+body.in-cockpit .completed-panel{margin:10px 0 14px}
+body.in-cockpit .completed-panel>button{font-size:16px;min-height:48px;padding:0 14px;align-items:center}
+body.in-cockpit .completed-panel>button span{font-size:15px}
+.cockpit-side{display:none}
+.side-timeline{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.side-timeline h2{font-size:14px;letter-spacing:.06em;color:#4a5a72;margin:0 0 6px;text-transform:uppercase}
+.side-timeline h2 small{text-transform:none;letter-spacing:0;font-weight:600}
+.side-timeline article{display:grid;grid-template-columns:60px 1fr;gap:8px;padding:5px 0;border-top:1px solid #eef1f5;font-size:15px}
+.side-timeline time{font-weight:900;color:var(--navy);font-variant-numeric:tabular-nums}
+@media(max-width:380px){
+  .cockpit-clock strong{font-size:30px}.cockpit-id strong{font-size:15px}.cockpit-end{padding:0 10px}
+  body.in-cockpit .task-card h3{font-size:20px}
+  .cockpit-tabs button,.sim-controls button{font-size:14px}
+}
+/* Wide/unfolded: actions left, flowchart + timeline right. Same type sizes. */
+@media(min-width:760px){
+  body.in-cockpit .app-shell{width:min(100%,1200px)}
+  .cockpit-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);gap:4px;align-items:start}
+  .cockpit-side{display:block;position:sticky;top:104px;max-height:calc(100vh - 112px);overflow:auto;padding:12px 10px 0 0}
+  .cockpit-side .flowchart{margin:0 0 12px}
+  .cockpit-side .flow-node h3{font-size:17px}.cockpit-side .flow-node p{font-size:15px}
+  .cockpit-tabs{grid-template-columns:repeat(3,1fr);max-width:620px}.cockpit-tabs .tab-flow{display:none}
+}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
   <title>OB Emergency Assist</title>
@@ -62,7 +155,7 @@
     </div>
   </template>
   <script>
-const APP_VERSION = "0.9.0-prototype";
+const APP_VERSION = "0.10.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -408,7 +501,9 @@ function navigate(next,opts={}){
 }
 
 function render(){
-  $("#clinicalNotice").hidden=settings.noticeDismissed;
+  const cockpit=route==="emergency"&&session?.status==="active";
+  document.body.classList.toggle("in-cockpit",cockpit);
+  $("#clinicalNotice").hidden=settings.noticeDismissed||cockpit;
   if(route==="emergency") renderEmergency();
   if(route==="flowcharts") renderFlowcharts();
   if(route==="medications") renderMedications();
@@ -476,56 +571,104 @@ function startSession(id,mode){
   ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render(); toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
 }
 
+// Active session = clinical cockpit. Global rule (see DESIGN-RULES.md):
+// nonclinical chrome is minimized, clinical text is never shrunk to fit.
 function renderActiveSession(){
   const e=EMERGENCIES[session.emergencyId];
-  const elapsed=currentElapsed();
-  const dueTimers=getDueTimers();
+  const sim=session.mode==="simulation";
+  const timerCount=session.timers.filter(t=>!t.cancelled&&!t.ack).length;
   main.innerHTML=`
-    <div class="session-banner ${session.mode}">
-      <div><span>${session.mode==="simulation"?"SIMULATION":"CLINICAL ASSIST"}</span><strong>${esc(e.name)}</strong></div>
-      <button class="text-button light" data-action="end-session">End</button>
-    </div>
-    <section class="timer-console ${e.accent}">
-      <div class="main-clock"><small>ELAPSED</small><strong id="elapsedClock">${fmt(elapsed,true)}</strong></div>
-      <div class="next-clock"><small>NEXT DUE</small><strong id="nextDue">${nextDueLabel()}</strong></div>
-      <button class="alarm-button ${session.sound?"on":""}" data-action="toggle-sound" aria-label="Toggle sound">${session.sound?"🔊":"🔇"}<small>${session.sound?"Sound on":"Sound off"}</small></button>
+    <section class="cockpit-head ${session.mode} ${e.accent}" aria-label="Session status">
+      <div class="cockpit-row">
+        <div class="cockpit-id"><span class="mode-tag">${sim?"SIMULATION":"CLINICAL"}</span><strong>${esc(e.short)}</strong></div>
+        <div class="cockpit-clock" aria-live="off"><strong id="elapsedClock">${fmt(currentElapsed())}</strong><small>elapsed${sim&&!session.running?" · paused":""}</small></div>
+        <button class="cockpit-icon ${session.sound?"on":""}" data-action="toggle-sound" aria-label="${session.sound?"Sound on — tap to mute":"Sound off — tap to unmute"}">${session.sound?"🔊":"🔇"}</button>
+        <button class="cockpit-end" data-action="end-session">End</button>
+      </div>
+      <div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>
     </section>
-    ${session.mode==="simulation"?renderSimulationControls():""}
-    ${dueTimers.length?`<section class="due-panel"><strong>${dueTimers.length} reminder${dueTimers.length>1?"s":""} due</strong>${dueTimers.map(t=>`<button data-action="open-due" data-timer-id="${t.id}">${esc(t.label)} <span>Due ${formatDue(t)}</span></button>`).join("")}</section>`:""}
-    <div class="active-toolbar">
-      <button data-action="open-flow" data-id="${e.id}">↳ <strong>Flowchart</strong></button>
-      <button data-action="show-timers">◷ <strong>Timers</strong><span>${session.timers.filter(t=>!t.cancelled).length}</span></button>
-      <button data-action="show-timeline">≡ <strong>Timeline</strong><span>${session.events.length}</span></button>
-    </div>
-    <section class="task-workspace">
-      ${renderTaskGroups(e)}
-    </section>
-    <section class="completed-panel">
-      <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} task${completedCount(e)===1?"":"s"} ›</span></button>
-      <div id="completedList" hidden>${renderCompleted(e)}</div>
-    </section>`;
+    ${sim?renderSimulationControls():""}
+    ${renderAlertStrip()}
+    <nav class="cockpit-tabs" aria-label="Session tools">
+      <button class="tab-flow" data-action="open-flow" data-id="${e.id}">Flowchart</button>
+      <button data-nav-jump="medications">Meds</button>
+      <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
+      <button data-action="show-timeline">Timeline</button>
+    </nav>
+    <div class="cockpit-body">
+      <section class="task-workspace">
+        ${renderDueGroup(e)}
+        ${renderTaskGroups(e)}
+        <section class="completed-panel">
+          <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} ›</span></button>
+          <div id="completedList" hidden>${renderCompleted(e)}</div>
+        </section>
+      </section>
+      <aside class="cockpit-side" aria-label="Flowchart and recent events">
+        ${flowHTML(e,true)}
+        <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
+      </aside>
+    </div>`;
   requestAnimationFrame(updateClockDom);
 }
 
 function renderSimulationControls(){
-  return `<section class="sim-controls"><span>SIM CLOCK</span><button data-sim="pause">${session.running?"Pause":"Resume"}</button><button data-sim="1">+1 min</button><button data-sim="5">+5 min</button><button data-sim="next">Next event</button></section>`;
+  return `<section class="sim-controls" aria-label="Simulation clock controls"><button data-sim="pause">${session.running?"Pause":"Resume"}</button><button data-sim="1">+1 min</button><button data-sim="5">+5 min</button><button data-sim="next">Next event</button></section>`;
+}
+
+// Overdue items are never hidden behind a tap. Task-linked reminders show on
+// their own card (DUE NOW group); unlinked reminders (milestones, post-dose
+// reassessment) show here, most overdue first.
+function renderAlertStrip(){
+  const due=getDueTimers().filter(t=>!t.taskId).sort((a,b)=>a.dueAt-b.dueAt);
+  if(!due.length)return "";
+  const first=due[0];
+  return `<section class="alert-strip" role="alert">
+    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${overdueSpan(first)}</span></button>
+    ${due.length>1?`<button class="alert-more" data-action="show-timers">+${due.length-1}</button>`:""}
+  </section>`;
+}
+
+function statusLineHTML(){
+  const due=getDueTimers().length;
+  const next=getFutureEvents()[0];
+  const nextTxt=next?`Next: ${esc(next.label)} in <span class="live-countdown" data-due-at="${next.at}">${fmt((next.at-sessionMinute())*60000)}</span>`:"No upcoming reminders";
+  return `${due?`<b class="overdue-count">${due} overdue</b>`:""}<span class="next-up">${nextTxt}</span>`;
 }
 
 function taskState(id){return session.tasks[id]||{status:"todo"};}
+function overdueTimerFor(taskId){return getDueTimers().find(x=>x.taskId===taskId);}
+function renderDueGroup(e){
+  const items=e.tasks.filter(t=>taskState(t.id).status!=="done"&&overdueTimerFor(t.id));
+  if(!items.length)return "";
+  return `<div class="task-group due-group"><h2>DUE NOW</h2>${items.map(renderTaskCard).join("")}</div>`;
+}
 function renderTaskGroups(e){
   const groups=[...new Set(e.tasks.map(t=>t.group))];
   return groups.map(group=>{
-    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done");
+    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
     if(!items.length)return "";
     return `<div class="task-group"><h2>${esc(group)}</h2>${items.map(renderTaskCard).join("")}</div>`;
   }).join("");
 }
 
+function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
+function taskStatusHTML(t,st){
+  const overdue=overdueTimerFor(t.id);
+  if(overdue)return `<div class="task-status overdue">${overdueSpan(overdue)}</div>`;
+  const next=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);
+  const parts=[];
+  if(st.status==="progress")parts.push("In progress");
+  if(st.status==="ongoing")parts.push("Ongoing");
+  if(next)parts.push(`Next in <span class="live-countdown" data-due-at="${next.dueAt}">${formatCountdown(next)}</span>`);
+  return parts.length?`<div class="task-status">${parts.join(" · ")}</div>`:"";
+}
+
 function renderTaskCard(t){
   const st=taskState(t.id);
-  const repeatTimer=session.timers.find(x=>x.taskId===t.id&&!x.cancelled);
-  return `<article class="task-card ${t.priority} ${st.status}">
-    <div class="task-copy"><div class="task-status">${st.status==="progress"?"IN PROGRESS":t.type==="ongoing"&&st.status==="ongoing"?"ONGOING":"TO DO"}${repeatTimer?` · ${repeatTimer.dueAt<=sessionMinute()?"DUE NOW":`NEXT ${formatCountdown(repeatTimer)}`}`:""}</div><h3>${esc(taskLabel(t))}</h3></div>
+  const overdue=!!overdueTimerFor(t.id);
+  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}">
+    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3></div>
     <button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>
     <div class="task-actions">
       ${st.status==="todo"?`<button class="button compact secondary" data-task-action="start" data-task-id="${t.id}">Start</button>`:""}
@@ -565,7 +708,9 @@ function addTimer(timer){session.timers.push({id:uid(),createdAt:sessionMinute()
 function logEvent(text,type="note"){session.events.unshift({id:uid(),at:currentElapsed(),type,text});}
 function formatEventTime(ms){return fmt(ms,true);}
 function formatCountdown(t){return fmt(Math.max(0,(t.dueAt-sessionMinute())*60000));}
-function formatDue(t){return t.dueAt<=sessionMinute()?`by ${fmt((sessionMinute()-t.dueAt)*60000)}`:`in ${formatCountdown(t)}`;}
+// Every time shown in a session is on the elapsed-time clock. Labels say which
+// is which: "due at" = elapsed time it fell due; "overdue"/"in" = distance from now.
+function formatDue(t){return t.dueAt<=sessionMinute()?`Due at ${fmt(t.dueAt*60000)} elapsed · overdue ${fmt((sessionMinute()-t.dueAt)*60000)}`:`Due at ${fmt(t.dueAt*60000)} elapsed · in ${formatCountdown(t)}`;}
 
 function getDueTimers(){return session?session.timers.filter(t=>!t.cancelled&&!t.ack&&t.dueAt<=sessionMinute()):[];}
 function getFutureEvents(){
@@ -575,10 +720,7 @@ function getFutureEvents(){
   const milestones=e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
   return [...timerEvents,...milestones].sort((a,b)=>a.at-b.at);
 }
-function nextDueLabel(){
-  const due=getDueTimers(); if(due.length)return "DUE NOW";
-  const next=getFutureEvents()[0]; return next?fmt((next.at-sessionMinute())*60000):"—";
-}
+function nextDueLabel(){return statusLineHTML();}
 
 function startClock(){
   clearInterval(clockHandle); if(!session||session.status!=="active")return;
@@ -587,9 +729,10 @@ function startClock(){
 }
 function updateClockDom(){
   if(!session)return;
-  const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed(),true);
-  const n=$("#nextDue"); if(n)n.textContent=nextDueLabel();
-  $(".task-card").forEach(card=>{});
+  const now=sessionMinute();
+  const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed());
+  $(".live-overdue").forEach(el=>{el.textContent=`overdue ${fmt((now-Number(el.dataset.dueAt))*60000)}`;});
+  $(".live-countdown").forEach(el=>{el.textContent=fmt((Number(el.dataset.dueAt)-now)*60000);});
 }
 function freezeClock(){
   if(session?.running){session.elapsedBase=currentElapsed();session.running=false;session.lastTickAt=Date.now();session.simulationTimeMs=session.mode==="simulation"?session.elapsedBase:null;saveSession({type:"SESSION_PAUSED",status:"active"});}
@@ -613,7 +756,8 @@ function checkMilestones(){
       session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message});logEvent(`${m.label}: ${m.message}`,"milestone");latest=m;
     }
   });
-  if(latest){playAlert();toast(latest.message,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
+  // The alert strip already shows the milestone; the toast only names it.
+  if(latest){playAlert();toast(`${latest.label} due`,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
 }
 let lastDueCount=0;
 function checkDueTransitions(){
@@ -642,8 +786,8 @@ function renderFlowcharts(){
     ${flowHTML(e)}
     <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>This is a concise implementation view, not a replacement for the complete source or local protocol.</small></div>`;
 }
-function flowHTML(e){
-  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${session?.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
+function flowHTML(e,embedded=false){
+  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${!embedded&&session?.status==="active"&&session.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
     <div class="flow-track">${e.flow.map((n,i)=>`<article class="flow-node ${n.tone}"><span>${i+1}</span><div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div></article>${i<e.flow.length-1?`<div class="flow-arrow">↓</div>`:""}`).join("")}</div></section>`;
 }
 
@@ -702,10 +846,10 @@ function openFlow(id){flowEmergency=id;route="flowcharts";$(".nav-item").forEach
 
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
-  openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?"Acknowledged":t.dueAt<=sessionMinute()?`Overdue ${formatDue(t)}`:`Due in ${formatCountdown(t)}`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
+  openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · ${formatDue(t)}`:formatDue(t)}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
 }
 function showTimeline(){
-  openSheet({eyebrow:"THIS DEVICE",title:"Event timeline",html:`<p class="lead">A local operational record—not documentation in the medical record.</p><div class="timeline-list">${session.events.map(e=>`<article><time>${formatEventTime(e.at)}</time><div><strong>${esc(e.text)}</strong><small>${esc(e.type)}</small></div></article>`).join("")}</div>`});
+  openSheet({eyebrow:"THIS DEVICE",title:"Event timeline",html:`<p class="lead">A local operational record—not documentation in the medical record. Times are elapsed since session start.</p><div class="timeline-list">${session.events.map(e=>`<article><time>${formatEventTime(e.at)}</time><div><strong>${esc(e.text)}</strong><small>${esc(e.type)}</small></div></article>`).join("")}</div>`});
 }
 function showDue(id){
   const t=session.timers.find(x=>x.id===id);if(!t)return;
@@ -722,7 +866,10 @@ function openSheet({eyebrow="",title,html,wide=false}){
 }
 function closeSheet(){$("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");setTimeout(()=>{$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
-  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),4200);
+  // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
+  const cockpit=document.body.classList.contains("in-cockpit");
+  if(cockpit)$("#toastRegion").replaceChildren();
+  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),cockpit?2600:4200);
 }
 function confirmAction(title,text,onConfirm){
   const tpl=$("#confirmTemplate").content.cloneNode(true),card=tpl.querySelector(".confirm-card");card.querySelector("h2").textContent=title;card.querySelector("p").textContent=text;openSheet({eyebrow:"CONFIRM",title:"",html:""});$("#sheetBody").replaceChildren(card);card.addEventListener("click",e=>{if(e.target.dataset.confirm==="cancel")closeSheet();if(e.target.dataset.confirm==="yes"){closeSheet();onConfirm();}});

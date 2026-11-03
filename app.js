@@ -85,7 +85,9 @@ function navigate(next,opts={}){
 }
 
 function render(){
-  $("#clinicalNotice").hidden=settings.noticeDismissed;
+  const cockpit=route==="emergency"&&session?.status==="active";
+  document.body.classList.toggle("in-cockpit",cockpit);
+  $("#clinicalNotice").hidden=settings.noticeDismissed||cockpit;
   if(route==="emergency") renderEmergency();
   if(route==="flowcharts") renderFlowcharts();
   if(route==="medications") renderMedications();
@@ -153,56 +155,104 @@ function startSession(id,mode){
   ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render(); toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
 }
 
+// Active session = clinical cockpit. Global rule (see DESIGN-RULES.md):
+// nonclinical chrome is minimized, clinical text is never shrunk to fit.
 function renderActiveSession(){
   const e=EMERGENCIES[session.emergencyId];
-  const elapsed=currentElapsed();
-  const dueTimers=getDueTimers();
+  const sim=session.mode==="simulation";
+  const timerCount=session.timers.filter(t=>!t.cancelled&&!t.ack).length;
   main.innerHTML=`
-    <div class="session-banner ${session.mode}">
-      <div><span>${session.mode==="simulation"?"SIMULATION":"CLINICAL ASSIST"}</span><strong>${esc(e.name)}</strong></div>
-      <button class="text-button light" data-action="end-session">End</button>
-    </div>
-    <section class="timer-console ${e.accent}">
-      <div class="main-clock"><small>ELAPSED</small><strong id="elapsedClock">${fmt(elapsed,true)}</strong></div>
-      <div class="next-clock"><small>NEXT DUE</small><strong id="nextDue">${nextDueLabel()}</strong></div>
-      <button class="alarm-button ${session.sound?"on":""}" data-action="toggle-sound" aria-label="Toggle sound">${session.sound?"🔊":"🔇"}<small>${session.sound?"Sound on":"Sound off"}</small></button>
+    <section class="cockpit-head ${session.mode} ${e.accent}" aria-label="Session status">
+      <div class="cockpit-row">
+        <div class="cockpit-id"><span class="mode-tag">${sim?"SIMULATION":"CLINICAL"}</span><strong>${esc(e.short)}</strong></div>
+        <div class="cockpit-clock" aria-live="off"><strong id="elapsedClock">${fmt(currentElapsed())}</strong><small>elapsed${sim&&!session.running?" · paused":""}</small></div>
+        <button class="cockpit-icon ${session.sound?"on":""}" data-action="toggle-sound" aria-label="${session.sound?"Sound on — tap to mute":"Sound off — tap to unmute"}">${session.sound?"🔊":"🔇"}</button>
+        <button class="cockpit-end" data-action="end-session">End</button>
+      </div>
+      <div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>
     </section>
-    ${session.mode==="simulation"?renderSimulationControls():""}
-    ${dueTimers.length?`<section class="due-panel"><strong>${dueTimers.length} reminder${dueTimers.length>1?"s":""} due</strong>${dueTimers.map(t=>`<button data-action="open-due" data-timer-id="${t.id}">${esc(t.label)} <span>Due ${formatDue(t)}</span></button>`).join("")}</section>`:""}
-    <div class="active-toolbar">
-      <button data-action="open-flow" data-id="${e.id}">↳ <strong>Flowchart</strong></button>
-      <button data-action="show-timers">◷ <strong>Timers</strong><span>${session.timers.filter(t=>!t.cancelled).length}</span></button>
-      <button data-action="show-timeline">≡ <strong>Timeline</strong><span>${session.events.length}</span></button>
-    </div>
-    <section class="task-workspace">
-      ${renderTaskGroups(e)}
-    </section>
-    <section class="completed-panel">
-      <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} task${completedCount(e)===1?"":"s"} ›</span></button>
-      <div id="completedList" hidden>${renderCompleted(e)}</div>
-    </section>`;
+    ${sim?renderSimulationControls():""}
+    ${renderAlertStrip()}
+    <nav class="cockpit-tabs" aria-label="Session tools">
+      <button class="tab-flow" data-action="open-flow" data-id="${e.id}">Flowchart</button>
+      <button data-nav-jump="medications">Meds</button>
+      <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
+      <button data-action="show-timeline">Timeline</button>
+    </nav>
+    <div class="cockpit-body">
+      <section class="task-workspace">
+        ${renderDueGroup(e)}
+        ${renderTaskGroups(e)}
+        <section class="completed-panel">
+          <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} ›</span></button>
+          <div id="completedList" hidden>${renderCompleted(e)}</div>
+        </section>
+      </section>
+      <aside class="cockpit-side" aria-label="Flowchart and recent events">
+        ${flowHTML(e,true)}
+        <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
+      </aside>
+    </div>`;
   requestAnimationFrame(updateClockDom);
 }
 
 function renderSimulationControls(){
-  return `<section class="sim-controls"><span>SIM CLOCK</span><button data-sim="pause">${session.running?"Pause":"Resume"}</button><button data-sim="1">+1 min</button><button data-sim="5">+5 min</button><button data-sim="next">Next event</button></section>`;
+  return `<section class="sim-controls" aria-label="Simulation clock controls"><button data-sim="pause">${session.running?"Pause":"Resume"}</button><button data-sim="1">+1 min</button><button data-sim="5">+5 min</button><button data-sim="next">Next event</button></section>`;
+}
+
+// Overdue items are never hidden behind a tap. Task-linked reminders show on
+// their own card (DUE NOW group); unlinked reminders (milestones, post-dose
+// reassessment) show here, most overdue first.
+function renderAlertStrip(){
+  const due=getDueTimers().filter(t=>!t.taskId).sort((a,b)=>a.dueAt-b.dueAt);
+  if(!due.length)return "";
+  const first=due[0];
+  return `<section class="alert-strip" role="alert">
+    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${overdueSpan(first)}</span></button>
+    ${due.length>1?`<button class="alert-more" data-action="show-timers">+${due.length-1}</button>`:""}
+  </section>`;
+}
+
+function statusLineHTML(){
+  const due=getDueTimers().length;
+  const next=getFutureEvents()[0];
+  const nextTxt=next?`Next: ${esc(next.label)} in <span class="live-countdown" data-due-at="${next.at}">${fmt((next.at-sessionMinute())*60000)}</span>`:"No upcoming reminders";
+  return `${due?`<b class="overdue-count">${due} overdue</b>`:""}<span class="next-up">${nextTxt}</span>`;
 }
 
 function taskState(id){return session.tasks[id]||{status:"todo"};}
+function overdueTimerFor(taskId){return getDueTimers().find(x=>x.taskId===taskId);}
+function renderDueGroup(e){
+  const items=e.tasks.filter(t=>taskState(t.id).status!=="done"&&overdueTimerFor(t.id));
+  if(!items.length)return "";
+  return `<div class="task-group due-group"><h2>DUE NOW</h2>${items.map(renderTaskCard).join("")}</div>`;
+}
 function renderTaskGroups(e){
   const groups=[...new Set(e.tasks.map(t=>t.group))];
   return groups.map(group=>{
-    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done");
+    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
     if(!items.length)return "";
     return `<div class="task-group"><h2>${esc(group)}</h2>${items.map(renderTaskCard).join("")}</div>`;
   }).join("");
 }
 
+function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
+function taskStatusHTML(t,st){
+  const overdue=overdueTimerFor(t.id);
+  if(overdue)return `<div class="task-status overdue">${overdueSpan(overdue)}</div>`;
+  const next=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);
+  const parts=[];
+  if(st.status==="progress")parts.push("In progress");
+  if(st.status==="ongoing")parts.push("Ongoing");
+  if(next)parts.push(`Next in <span class="live-countdown" data-due-at="${next.dueAt}">${formatCountdown(next)}</span>`);
+  return parts.length?`<div class="task-status">${parts.join(" · ")}</div>`:"";
+}
+
 function renderTaskCard(t){
   const st=taskState(t.id);
-  const repeatTimer=session.timers.find(x=>x.taskId===t.id&&!x.cancelled);
-  return `<article class="task-card ${t.priority} ${st.status}">
-    <div class="task-copy"><div class="task-status">${st.status==="progress"?"IN PROGRESS":t.type==="ongoing"&&st.status==="ongoing"?"ONGOING":"TO DO"}${repeatTimer?` · ${repeatTimer.dueAt<=sessionMinute()?"DUE NOW":`NEXT ${formatCountdown(repeatTimer)}`}`:""}</div><h3>${esc(taskLabel(t))}</h3></div>
+  const overdue=!!overdueTimerFor(t.id);
+  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}">
+    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3></div>
     <button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>
     <div class="task-actions">
       ${st.status==="todo"?`<button class="button compact secondary" data-task-action="start" data-task-id="${t.id}">Start</button>`:""}
@@ -242,7 +292,9 @@ function addTimer(timer){session.timers.push({id:uid(),createdAt:sessionMinute()
 function logEvent(text,type="note"){session.events.unshift({id:uid(),at:currentElapsed(),type,text});}
 function formatEventTime(ms){return fmt(ms,true);}
 function formatCountdown(t){return fmt(Math.max(0,(t.dueAt-sessionMinute())*60000));}
-function formatDue(t){return t.dueAt<=sessionMinute()?`by ${fmt((sessionMinute()-t.dueAt)*60000)}`:`in ${formatCountdown(t)}`;}
+// Every time shown in a session is on the elapsed-time clock. Labels say which
+// is which: "due at" = elapsed time it fell due; "overdue"/"in" = distance from now.
+function formatDue(t){return t.dueAt<=sessionMinute()?`Due at ${fmt(t.dueAt*60000)} elapsed · overdue ${fmt((sessionMinute()-t.dueAt)*60000)}`:`Due at ${fmt(t.dueAt*60000)} elapsed · in ${formatCountdown(t)}`;}
 
 function getDueTimers(){return session?session.timers.filter(t=>!t.cancelled&&!t.ack&&t.dueAt<=sessionMinute()):[];}
 function getFutureEvents(){
@@ -252,10 +304,7 @@ function getFutureEvents(){
   const milestones=e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
   return [...timerEvents,...milestones].sort((a,b)=>a.at-b.at);
 }
-function nextDueLabel(){
-  const due=getDueTimers(); if(due.length)return "DUE NOW";
-  const next=getFutureEvents()[0]; return next?fmt((next.at-sessionMinute())*60000):"—";
-}
+function nextDueLabel(){return statusLineHTML();}
 
 function startClock(){
   clearInterval(clockHandle); if(!session||session.status!=="active")return;
@@ -264,9 +313,10 @@ function startClock(){
 }
 function updateClockDom(){
   if(!session)return;
-  const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed(),true);
-  const n=$("#nextDue"); if(n)n.textContent=nextDueLabel();
-  $$(".task-card").forEach(card=>{});
+  const now=sessionMinute();
+  const c=$("#elapsedClock"); if(c)c.textContent=fmt(currentElapsed());
+  $$(".live-overdue").forEach(el=>{el.textContent=`overdue ${fmt((now-Number(el.dataset.dueAt))*60000)}`;});
+  $$(".live-countdown").forEach(el=>{el.textContent=fmt((Number(el.dataset.dueAt)-now)*60000);});
 }
 function freezeClock(){
   if(session?.running){session.elapsedBase=currentElapsed();session.running=false;session.lastTickAt=Date.now();session.simulationTimeMs=session.mode==="simulation"?session.elapsedBase:null;saveSession({type:"SESSION_PAUSED",status:"active"});}
@@ -290,7 +340,8 @@ function checkMilestones(){
       session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message});logEvent(`${m.label}: ${m.message}`,"milestone");latest=m;
     }
   });
-  if(latest){playAlert();toast(latest.message,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
+  // The alert strip already shows the milestone; the toast only names it.
+  if(latest){playAlert();toast(`${latest.label} due`,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
 }
 let lastDueCount=0;
 function checkDueTransitions(){
@@ -319,8 +370,8 @@ function renderFlowcharts(){
     ${flowHTML(e)}
     <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>This is a concise implementation view, not a replacement for the complete source or local protocol.</small></div>`;
 }
-function flowHTML(e){
-  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${session?.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
+function flowHTML(e,embedded=false){
+  return `<section class="flowchart ${e.accent}"><div class="flowchart-head"><span>${e.icon}</span><div><small>FULL PATHWAY</small><h2>${esc(e.name)}</h2></div>${!embedded&&session?.status==="active"&&session.emergencyId===e.id?`<button data-nav-jump="emergency">Return to Actions</button>`:""}</div>
     <div class="flow-track">${e.flow.map((n,i)=>`<article class="flow-node ${n.tone}"><span>${i+1}</span><div><h3>${esc(n.title)}</h3><p>${esc(n.body)}</p></div></article>${i<e.flow.length-1?`<div class="flow-arrow">↓</div>`:""}`).join("")}</div></section>`;
 }
 
@@ -379,10 +430,10 @@ function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEac
 
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
-  openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?"Acknowledged":t.dueAt<=sessionMinute()?`Overdue ${formatDue(t)}`:`Due in ${formatCountdown(t)}`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
+  openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · ${formatDue(t)}`:formatDue(t)}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
 }
 function showTimeline(){
-  openSheet({eyebrow:"THIS DEVICE",title:"Event timeline",html:`<p class="lead">A local operational record—not documentation in the medical record.</p><div class="timeline-list">${session.events.map(e=>`<article><time>${formatEventTime(e.at)}</time><div><strong>${esc(e.text)}</strong><small>${esc(e.type)}</small></div></article>`).join("")}</div>`});
+  openSheet({eyebrow:"THIS DEVICE",title:"Event timeline",html:`<p class="lead">A local operational record—not documentation in the medical record. Times are elapsed since session start.</p><div class="timeline-list">${session.events.map(e=>`<article><time>${formatEventTime(e.at)}</time><div><strong>${esc(e.text)}</strong><small>${esc(e.type)}</small></div></article>`).join("")}</div>`});
 }
 function showDue(id){
   const t=session.timers.find(x=>x.id===id);if(!t)return;
@@ -399,7 +450,10 @@ function openSheet({eyebrow="",title,html,wide=false}){
 }
 function closeSheet(){$("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");setTimeout(()=>{$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
-  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),4200);
+  // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
+  const cockpit=document.body.classList.contains("in-cockpit");
+  if(cockpit)$("#toastRegion").replaceChildren();
+  const el=document.createElement("div");el.className=`toast ${type}`;el.textContent=message;$("#toastRegion").appendChild(el);setTimeout(()=>el.remove(),cockpit?2600:4200);
 }
 function confirmAction(title,text,onConfirm){
   const tpl=$("#confirmTemplate").content.cloneNode(true),card=tpl.querySelector(".confirm-card");card.querySelector("h2").textContent=title;card.querySelector("p").textContent=text;openSheet({eyebrow:"CONFIRM",title:"",html:""});$("#sheetBody").replaceChildren(card);card.addEventListener("click",e=>{if(e.target.dataset.confirm==="cancel")closeSheet();if(e.target.dataset.confirm==="yes"){closeSheet();onConfirm();}});

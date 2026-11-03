@@ -1,0 +1,50 @@
+# Design rules — OB Emergency Assist
+
+These apply to every emergency module (PPH, severe hypertension, eclampsia, and anything added later), not just one screen.
+
+## Principle
+
+An active session is a **clinical cockpit**, not a scrolling dashboard. Reduce nonclinical vertical space; never shrink clinical text to fit more on screen.
+
+## Active-session layout (top to bottom)
+
+1. **Cockpit header** (sticky, ~85 px): mode tag (SIMULATION / CLINICAL), emergency name, elapsed clock, sound, End. One status line: overdue count + next reminder.
+2. **Simulation controls** (simulation only, one row, scrolls away).
+3. **Alert strip**: overdue reminders not tied to a task card (milestones, post-dose reassessment). Shows the most overdue item in full; `+N` opens the rest. Never collapsed.
+4. **Tool tabs**: Flowchart · Meds · Timers · Timeline (44 px).
+5. **Actions**: a `DUE NOW` group first (overdue task cards, red), then the pathway groups.
+
+Focus mode is the default: once a session starts, the app header, disclaimer and bottom navigation are hidden. Disclaimers live on the start screen. The simulation indicator (teal tag + striped header) is always visible while simulating.
+
+## Time labels
+
+There is one clock: **elapsed time since session start**. Every time shown is on that clock and labelled:
+
+- `due at 05:00` — the elapsed time the item fell due
+- `overdue 10:01` — how long past due, counting live
+- `in 03:10` — time until due, counting live
+
+Never show a bare time next to the elapsed clock without one of these labels.
+
+## Type and touch sizes
+
+| Element | Size |
+| --- | --- |
+| Main action text | 20–22 px, bold |
+| Supporting text | ≥ 16 px |
+| Section / group labels | 13–15 px |
+| Buttons | 15–17 px text, ≥ 44 px tall; task completion buttons ≥ 48 px |
+| Card padding | 10–14 px |
+| Gap between cards | 6–8 px |
+| Elapsed clock | 30–34 px |
+
+## Adaptive width
+
+- **Under 760 px** (Fold outer screen, phones): single column.
+- **760 px and up** (Fold unfolded, tablets): actions left; flowchart and recent events right, sticky. Same type sizes — extra width shows more context, not smaller text.
+
+## Alerts
+
+- Overdue items are visible without a tap (on the card or in the alert strip).
+- Toasts in the cockpit: one at a time, short, never a second copy of something already on screen.
+- Acknowledging a reminder never marks a task complete.
