@@ -89,6 +89,49 @@ export const EDU_DECKS = {
     {kind:"steps",title:"Initial work-up",steps:["ECG · BNP · chest X-ray · troponin","Abnormal or indicated → echocardiogram","OB + cardiology consultation"]}
   ],
 
+  "shoulder-dystocia":[
+    {kind:"title",title:"Shoulder dystocia maneuvers",sub:"Head delivered · shoulders stuck · every second counts"},
+    {kind:"steps",title:"First 30 seconds",steps:["Say “shoulder dystocia” · call for help","Note the time the head delivered","Stop pushing","Gentle axial traction only"],note:"A recorder calls out the time every 30 seconds."},
+    {kind:"cards",title:"First line — together",cards:[
+      {h:"McRoberts",t:"Hyperflex the thighs onto the abdomen."},
+      {h:"Suprapubic pressure",t:"From the fetal back: push the anterior shoulder down and toward the face."}],
+      note:"Never fundal pressure."},
+    {kind:"cards",title:"Next — choose by situation",cards:[
+      {h:"Posterior arm",t:"Flex the elbow, sweep the forearm across the chest."},
+      {h:"Rotation",t:"Rubin II · Woods screw · reverse Woods."},
+      {h:"All-fours (Gaskin)",t:"Hands and knees, then try again."},
+      {h:"Episiotomy",t:"Room for your hands — not for the bone."}]},
+    {kind:"list",title:"Last resort",items:["Deliberate clavicle fracture","Zavanelli → cesarean","Symphysiotomy","Abdominal rescue (hysterotomy)"],note:"Get the OR and anesthesia ready early."},
+    {kind:"split",tone:"dodont",title:"Avoid",left:{h:"Do",items:["Gentle axial traction","Change maneuver if no progress","Call out the time"]},right:{h:"Never",items:["Fundal pressure","Excess lateral traction","Twisting the neck"]}},
+    {kind:"split",title:"After delivery",left:{h:"Baby",items:["Neonatal resuscitation team","Arm and clavicle exam"]},right:{h:"Document",items:["Head-to-body interval","Maneuvers in order","Who did what","Which shoulder was anterior"]},note:"Watch for postpartum hemorrhage."}
+  ],
+
+  "t3-bleeding":[
+    {kind:"title",title:"Third-trimester bleeding",sub:"Including bleeding after a car crash or other trauma"},
+    {kind:"big",title:"Four causes to consider",items:[{big:"Abruption",label:"Pain · firm uterus"},{big:"Previa",label:"Painless bleeding"},{big:"Vasa previa",label:"Bleeding at rupture"},{big:"Rupture",label:"Prior uterine scar"}],
+      note:"No digital cervical exam until previa is excluded by ultrasound."},
+    {kind:"steps",title:"First steps",steps:["Call OB · continuous fetal monitoring","2 large-bore IVs · type & cross · coags","Ultrasound: where is the placenta?","Unstable mother or fetus → expedite delivery"],note:"A normal ultrasound does not exclude abruption."},
+    {kind:"list",title:"After trauma: what gets missed",items:["Left uterine displacement","Fetal monitoring even after minor trauma","Abruption can appear hours later","Rh immune globulin if Rh-negative","Needed imaging is never withheld"]},
+    {kind:"big",title:"Fetal monitoring after trauma",items:[{big:"4 h",label:"Minimum, even if minor"},{big:"24 h",label:"Contractions, bleeding, tenderness or abnormal FHR"}],
+      note:"At 20 weeks or more. Thresholds vary — follow local protocol."},
+    {kind:"list",title:"Rh and Kleihauer-Betke",items:["Rh-negative → Rh immune globulin","Kleihauer-Betke after major trauma","KB helps size the RhIG dose"],note:"Mother arrests? Switch to the Maternal Cardiac Arrest pathway."}
+  ],
+
+  "arrest-pregnancy":[
+    {kind:"title",title:"Cardiac arrest in pregnancy",sub:"Resuscitate the mother · deliver within 5 minutes"},
+    {kind:"list",title:"What stays the same",items:["High-quality CPR","Defibrillation when indicated","Standard ACLS drug doses"],note:"Pregnancy changes the setup, not the ACLS."},
+    {kind:"cards",title:"What changes",cards:[
+      {h:"Left uterine displacement",t:"Manual and continuous when the fundus is at or above the umbilicus."},
+      {h:"Early airway",t:"Difficult airway is common — most experienced provider."},
+      {h:"IV above the diaphragm",t:"Arms or neck."},
+      {h:"Fetal monitors",t:"Detach them."},
+      {h:"Magnesium running?",t:"Stop it and give calcium."}]},
+    {kind:"big",title:"The clock",items:[{big:"4 min",label:"No ROSC → start delivery"},{big:"5 min",label:"Target: baby delivered"}],
+      note:"Prepare from minute one. Deliver where the resuscitation is happening."},
+    {kind:"split",title:"Find the cause: A–H",left:{h:"A–D",items:["Anesthetic complications","Bleeding","Cardiovascular","Drugs"]},right:{h:"E–H",items:["Embolic: amniotic fluid or PE","Fever","General H’s and T’s","Hypertension (preeclampsia)"]}},
+    {kind:"steps",title:"Amniotic fluid embolism",steps:["Sudden collapse in labor or just after birth","High-quality CPR · deliver if arrested","Activate massive transfusion","Check coagulation early","Avoid fluid overload"],note:"A clinical diagnosis — no test confirms or excludes it."}
+  ],
+
   simulation:[
     {kind:"title",title:"Using Simulation mode",sub:"Same actions and timers — the facilitator controls time"},
     {kind:"split",tone:"dodont",title:"Time controls",left:{h:"They do",items:["Pause the clock","Jump +1 or +5 minutes","Fire reminders that fall due"]},right:{h:"They never",items:["Give a medication","Complete a task","Improve the patient","Advance a branch"]}},

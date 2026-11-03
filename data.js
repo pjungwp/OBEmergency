@@ -1,4 +1,4 @@
-export const APP_VERSION = "0.14.0-prototype";
+export const APP_VERSION = "0.15.1-prototype";
 export const CONTENT_REVIEW_DATE = "2026-11-02";
 
 export const REFERENCES = [
@@ -8,6 +8,11 @@ export const REFERENCES = [
   {id:"acog-ed-htn",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
   {id:"acog-ed-eclampsia",url:"https://www.acog.org/-/media/project/acog/acogorg/files/pdfs/programs/ob-emergencies/eclampsia_algorithm.pdf",urlKind:"pdf",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
   {id:"acog-ed-cvd",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
+  {id:"aha-2025-pregnancy",short:"AHA 2025",title:"2025 AHA Guidelines, Part 10: Special Circumstances — Cardiac Arrest in Pregnancy",year:"2025",url:"https://cpr.heart.org/en/resuscitation-science/cpr-and-ecc-guidelines/adult-and-pediatric-special-circumstances-of-resuscitation",urlKind:"page",note:"Left uterine displacement, early airway, IV above the diaphragm, stop magnesium and give calcium, detach fetal monitors, MTP for suspected AFE, resuscitative delivery within 5 minutes."},
+  {id:"smfm-afe-9",short:"SMFM CG 9",title:"SMFM Clinical Guideline No. 9: Amniotic Fluid Embolism — Diagnosis and Management",year:"2016",url:"https://publications.smfm.org/publications/581-society-for-maternal-fetal-medicine-clinical-guidelines-9/",urlKind:"page",note:"Clinical diagnosis; immediate high-quality CPR; delivery if arrested at ≥23 weeks; avoid excessive fluid; early coagulation assessment and massive transfusion."},
+  {id:"acog-sd-178",short:"ACOG PB 178",title:"ACOG Practice Bulletin No. 178: Shoulder Dystocia",year:"2017",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2017/05/shoulder-dystocia",urlKind:"page",note:"McRoberts and suprapubic pressure first; posterior arm delivery and internal rotational maneuvers next; avoid fundal pressure."},
+  {id:"aafp-trauma",short:"AFP 2014",title:"Trauma in Pregnancy: Assessment, Management, and Prevention (Am Fam Physician)",year:"2014",url:"https://www.aafp.org/pubs/afp/issues/2014/1115/p717.html",urlKind:"page",note:"Uterine displacement, fetal monitoring after trauma (minimum 4 hours, longer with risk signs), Rh immune globulin and Kleihauer-Betke testing."},
+  {id:"acog-co-723",short:"ACOG CO 723",title:"ACOG Committee Opinion No. 723: Guidelines for Diagnostic Imaging During Pregnancy and Lactation",year:"2017",note:"Indicated maternal imaging should not be withheld because of pregnancy."},
   {id:"ahrq-teamstepps",short:"AHRQ TeamSTEPPS",title:"TeamSTEPPS 3.0 Curriculum",year:"2023",url:"https://www.ahrq.gov/teamstepps-program/curriculum/intro/overview.html",note:"Communication, leadership, situation monitoring and mutual support."}
 ];
 
@@ -95,6 +100,88 @@ export const EMERGENCIES = {
       {title:"After seizure",body:"Assess severe BP, neurologic deficits, oxygenation and fetal status; consider head CT and alternate diagnoses.",tone:"action"},
       {title:"Ongoing care",body:"Monitor magnesium toxicity, continue therapy per protocol and plan delivery after stabilization.",tone:"critical"}
     ]
+  },
+  arrest:{
+    id:"arrest",name:"Maternal Cardiac Arrest",short:"Arrest",icon:"♥",accent:"crimson",summary:"High-quality CPR with left uterine displacement; deliver within 5 minutes if no ROSC. Includes amniotic fluid embolism.",source:["aha-2025-pregnancy","smfm-afe-9"],
+    milestones:[
+      {min:4,label:"4 minutes — no ROSC?",message:"Fundus at or above the umbilicus and no ROSC: begin resuscitative delivery now."},
+      {min:5,label:"5-minute delivery target",message:"Goal: delivery within 5 minutes of arrest if no ROSC."},
+      {min:10,label:"10-minute status update",message:"State the rhythm, interventions, suspected cause and next priorities."}
+    ],
+    tasks:[
+      {id:"arrest-help",group:"DO NOW",title:"Call the cardiac arrest team and obstetrics. Note the time of arrest.",detail:"Activate the cardiac arrest in pregnancy team per local resources: team leader, anesthesia, obstetrics, neonatology, nursing and pharmacy. Start the app clock at the time of arrest.",type:"once",priority:"critical",review:"New pathway (AHA 2025) pending clinical review."},
+      {id:"arrest-cpr",group:"DO NOW",title:"High-quality CPR. Defibrillate when indicated. Rhythm check every 2 minutes.",detail:"Standard BLS/ACLS: compressions, defibrillation and drug doses are unchanged in pregnancy. Address the cause while resuscitation continues.",type:"repeat",repeatMin:2,priority:"critical"},
+      {id:"arrest-lud",group:"DO NOW",title:"Continuous manual left uterine displacement.",detail:"Displace the uterus to the left continuously when the fundus is at or above the umbilicus. This relieves aortocaval compression and makes compressions more effective.",type:"ongoing",priority:"critical"},
+      {id:"arrest-airway",group:"OPTIMIZE FOR PREGNANCY",title:"Early airway by the most experienced provider.",detail:"A difficult airway is common in pregnancy. Prioritize early airway management (endotracheal tube or supraglottic airway) and oxygenation.",type:"once",priority:"critical"},
+      {id:"arrest-iv",group:"OPTIMIZE FOR PREGNANCY",title:"IV access above the diaphragm.",detail:"Place IV or IO access above the diaphragm so drugs and fluids are not slowed by aortocaval compression.",type:"once",priority:"high"},
+      {id:"arrest-mag",group:"OPTIMIZE FOR PREGNANCY",title:"On IV magnesium? Stop it and give calcium.",detail:"If the patient is receiving IV magnesium, stop the infusion and give calcium.",type:"med",meds:["calcium-gluconate"],priority:"high"},
+      {id:"arrest-monitors",group:"OPTIMIZE FOR PREGNANCY",title:"Detach fetal monitors.",detail:"Remove fetal monitors so they do not interfere with resuscitation or defibrillation.",type:"once",priority:"high"},
+      {id:"arrest-delivery",group:"DELIVER",title:"Prepare resuscitative delivery now. No ROSC: deliver, target within 5 minutes.",detail:"Begin preparation when the fundal height is at or above the umbilicus. If there is no ROSC, the goal is delivery within 5 minutes, where the resuscitation is taking place. Resuscitate the newborn with the neonatal algorithm.",type:"once",priority:"critical"},
+      {id:"arrest-cause",group:"FIND THE CAUSE",title:"Treat the cause: A–H.",detail:"Anesthetic complications · Bleeding · Cardiovascular · Drugs · Embolic (amniotic fluid or pulmonary) · Fever · General H’s and T’s · Hypertension (preeclampsia).",type:"once",priority:"high"},
+      {id:"arrest-afe",group:"FIND THE CAUSE",title:"Suspect amniotic fluid embolism? Activate massive transfusion.",detail:"Consider AFE with sudden cardiorespiratory collapse in labor or just after delivery; it is a clinical diagnosis with no confirmatory test. Activate massive transfusion, assess coagulation early and treat bleeding aggressively, avoid excessive fluid, and use vasopressors/inotropes as indicated with a multidisciplinary team.",type:"once",priority:"critical",review:"AFE content from AHA 2025 and SMFM Clinical Guideline 9 (2016) pending review."}
+    ],
+    flow:[
+      {title:"Arrest recognized",body:"Pregnant or recently delivered, no pulse. Call the team; note the time.",tone:"start"},
+      {title:"CPR + uterine displacement",body:"High-quality CPR, defibrillation when indicated, continuous left uterine displacement.",tone:"critical"},
+      {title:"Optimize for pregnancy",body:"Early airway, IV above the diaphragm, stop magnesium and give calcium, detach fetal monitors.",tone:"action"},
+      {title:"ROSC by 4 minutes?",body:"If not, begin resuscitative delivery; target delivery within 5 minutes.",tone:"decision"},
+      {title:"Find the cause",body:"A–H; suspected amniotic fluid embolism → massive transfusion and early coagulation management.",tone:"critical"}
+    ]
+  },
+  trauma:{
+    id:"trauma",name:"Third-Trimester Trauma / Abruption",short:"Trauma",icon:"⚠",accent:"amber",summary:"Motor vehicle crash or other trauma with vaginal bleeding late in pregnancy. Mother first, then monitor for abruption.",source:["aafp-trauma","acog-co-723"],
+    milestones:[
+      {min:5,label:"5-minute team check",message:"Maternal status, fetal heart rate, bleeding and the next priorities."},
+      {min:15,label:"15-minute huddle",message:"Stable? Abruption signs? Delivery plan and level of care."},
+      {min:240,label:"4 hours of monitoring",message:"Review contractions, bleeding, uterine tenderness and FHR before discharge or extended monitoring."}
+    ],
+    tasks:[
+      {id:"tr-help",group:"DO NOW",title:"Call OB and the trauma team. Estimate gestational age.",detail:"Activate trauma and obstetric response, and the neonatal team at a viable gestation. A fundus at or above the umbilicus suggests at least 20 weeks.",type:"once",priority:"critical",review:"New pathway pending clinical review."},
+      {id:"tr-primary",group:"DO NOW",title:"Mother first: airway, breathing, circulation.",detail:"Complete the primary survey before obstetric assessment. Maternal resuscitation is the best fetal resuscitation.",type:"once",priority:"critical"},
+      {id:"tr-lud",group:"DO NOW",title:"Left uterine displacement or left tilt.",detail:"Manually displace the uterus to the left, or tilt the whole body (on a backboard) 25–30 degrees, to relieve aortocaval compression.",type:"ongoing",priority:"critical"},
+      {id:"tr-iv",group:"DO IN PARALLEL",title:"Two large-bore IVs. CBC, type & crossmatch, coags, fibrinogen, Kleihauer-Betke.",detail:"Kleihauer-Betke testing is recommended for all pregnant patients with major trauma, regardless of Rh status.",type:"once",priority:"high"},
+      {id:"tr-imaging",group:"DO IN PARALLEL",title:"Don’t withhold needed imaging.",detail:"Indicated maternal imaging should not be delayed or withheld because of pregnancy.",type:"once",priority:"high"},
+      {id:"tr-fetal",group:"ASSESS THE PREGNANCY",title:"Continuous fetal heart rate and contraction monitoring.",detail:"At 20 weeks or more, monitor as soon as the mother is stable: a minimum of 4 hours even after minor trauma. Extend (commonly 24 hours) with frequent contractions, bleeding, uterine tenderness, abnormal FHR or serious maternal injury. Follow local protocol.",type:"ongoing",priority:"high"},
+      {id:"tr-noexam",group:"ASSESS THE PREGNANCY",title:"No digital cervical exam until previa is excluded by ultrasound.",detail:"Bedside ultrasound for placental location, fetal heart rate and gestational age. Ultrasound often misses abruption: a normal scan does not exclude it.",type:"once",priority:"critical"},
+      {id:"tr-abruption",group:"ASSESS THE PREGNANCY",title:"Look for abruption: pain, tender or firm uterus, contractions, abnormal FHR.",detail:"Bleeding may be concealed. Abruption can appear up to 24 hours after trauma; frequent contractions are an early warning sign.",type:"once",priority:"high"},
+      {id:"tr-rh",group:"ASSESS THE PREGNANCY",title:"Rh-negative? Give Rh immune globulin.",detail:"Rh-negative patients receive Rh immune globulin unless the injury is remote from the uterus; Kleihauer-Betke helps size the dose.",type:"once",priority:"high"},
+      {id:"tr-deliver",group:"DELIVER",title:"Unstable mother or abnormal fetal status at a viable gestation: expedite delivery.",detail:"Decide with OB, anesthesia and neonatology; delivery is often by cesarean. If the mother arrests, switch to the Maternal Cardiac Arrest pathway: resuscitative delivery within 5 minutes.",type:"once",priority:"critical"}
+    ],
+    flow:[
+      {title:"Pregnant trauma + bleeding",body:"Call OB and trauma; estimate gestational age.",tone:"start"},
+      {title:"Mother first",body:"Primary survey, left uterine displacement, IV access and labs, needed imaging.",tone:"critical"},
+      {title:"Assess the pregnancy",body:"Fetal monitoring, ultrasound before any cervical exam, abruption signs, Rh status.",tone:"action"},
+      {title:"Stable?",body:"Yes: monitor at least 4 hours. No: expedite delivery.",tone:"decision"}
+    ]
+  },
+  shoulder:{
+    id:"shoulder",name:"Shoulder Dystocia",short:"Shoulder",icon:"⟲",accent:"violet",summary:"Head delivered, shoulders impacted. Call for help, McRoberts and suprapubic pressure, then posterior arm and rotation.",source:["acog-sd-178"],
+    milestones:[
+      {min:1,label:"1 minute since head delivered",message:"Announce the time. No progress? Move to the next maneuver."},
+      {min:2,label:"2 minutes since head delivered",message:"Announce the time. Posterior arm or rotation if not yet tried."},
+      {min:3,label:"3 minutes since head delivered",message:"Announce the time. All-fours; prepare for last-resort options."},
+      {min:4,label:"4 minutes since head delivered",message:"Announce the time. Senior help, OR and anesthesia ready."},
+      {min:5,label:"5 minutes since head delivered",message:"Announce the time. Consider last-resort maneuvers."}
+    ],
+    tasks:[
+      {id:"sd-help",group:"DO NOW",title:"Say “shoulder dystocia.” Call OB, anesthesia and the neonatal team.",detail:"Announce the emergency, call additional obstetric help, anesthesia and a neonatal resuscitation team. Start the app clock when the head delivers; a recorder announces elapsed time.",type:"once",priority:"critical",review:"New pathway (ACOG PB 178) pending clinical review."},
+      {id:"sd-avoid",group:"DO NOW",title:"Stop pushing. No fundal pressure. Gentle axial traction only.",detail:"Avoid fundal pressure (uterine rupture risk) and excessive lateral or downward traction on the head (brachial plexus injury).",type:"ongoing",priority:"critical"},
+      {id:"sd-mcroberts",group:"FIRST LINE",title:"McRoberts: hyperflex the thighs onto the abdomen.",detail:"Two assistants flex the maternal thighs onto the abdomen, flattening the sacrum and rotating the symphysis. Often resolves the dystocia, especially with suprapubic pressure.",type:"once",priority:"critical"},
+      {id:"sd-suprapubic",group:"FIRST LINE",title:"Suprapubic pressure — never fundal.",detail:"Pressure just above the pubic bone from the side of the fetal back, pushing the anterior shoulder down and toward the fetal face. Steady, then rocking.",type:"once",priority:"critical"},
+      {id:"sd-posterior",group:"NEXT MANEUVERS",title:"Deliver the posterior arm.",detail:"Follow the posterior arm to the elbow, flex it and sweep the forearm across the chest and out. Hold the wrist or forearm, not the upper arm.",type:"once",priority:"high"},
+      {id:"sd-rotate",group:"NEXT MANEUVERS",title:"Internal rotation: Rubin II, Woods screw, reverse Woods.",detail:"Rubin II: pressure on the back of the anterior shoulder toward the chest. Woods screw: pressure on the front of the posterior shoulder. Rotate the shoulders into an oblique diameter.",type:"once",priority:"high"},
+      {id:"sd-allfours",group:"NEXT MANEUVERS",title:"All-fours (Gaskin) position.",detail:"Roll the patient to hands and knees and try gentle downward traction to deliver the posterior shoulder. Maneuvers can be repeated in this position.",type:"once",priority:"high"},
+      {id:"sd-episiotomy",group:"NEXT MANEUVERS",title:"Consider episiotomy for room to work.",detail:"Episiotomy does not relieve the bony obstruction; it only gives space for internal maneuvers.",type:"once",priority:"high"},
+      {id:"sd-lastresort",group:"LAST RESORT",title:"Last resort: clavicle fracture, Zavanelli with cesarean, symphysiotomy.",detail:"When other maneuvers fail. Requires the most experienced clinicians; get the operating room and anesthesia ready early.",type:"once",priority:"critical"},
+      {id:"sd-after",group:"AFTER DELIVERY",title:"Neonatal team, watch for PPH, document.",detail:"Neonatal resuscitation and arm/clavicle exam. Anticipate postpartum hemorrhage and perineal injury. Document the head-to-body interval, maneuvers in order, who did what, and which shoulder was anterior.",type:"once",priority:"high"}
+    ],
+    flow:[
+      {title:"Head delivered, shoulders stuck",body:"Call for help, note the time, stop pushing, no fundal pressure.",tone:"start"},
+      {title:"McRoberts + suprapubic pressure",body:"First-line, together.",tone:"critical"},
+      {title:"Delivered?",body:"If not: posterior arm, internal rotation, all-fours; consider episiotomy for room.",tone:"decision"},
+      {title:"Last resort",body:"Clavicle fracture, Zavanelli with cesarean, symphysiotomy.",tone:"critical"},
+      {title:"After delivery",body:"Neonatal team, PPH watch, documentation.",tone:"action"}
+    ]
   }
 };
 
@@ -140,6 +227,9 @@ export const EDUCATION = [
     {h:"Cardiovascular red flags",bullets:["Shortness of breath or chest pain at rest","Severe orthopnea or near-syncope with palpitations","Resting HR ≥120 or RR ≥25","Oxygen saturation ≤94%","Resting systolic BP ≥160 or <90","New pathologic murmur, S3/S4, crackles or distended neck veins"]},
     {h:"Initial work-up",p:"The supplied ACOG educational algorithm highlights ECG, BNP, chest X-ray and troponin, followed by echocardiography and obstetric/cardiology consultation when abnormal or clinically indicated."}
   ]},
+  {id:"shoulder-dystocia",title:"Shoulder dystocia maneuvers",kicker:"EVERY SECOND COUNTS",accent:"teal",summary:"First-line maneuvers, what comes next, and what never to do.",sections:[]},
+  {id:"t3-bleeding",title:"Third-trimester bleeding and trauma",kicker:"ABRUPTION · PREVIA · TRAUMA",accent:"crimson",summary:"Causes, first steps, and what non-OB teams miss after trauma.",sections:[]},
+  {id:"arrest-pregnancy",title:"Cardiac arrest in pregnancy",kicker:"INCLUDES AMNIOTIC FLUID EMBOLISM",accent:"navy",summary:"What changes in pregnancy, the 4–5 minute clock, and causes A–H.",sections:[]},
   {id:"simulation",title:"Using Simulation mode",kicker:"DUAL-PURPOSE TRAINING",accent:"teal",summary:"Simulation uses the same actions and timers while allowing the facilitator to control time.",sections:[
     {h:"What time controls do",p:"Pause, +1 minute, +5 minutes and Next event change the simulation clock and trigger reminders that become due."},
     {h:"What time controls never do",p:"They never administer a medication, complete a task, improve the patient or advance a clinical branch automatically."},

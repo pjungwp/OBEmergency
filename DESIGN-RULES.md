@@ -44,6 +44,14 @@ Never show a bare time next to the elapsed clock without one of these labels.
 - **680 px and up** (Fold unfolded, tablets): actions use the full width. The Flowchart tab opens a sticky right-hand panel (flowchart + recent events) and closes it again. Same type sizes — extra width shows more context, not smaller text.
 - **Flowchart is closed by default** on every width. On narrow screens the tab opens it in a sheet over the cockpit.
 
+## Home dashboard
+
+Six emergencies maximum. Phones: one column (scrolling is fine). From 600 px wide: two columns × three rows, all six visible without scrolling at common tablet, Fold-unfolded and laptop sizes.
+
+## Cockpit tools column
+
+Flowchart · Meds · Timers · Timeline are toggles for one tools panel. Wide screens: the right-hand column (tap the active button to close). Phones: the same panel as a sheet over the cockpit. None of them leaves the session. Meds lists the pathway's drugs first; a drug opens its card, where a dose can be recorded.
+
 ## Flowcharts
 
 One pathway record per emergency (`pathways.js`) drives three views (`flowchart.js`):

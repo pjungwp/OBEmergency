@@ -486,6 +486,35 @@ body.deck-open{overflow:hidden}
   .dk-nav{height:52px}
 }
 @media(max-width:400px){.nav-item small{font-size:12px;letter-spacing:-.02em}}
+/* Home dashboard: 6 emergencies. Phones: one column (scroll is fine). Wide: 2 columns × 3 rows, no scrolling. */
+@media(min-width:600px){
+  .emergency-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .emergency-grid .emergency-card{grid-template-columns:56px minmax(0,1fr) 16px;min-height:92px;align-content:center}
+  .emergency-grid .emergency-card .chevron{display:block}
+}
+@media(min-width:600px) and (max-height:880px){.hero-aurora{min-height:150px}.home-label{margin-top:10px}}
+.sl-cards.n5,.sl-cards.n6{grid-template-columns:1fr}
+@media(min-width:600px){.sl-cards.n5,.sl-cards.n6{grid-template-columns:1fr 1fr}}
+/* Cockpit side panels (Flowchart · Meds · Timers · Timeline) */
+.cockpit-side .side-flow-head,.sheet-side .side-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.sheet-side .side-flow-head:empty{display:none}
+.side-sub{font-size:14px;color:var(--muted)}
+.side-note{margin:0 0 8px;font-size:15px;line-height:1.4;color:var(--muted)}
+.side-meds{display:grid;gap:8px}
+.side-med{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:10px 12px;text-align:left;background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy);border-radius:12px;color:var(--ink)}
+.side-med.crimson{border-left-color:var(--crimson)}.side-med.amber{border-left-color:var(--amber)}.side-med.violet{border-left-color:var(--violet)}
+.side-med strong{font-size:17px;color:var(--navy)}.side-med span{font-size:15px;line-height:1.35;color:#34445c}
+.side-med em{font-style:normal;font-size:14px;font-weight:800;color:#1f8a5b}
+.side-more{margin-top:10px}.side-more summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:800;color:var(--navy-2)}
+.cockpit-side .timer-list article,.sheet-side .timer-list article{background:#fff}
+.cockpit-side .timeline-list,.sheet-side .timeline-list{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 12px 2px}
+/* Flowchart-page session strip on narrow phones: no overflow */
+.fc-strip{gap:8px;flex-wrap:nowrap;min-width:0}
+.fc-strip .mode-tag{white-space:nowrap;flex:none}
+.fc-strip strong{font-size:22px;flex:none}
+.fc-strip .overdue-count{white-space:nowrap;flex:none}
+.fc-strip button{flex:none;white-space:nowrap;padding:0 12px}
+@media(max-width:420px){.fc-strip .mode-tag{font-size:11px;padding:3px 6px}.fc-strip strong{font-size:20px}.fc-strip .overdue-count{font-size:13px;padding:2px 6px}.fc-strip button{font-size:15px;padding:0 10px}}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -510,7 +539,7 @@ body.deck-open{overflow:hidden}
     </header>
 
     <div id="clinicalNotice" class="clinical-notice">
-      <span><strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.</span>
+      <span><strong>Clinical prototype:</strong> verify against your institution’s current policy before clinical use.</span>
       <button data-action="dismiss-notice" aria-label="Dismiss notice">×</button>
     </div>
 
@@ -558,7 +587,7 @@ body.deck-open{overflow:hidden}
     </div>
   </template>
   <script>
-const APP_VERSION = "0.14.0-prototype";
+const APP_VERSION = "0.15.1-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -568,6 +597,11 @@ const REFERENCES = [
   {id:"acog-ed-htn",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
   {id:"acog-ed-eclampsia",url:"https://www.acog.org/-/media/project/acog/acogorg/files/pdfs/programs/ob-emergencies/eclampsia_algorithm.pdf",urlKind:"pdf",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
   {id:"acog-ed-cvd",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
+  {id:"aha-2025-pregnancy",short:"AHA 2025",title:"2025 AHA Guidelines, Part 10: Special Circumstances — Cardiac Arrest in Pregnancy",year:"2025",url:"https://cpr.heart.org/en/resuscitation-science/cpr-and-ecc-guidelines/adult-and-pediatric-special-circumstances-of-resuscitation",urlKind:"page",note:"Left uterine displacement, early airway, IV above the diaphragm, stop magnesium and give calcium, detach fetal monitors, MTP for suspected AFE, resuscitative delivery within 5 minutes."},
+  {id:"smfm-afe-9",short:"SMFM CG 9",title:"SMFM Clinical Guideline No. 9: Amniotic Fluid Embolism — Diagnosis and Management",year:"2016",url:"https://publications.smfm.org/publications/581-society-for-maternal-fetal-medicine-clinical-guidelines-9/",urlKind:"page",note:"Clinical diagnosis; immediate high-quality CPR; delivery if arrested at ≥23 weeks; avoid excessive fluid; early coagulation assessment and massive transfusion."},
+  {id:"acog-sd-178",short:"ACOG PB 178",title:"ACOG Practice Bulletin No. 178: Shoulder Dystocia",year:"2017",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2017/05/shoulder-dystocia",urlKind:"page",note:"McRoberts and suprapubic pressure first; posterior arm delivery and internal rotational maneuvers next; avoid fundal pressure."},
+  {id:"aafp-trauma",short:"AFP 2014",title:"Trauma in Pregnancy: Assessment, Management, and Prevention (Am Fam Physician)",year:"2014",url:"https://www.aafp.org/pubs/afp/issues/2014/1115/p717.html",urlKind:"page",note:"Uterine displacement, fetal monitoring after trauma (minimum 4 hours, longer with risk signs), Rh immune globulin and Kleihauer-Betke testing."},
+  {id:"acog-co-723",short:"ACOG CO 723",title:"ACOG Committee Opinion No. 723: Guidelines for Diagnostic Imaging During Pregnancy and Lactation",year:"2017",note:"Indicated maternal imaging should not be withheld because of pregnancy."},
   {id:"ahrq-teamstepps",short:"AHRQ TeamSTEPPS",title:"TeamSTEPPS 3.0 Curriculum",year:"2023",url:"https://www.ahrq.gov/teamstepps-program/curriculum/intro/overview.html",note:"Communication, leadership, situation monitoring and mutual support."}
 ];
 
@@ -655,6 +689,88 @@ const EMERGENCIES = {
       {title:"After seizure",body:"Assess severe BP, neurologic deficits, oxygenation and fetal status; consider head CT and alternate diagnoses.",tone:"action"},
       {title:"Ongoing care",body:"Monitor magnesium toxicity, continue therapy per protocol and plan delivery after stabilization.",tone:"critical"}
     ]
+  },
+  arrest:{
+    id:"arrest",name:"Maternal Cardiac Arrest",short:"Arrest",icon:"♥",accent:"crimson",summary:"High-quality CPR with left uterine displacement; deliver within 5 minutes if no ROSC. Includes amniotic fluid embolism.",source:["aha-2025-pregnancy","smfm-afe-9"],
+    milestones:[
+      {min:4,label:"4 minutes — no ROSC?",message:"Fundus at or above the umbilicus and no ROSC: begin resuscitative delivery now."},
+      {min:5,label:"5-minute delivery target",message:"Goal: delivery within 5 minutes of arrest if no ROSC."},
+      {min:10,label:"10-minute status update",message:"State the rhythm, interventions, suspected cause and next priorities."}
+    ],
+    tasks:[
+      {id:"arrest-help",group:"DO NOW",title:"Call the cardiac arrest team and obstetrics. Note the time of arrest.",detail:"Activate the cardiac arrest in pregnancy team per local resources: team leader, anesthesia, obstetrics, neonatology, nursing and pharmacy. Start the app clock at the time of arrest.",type:"once",priority:"critical",review:"New pathway (AHA 2025) pending clinical review."},
+      {id:"arrest-cpr",group:"DO NOW",title:"High-quality CPR. Defibrillate when indicated. Rhythm check every 2 minutes.",detail:"Standard BLS/ACLS: compressions, defibrillation and drug doses are unchanged in pregnancy. Address the cause while resuscitation continues.",type:"repeat",repeatMin:2,priority:"critical"},
+      {id:"arrest-lud",group:"DO NOW",title:"Continuous manual left uterine displacement.",detail:"Displace the uterus to the left continuously when the fundus is at or above the umbilicus. This relieves aortocaval compression and makes compressions more effective.",type:"ongoing",priority:"critical"},
+      {id:"arrest-airway",group:"OPTIMIZE FOR PREGNANCY",title:"Early airway by the most experienced provider.",detail:"A difficult airway is common in pregnancy. Prioritize early airway management (endotracheal tube or supraglottic airway) and oxygenation.",type:"once",priority:"critical"},
+      {id:"arrest-iv",group:"OPTIMIZE FOR PREGNANCY",title:"IV access above the diaphragm.",detail:"Place IV or IO access above the diaphragm so drugs and fluids are not slowed by aortocaval compression.",type:"once",priority:"high"},
+      {id:"arrest-mag",group:"OPTIMIZE FOR PREGNANCY",title:"On IV magnesium? Stop it and give calcium.",detail:"If the patient is receiving IV magnesium, stop the infusion and give calcium.",type:"med",meds:["calcium-gluconate"],priority:"high"},
+      {id:"arrest-monitors",group:"OPTIMIZE FOR PREGNANCY",title:"Detach fetal monitors.",detail:"Remove fetal monitors so they do not interfere with resuscitation or defibrillation.",type:"once",priority:"high"},
+      {id:"arrest-delivery",group:"DELIVER",title:"Prepare resuscitative delivery now. No ROSC: deliver, target within 5 minutes.",detail:"Begin preparation when the fundal height is at or above the umbilicus. If there is no ROSC, the goal is delivery within 5 minutes, where the resuscitation is taking place. Resuscitate the newborn with the neonatal algorithm.",type:"once",priority:"critical"},
+      {id:"arrest-cause",group:"FIND THE CAUSE",title:"Treat the cause: A–H.",detail:"Anesthetic complications · Bleeding · Cardiovascular · Drugs · Embolic (amniotic fluid or pulmonary) · Fever · General H’s and T’s · Hypertension (preeclampsia).",type:"once",priority:"high"},
+      {id:"arrest-afe",group:"FIND THE CAUSE",title:"Suspect amniotic fluid embolism? Activate massive transfusion.",detail:"Consider AFE with sudden cardiorespiratory collapse in labor or just after delivery; it is a clinical diagnosis with no confirmatory test. Activate massive transfusion, assess coagulation early and treat bleeding aggressively, avoid excessive fluid, and use vasopressors/inotropes as indicated with a multidisciplinary team.",type:"once",priority:"critical",review:"AFE content from AHA 2025 and SMFM Clinical Guideline 9 (2016) pending review."}
+    ],
+    flow:[
+      {title:"Arrest recognized",body:"Pregnant or recently delivered, no pulse. Call the team; note the time.",tone:"start"},
+      {title:"CPR + uterine displacement",body:"High-quality CPR, defibrillation when indicated, continuous left uterine displacement.",tone:"critical"},
+      {title:"Optimize for pregnancy",body:"Early airway, IV above the diaphragm, stop magnesium and give calcium, detach fetal monitors.",tone:"action"},
+      {title:"ROSC by 4 minutes?",body:"If not, begin resuscitative delivery; target delivery within 5 minutes.",tone:"decision"},
+      {title:"Find the cause",body:"A–H; suspected amniotic fluid embolism → massive transfusion and early coagulation management.",tone:"critical"}
+    ]
+  },
+  trauma:{
+    id:"trauma",name:"Third-Trimester Trauma / Abruption",short:"Trauma",icon:"⚠",accent:"amber",summary:"Motor vehicle crash or other trauma with vaginal bleeding late in pregnancy. Mother first, then monitor for abruption.",source:["aafp-trauma","acog-co-723"],
+    milestones:[
+      {min:5,label:"5-minute team check",message:"Maternal status, fetal heart rate, bleeding and the next priorities."},
+      {min:15,label:"15-minute huddle",message:"Stable? Abruption signs? Delivery plan and level of care."},
+      {min:240,label:"4 hours of monitoring",message:"Review contractions, bleeding, uterine tenderness and FHR before discharge or extended monitoring."}
+    ],
+    tasks:[
+      {id:"tr-help",group:"DO NOW",title:"Call OB and the trauma team. Estimate gestational age.",detail:"Activate trauma and obstetric response, and the neonatal team at a viable gestation. A fundus at or above the umbilicus suggests at least 20 weeks.",type:"once",priority:"critical",review:"New pathway pending clinical review."},
+      {id:"tr-primary",group:"DO NOW",title:"Mother first: airway, breathing, circulation.",detail:"Complete the primary survey before obstetric assessment. Maternal resuscitation is the best fetal resuscitation.",type:"once",priority:"critical"},
+      {id:"tr-lud",group:"DO NOW",title:"Left uterine displacement or left tilt.",detail:"Manually displace the uterus to the left, or tilt the whole body (on a backboard) 25–30 degrees, to relieve aortocaval compression.",type:"ongoing",priority:"critical"},
+      {id:"tr-iv",group:"DO IN PARALLEL",title:"Two large-bore IVs. CBC, type & crossmatch, coags, fibrinogen, Kleihauer-Betke.",detail:"Kleihauer-Betke testing is recommended for all pregnant patients with major trauma, regardless of Rh status.",type:"once",priority:"high"},
+      {id:"tr-imaging",group:"DO IN PARALLEL",title:"Don’t withhold needed imaging.",detail:"Indicated maternal imaging should not be delayed or withheld because of pregnancy.",type:"once",priority:"high"},
+      {id:"tr-fetal",group:"ASSESS THE PREGNANCY",title:"Continuous fetal heart rate and contraction monitoring.",detail:"At 20 weeks or more, monitor as soon as the mother is stable: a minimum of 4 hours even after minor trauma. Extend (commonly 24 hours) with frequent contractions, bleeding, uterine tenderness, abnormal FHR or serious maternal injury. Follow local protocol.",type:"ongoing",priority:"high"},
+      {id:"tr-noexam",group:"ASSESS THE PREGNANCY",title:"No digital cervical exam until previa is excluded by ultrasound.",detail:"Bedside ultrasound for placental location, fetal heart rate and gestational age. Ultrasound often misses abruption: a normal scan does not exclude it.",type:"once",priority:"critical"},
+      {id:"tr-abruption",group:"ASSESS THE PREGNANCY",title:"Look for abruption: pain, tender or firm uterus, contractions, abnormal FHR.",detail:"Bleeding may be concealed. Abruption can appear up to 24 hours after trauma; frequent contractions are an early warning sign.",type:"once",priority:"high"},
+      {id:"tr-rh",group:"ASSESS THE PREGNANCY",title:"Rh-negative? Give Rh immune globulin.",detail:"Rh-negative patients receive Rh immune globulin unless the injury is remote from the uterus; Kleihauer-Betke helps size the dose.",type:"once",priority:"high"},
+      {id:"tr-deliver",group:"DELIVER",title:"Unstable mother or abnormal fetal status at a viable gestation: expedite delivery.",detail:"Decide with OB, anesthesia and neonatology; delivery is often by cesarean. If the mother arrests, switch to the Maternal Cardiac Arrest pathway: resuscitative delivery within 5 minutes.",type:"once",priority:"critical"}
+    ],
+    flow:[
+      {title:"Pregnant trauma + bleeding",body:"Call OB and trauma; estimate gestational age.",tone:"start"},
+      {title:"Mother first",body:"Primary survey, left uterine displacement, IV access and labs, needed imaging.",tone:"critical"},
+      {title:"Assess the pregnancy",body:"Fetal monitoring, ultrasound before any cervical exam, abruption signs, Rh status.",tone:"action"},
+      {title:"Stable?",body:"Yes: monitor at least 4 hours. No: expedite delivery.",tone:"decision"}
+    ]
+  },
+  shoulder:{
+    id:"shoulder",name:"Shoulder Dystocia",short:"Shoulder",icon:"⟲",accent:"violet",summary:"Head delivered, shoulders impacted. Call for help, McRoberts and suprapubic pressure, then posterior arm and rotation.",source:["acog-sd-178"],
+    milestones:[
+      {min:1,label:"1 minute since head delivered",message:"Announce the time. No progress? Move to the next maneuver."},
+      {min:2,label:"2 minutes since head delivered",message:"Announce the time. Posterior arm or rotation if not yet tried."},
+      {min:3,label:"3 minutes since head delivered",message:"Announce the time. All-fours; prepare for last-resort options."},
+      {min:4,label:"4 minutes since head delivered",message:"Announce the time. Senior help, OR and anesthesia ready."},
+      {min:5,label:"5 minutes since head delivered",message:"Announce the time. Consider last-resort maneuvers."}
+    ],
+    tasks:[
+      {id:"sd-help",group:"DO NOW",title:"Say “shoulder dystocia.” Call OB, anesthesia and the neonatal team.",detail:"Announce the emergency, call additional obstetric help, anesthesia and a neonatal resuscitation team. Start the app clock when the head delivers; a recorder announces elapsed time.",type:"once",priority:"critical",review:"New pathway (ACOG PB 178) pending clinical review."},
+      {id:"sd-avoid",group:"DO NOW",title:"Stop pushing. No fundal pressure. Gentle axial traction only.",detail:"Avoid fundal pressure (uterine rupture risk) and excessive lateral or downward traction on the head (brachial plexus injury).",type:"ongoing",priority:"critical"},
+      {id:"sd-mcroberts",group:"FIRST LINE",title:"McRoberts: hyperflex the thighs onto the abdomen.",detail:"Two assistants flex the maternal thighs onto the abdomen, flattening the sacrum and rotating the symphysis. Often resolves the dystocia, especially with suprapubic pressure.",type:"once",priority:"critical"},
+      {id:"sd-suprapubic",group:"FIRST LINE",title:"Suprapubic pressure — never fundal.",detail:"Pressure just above the pubic bone from the side of the fetal back, pushing the anterior shoulder down and toward the fetal face. Steady, then rocking.",type:"once",priority:"critical"},
+      {id:"sd-posterior",group:"NEXT MANEUVERS",title:"Deliver the posterior arm.",detail:"Follow the posterior arm to the elbow, flex it and sweep the forearm across the chest and out. Hold the wrist or forearm, not the upper arm.",type:"once",priority:"high"},
+      {id:"sd-rotate",group:"NEXT MANEUVERS",title:"Internal rotation: Rubin II, Woods screw, reverse Woods.",detail:"Rubin II: pressure on the back of the anterior shoulder toward the chest. Woods screw: pressure on the front of the posterior shoulder. Rotate the shoulders into an oblique diameter.",type:"once",priority:"high"},
+      {id:"sd-allfours",group:"NEXT MANEUVERS",title:"All-fours (Gaskin) position.",detail:"Roll the patient to hands and knees and try gentle downward traction to deliver the posterior shoulder. Maneuvers can be repeated in this position.",type:"once",priority:"high"},
+      {id:"sd-episiotomy",group:"NEXT MANEUVERS",title:"Consider episiotomy for room to work.",detail:"Episiotomy does not relieve the bony obstruction; it only gives space for internal maneuvers.",type:"once",priority:"high"},
+      {id:"sd-lastresort",group:"LAST RESORT",title:"Last resort: clavicle fracture, Zavanelli with cesarean, symphysiotomy.",detail:"When other maneuvers fail. Requires the most experienced clinicians; get the operating room and anesthesia ready early.",type:"once",priority:"critical"},
+      {id:"sd-after",group:"AFTER DELIVERY",title:"Neonatal team, watch for PPH, document.",detail:"Neonatal resuscitation and arm/clavicle exam. Anticipate postpartum hemorrhage and perineal injury. Document the head-to-body interval, maneuvers in order, who did what, and which shoulder was anterior.",type:"once",priority:"high"}
+    ],
+    flow:[
+      {title:"Head delivered, shoulders stuck",body:"Call for help, note the time, stop pushing, no fundal pressure.",tone:"start"},
+      {title:"McRoberts + suprapubic pressure",body:"First-line, together.",tone:"critical"},
+      {title:"Delivered?",body:"If not: posterior arm, internal rotation, all-fours; consider episiotomy for room.",tone:"decision"},
+      {title:"Last resort",body:"Clavicle fracture, Zavanelli with cesarean, symphysiotomy.",tone:"critical"},
+      {title:"After delivery",body:"Neonatal team, PPH watch, documentation.",tone:"action"}
+    ]
   }
 };
 
@@ -700,6 +816,9 @@ const EDUCATION = [
     {h:"Cardiovascular red flags",bullets:["Shortness of breath or chest pain at rest","Severe orthopnea or near-syncope with palpitations","Resting HR ≥120 or RR ≥25","Oxygen saturation ≤94%","Resting systolic BP ≥160 or <90","New pathologic murmur, S3/S4, crackles or distended neck veins"]},
     {h:"Initial work-up",p:"The supplied ACOG educational algorithm highlights ECG, BNP, chest X-ray and troponin, followed by echocardiography and obstetric/cardiology consultation when abnormal or clinically indicated."}
   ]},
+  {id:"shoulder-dystocia",title:"Shoulder dystocia maneuvers",kicker:"EVERY SECOND COUNTS",accent:"teal",summary:"First-line maneuvers, what comes next, and what never to do.",sections:[]},
+  {id:"t3-bleeding",title:"Third-trimester bleeding and trauma",kicker:"ABRUPTION · PREVIA · TRAUMA",accent:"crimson",summary:"Causes, first steps, and what non-OB teams miss after trauma.",sections:[]},
+  {id:"arrest-pregnancy",title:"Cardiac arrest in pregnancy",kicker:"INCLUDES AMNIOTIC FLUID EMBOLISM",accent:"navy",summary:"What changes in pregnancy, the 4–5 minute clock, and causes A–H.",sections:[]},
   {id:"simulation",title:"Using Simulation mode",kicker:"DUAL-PURPOSE TRAINING",accent:"teal",summary:"Simulation uses the same actions and timers while allowing the facilitator to control time.",sections:[
     {h:"What time controls do",p:"Pause, +1 minute, +5 minutes and Next event change the simulation clock and trigger reminders that become due."},
     {h:"What time controls never do",p:"They never administer a medication, complete a task, improve the patient or advance a clinical branch automatically."},
@@ -927,6 +1046,170 @@ const PATHWAYS = {
       {title:"After the seizure",nodes:["after"]},
       {title:"Ongoing care",nodes:["tox","delivery"]}
     ]
+  },
+
+  arrest:{
+    id:"arrest",
+    title:"Maternal Cardiac Arrest",
+    sourceRefs:["aha-2025-pregnancy","smfm-afe-9"],
+    nodes:{
+      recognize:{title:"Cardiac arrest in pregnancy",type:"start",urgency:"critical",summary:"No pulse · call the team · note the time",
+        items:[{text:"Call the arrest team + OB · note the time",task:"arrest-help"}],
+        details:"Activate the cardiac arrest in pregnancy team per local resources: leader, anesthesia, obstetrics, neonatology, nursing, pharmacy.",
+        connections:[{to:"g-start"}],sourceRefs:["aha-2025-pregnancy"],reviewStatus:"draft",reviewNote:"New pathway from the 2025 AHA cardiac arrest in pregnancy algorithm; pending clinical review."},
+      cpr:{title:"High-quality CPR",type:"action",urgency:"critical",summary:"Defibrillate when indicated · rhythm check every 2 min",
+        items:[{text:"CPR · defibrillate when indicated · check every 2 min",task:"arrest-cpr"}],
+        details:"Standard BLS/ACLS: compressions, defibrillation and drug doses are unchanged in pregnancy.",reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      lud:{title:"Left uterine displacement",type:"action",urgency:"critical",summary:"Continuous, manual · fundus at or above umbilicus",
+        items:[{text:"Continuous manual left uterine displacement",task:"arrest-lud"}],
+        details:"Relieves aortocaval compression and makes compressions more effective.",reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      airway:{title:"Early airway",type:"action",urgency:"critical",summary:"Most experienced provider",
+        items:[{text:"Early airway by the most experienced provider",task:"arrest-airway"}],
+        details:"A difficult airway is common in pregnancy. Endotracheal tube or supraglottic airway; oxygenate.",reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      iv:{title:"IV above the diaphragm",type:"action",urgency:"urgent",summary:"Arms or neck",
+        items:[{text:"IV or IO access above the diaphragm",task:"arrest-iv"}],details:"Access above the diaphragm avoids delay from aortocaval compression.",reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      mag:{title:"On magnesium?",type:"action",urgency:"urgent",summary:"Stop it · give calcium",
+        items:[{text:"Stop IV magnesium and give calcium",task:"arrest-mag"},{text:"Calcium gluconate",med:"calcium-gluconate"}],
+        details:"If the patient is receiving IV magnesium, stop it and give calcium.",medicationRefs:["calcium-gluconate"],reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      monitors:{title:"Detach fetal monitors",type:"action",urgency:"urgent",summary:"Before defibrillation",
+        items:[{text:"Detach fetal monitors",task:"arrest-monitors"}],details:"Remove fetal monitors so they do not interfere with resuscitation.",reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      rosc:{title:"ROSC within 4 minutes?",type:"decision",urgency:"critical",summary:"Prepare for delivery from minute one",
+        details:"Begin preparing for resuscitative delivery as soon as the arrest is called when the fundus is at or above the umbilicus.",
+        connections:[{to:"post",label:"Yes"},{to:"deliver",label:"No"}],reviewStatus:"draft",reviewNote:"4-minute decision point from AHA guidance; pending clinical review."},
+      deliver:{title:"Resuscitative delivery",type:"escalation",urgency:"critical",summary:"Target: delivered within 5 minutes",
+        items:[{text:"Resuscitative delivery where you are · target 5 min",task:"arrest-delivery"},{text:"Newborn: neonatal resuscitation algorithm"}],
+        details:"If there is no ROSC, the goal is delivery within 5 minutes, at the site of the resuscitation. Continue ALS throughout.",
+        connections:[{to:"cause",label:"Continue ALS"}],reviewStatus:"draft",reviewNote:"AHA 2025; pending clinical review."},
+      post:{title:"ROSC",type:"endpoint",urgency:"urgent",summary:"Post-arrest care · keep looking for the cause",
+        items:[{text:"Post-arrest care with the full team"}],details:"Continue to identify and treat the cause.",
+        connections:[{to:"cause",label:"Find the cause"}],reviewStatus:"draft",reviewNote:"Endpoint wording pending clinical review."},
+      cause:{title:"Treat the cause: A–H",type:"action",urgency:"urgent",summary:"Anesthetic · Bleeding · Cardiac · Drugs · Embolic · Fever · H’s/T’s · Hypertension",
+        items:[{text:"Treat the cause (A–H)",task:"arrest-cause"}],
+        details:"Anesthetic complications · Bleeding · Cardiovascular · Drugs · Embolic (amniotic fluid or pulmonary) · Fever · General H’s and T’s · Hypertension (preeclampsia).",reviewStatus:"draft",reviewNote:"AHA 2025 etiologies; pending clinical review."},
+      afe:{title:"Amniotic fluid embolism?",type:"escalation",urgency:"critical",summary:"Massive transfusion · early coagulation · avoid fluid overload",
+        items:[{text:"Suspected AFE: activate massive transfusion",task:"arrest-afe"}],
+        details:"Sudden cardiorespiratory collapse in labor or just after delivery. Clinical diagnosis; no confirmatory test. Activate massive transfusion, assess coagulation early, avoid excessive fluid, vasopressors/inotropes as indicated, multidisciplinary team.",
+        sourceRefs:["aha-2025-pregnancy","smfm-afe-9"],reviewStatus:"draft",reviewNote:"AHA 2025 and SMFM Clinical Guideline 9 (2016); pending clinical review."}
+    },
+    chart:{rows:[
+      ["recognize"],
+      [{group:"g-start",label:"Start now — at the same time",nodes:["cpr","lud"],connections:[{to:"g-opt"}]}],
+      [{group:"g-opt",label:"Optimize for pregnancy — at the same time",nodes:["airway","iv","mag","monitors"],connections:[{to:"rosc"}]}],
+      ["rosc"],
+      ["post","deliver"],
+      [{group:"g-cause",label:"Find the cause",nodes:["cause","afe"]}]
+    ]},
+    steps:[
+      {title:"Start resuscitation",nodes:["recognize","cpr","lud"],parallel:true},
+      {title:"Optimize for pregnancy",nodes:["airway","iv","mag","monitors"],parallel:true},
+      {title:"ROSC within 4 minutes?",nodes:["rosc"],decision:"rosc"},
+      {title:"Resuscitative delivery",nodes:["deliver"],escalation:true},
+      {title:"Find the cause",nodes:["cause","afe"]}
+    ]
+  },
+
+  trauma:{
+    id:"trauma",
+    title:"Third-Trimester Trauma / Abruption",
+    sourceRefs:["aafp-trauma","acog-co-723"],
+    nodes:{
+      start:{title:"Pregnant trauma + vaginal bleeding",type:"start",urgency:"critical",summary:"Call OB + trauma · fundus at umbilicus ≈ 20 weeks",
+        items:[{text:"Call OB + trauma team · estimate gestational age",task:"tr-help"}],
+        details:"Activate trauma and obstetric response, and the neonatal team at a viable gestation.",
+        connections:[{to:"g-mother"}],reviewStatus:"draft",reviewNote:"New pathway pending clinical review."},
+      primary:{title:"Primary survey",type:"action",urgency:"critical",summary:"Airway · breathing · circulation",
+        items:[{text:"Primary survey: airway, breathing, circulation",task:"tr-primary"}],details:"Maternal resuscitation is the best fetal resuscitation.",reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      lud:{title:"Uterine displacement",type:"action",urgency:"critical",summary:"Manual left, or tilt 25–30°",
+        items:[{text:"Left uterine displacement or left tilt",task:"tr-lud"}],details:"Relieves aortocaval compression.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"AFP 2014; pending clinical review."},
+      iv:{title:"Access + labs",type:"action",urgency:"urgent",summary:"2 large-bore IVs · type & cross · coags · KB",
+        items:[{text:"2 large-bore IVs · CBC, type & cross, coags, fibrinogen, KB",task:"tr-iv"}],
+        details:"Kleihauer-Betke for all pregnant patients with major trauma, regardless of Rh status.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"AFP 2014; pending clinical review."},
+      imaging:{title:"Imaging",type:"action",urgency:"urgent",summary:"Never withheld because of pregnancy",
+        items:[{text:"Don’t withhold needed imaging",task:"tr-imaging"}],details:"Indicated maternal imaging should not be delayed or withheld because of pregnancy.",sourceRefs:["acog-co-723"],reviewStatus:"draft",reviewNote:"ACOG CO 723; pending clinical review."},
+      fetal:{title:"Fetal monitoring",type:"action",urgency:"urgent",summary:"Continuous FHR + contractions",
+        items:[{text:"Continuous fetal heart rate + contraction monitoring",task:"tr-fetal"}],
+        details:"At 20 weeks or more, once the mother is stable: minimum 4 hours even after minor trauma; longer (commonly 24 h) with risk signs. Follow local protocol.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"Monitoring durations from AFP 2014; local protocol governs."},
+      us:{title:"Ultrasound first",type:"action",urgency:"critical",summary:"No digital exam until previa excluded",
+        items:[{text:"No cervical exam until previa is excluded",task:"tr-noexam"}],
+        details:"Placental location, fetal heart rate, gestational age. A normal ultrasound does not exclude abruption.",reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      abruption:{title:"Abruption signs",type:"action",urgency:"urgent",summary:"Pain · firm or tender uterus · contractions · abnormal FHR",
+        items:[{text:"Look for abruption signs",task:"tr-abruption"}],details:"Bleeding may be concealed; abruption can appear up to 24 hours after trauma.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"AFP 2014; pending clinical review."},
+      rh:{title:"Rh status",type:"action",urgency:"urgent",summary:"Rh-negative → Rh immune globulin",
+        items:[{text:"Rh-negative: give Rh immune globulin",task:"tr-rh"}],details:"Kleihauer-Betke helps size the dose.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"AFP 2014; pending clinical review."},
+      stable:{title:"Mother and fetus stable?",type:"decision",urgency:"critical",summary:"Reassess continuously",
+        details:"Maternal hemodynamics, bleeding, uterine tone and tenderness, contractions and FHR.",
+        connections:[{to:"monitor",label:"Yes"},{to:"deliver",label:"No"}],reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      monitor:{title:"Monitor",type:"endpoint",urgency:"routine",summary:"≥4 hours · longer with any risk sign",
+        items:[{text:"Monitor at least 4 hours; extend with contractions, bleeding, tenderness or abnormal FHR"}],
+        details:"Commonly extended to 24 hours with frequent contractions, bleeding, uterine tenderness, abnormal FHR or serious maternal injury.",sourceRefs:["aafp-trauma"],reviewStatus:"draft",reviewNote:"AFP 2014; local protocol governs."},
+      deliver:{title:"Expedite delivery",type:"escalation",urgency:"critical",summary:"Viable gestation · often cesarean",
+        items:[{text:"Expedite delivery with OB, anesthesia, neonatology",task:"tr-deliver"},{text:"Mother arrests → Maternal Cardiac Arrest pathway",pathway:"arrest"}],
+        details:"Unstable mother or abnormal fetal status at a viable gestation.",reviewStatus:"draft",reviewNote:"Pending clinical review."}
+    },
+    chart:{rows:[
+      ["start"],
+      [{group:"g-mother",label:"Mother first — at the same time",nodes:["primary","lud","iv","imaging"],connections:[{to:"g-preg"}]}],
+      [{group:"g-preg",label:"Assess the pregnancy — at the same time",nodes:["fetal","us","abruption","rh"],connections:[{to:"stable"}]}],
+      ["stable"],
+      ["monitor","deliver"]
+    ]},
+    steps:[
+      {title:"Mother first",nodes:["start","primary","lud","iv","imaging"],parallel:true},
+      {title:"Assess the pregnancy",nodes:["fetal","us","abruption","rh"],parallel:true},
+      {title:"Stable?",nodes:["stable"],decision:"stable"},
+      {title:"Expedite delivery",nodes:["deliver"],escalation:true}
+    ]
+  },
+
+  shoulder:{
+    id:"shoulder",
+    title:"Shoulder Dystocia",
+    sourceRefs:["acog-sd-178"],
+    nodes:{
+      start:{title:"Shoulder dystocia",type:"start",urgency:"critical",summary:"Head delivered · shoulders stuck · start the clock",
+        items:[{text:"Say “shoulder dystocia” · call OB, anesthesia, neonatal team",task:"sd-help"}],
+        details:"Start the app clock when the head delivers; a recorder announces elapsed time.",
+        connections:[{to:"g-first"}],reviewStatus:"draft",reviewNote:"New pathway (ACOG PB 178); pending clinical review."},
+      avoid:{title:"Never",type:"escalation",urgency:"critical",summary:"Fundal pressure · pushing · excess traction",
+        items:[{text:"Stop pushing · no fundal pressure · gentle axial traction only",task:"sd-avoid"}],
+        details:"Fundal pressure risks uterine rupture; excessive lateral or downward traction risks brachial plexus injury.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      mcroberts:{title:"McRoberts",type:"action",urgency:"critical",summary:"Hyperflex thighs onto the abdomen",
+        items:[{text:"McRoberts: hyperflex the thighs",task:"sd-mcroberts"}],details:"Two assistants flex the thighs onto the abdomen.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      suprapubic:{title:"Suprapubic pressure",type:"action",urgency:"critical",summary:"From the fetal back · never fundal",
+        items:[{text:"Suprapubic pressure — never fundal",task:"sd-suprapubic"}],details:"Push the anterior shoulder down and toward the fetal face; steady, then rocking.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      delivered1:{title:"Delivered?",type:"decision",urgency:"critical",summary:"Announce the time",
+        connections:[{to:"after",label:"Yes"},{to:"posterior",label:"No"}],details:"If not, move on without delay.",reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      posterior:{title:"Posterior arm",type:"action",urgency:"critical",summary:"Flex elbow · sweep across the chest",
+        items:[{text:"Deliver the posterior arm",task:"sd-posterior"}],details:"Hold the wrist or forearm, not the upper arm.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      rotate:{title:"Internal rotation",type:"action",urgency:"critical",summary:"Rubin II · Woods screw · reverse Woods",
+        items:[{text:"Rubin II · Woods screw · reverse Woods",task:"sd-rotate"}],details:"Rotate the shoulders into an oblique diameter.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      allfours:{title:"All-fours",type:"action",urgency:"urgent",summary:"Gaskin: hands and knees, then retry",
+        items:[{text:"All-fours (Gaskin) position",task:"sd-allfours"}],details:"Gentle downward traction to deliver the posterior shoulder; maneuvers can be repeated.",reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      episiotomy:{title:"Episiotomy?",type:"action",urgency:"routine",summary:"Room for your hands, not the bone",
+        items:[{text:"Consider episiotomy for room",task:"sd-episiotomy"}],details:"Does not relieve the bony obstruction.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      delivered2:{title:"Delivered?",type:"decision",urgency:"critical",summary:"Announce the time",
+        connections:[{to:"after",label:"Yes"},{to:"lastresort",label:"No"}],details:"Senior help, OR and anesthesia ready.",reviewStatus:"draft",reviewNote:"Pending clinical review."},
+      lastresort:{title:"Last resort",type:"escalation",urgency:"critical",summary:"Clavicle fracture · Zavanelli + cesarean · symphysiotomy",
+        items:[{text:"Last-resort maneuvers by the most experienced clinician",task:"sd-lastresort"}],details:"OR and anesthesia ready early.",reviewStatus:"draft",reviewNote:"ACOG PB 178; pending clinical review."},
+      after:{title:"After delivery",type:"endpoint",urgency:"urgent",summary:"Neonatal team · PPH watch · document",
+        items:[{text:"Neonatal team, PPH watch, document",task:"sd-after"}],
+        details:"Document head-to-body interval, maneuvers in order, who did what, and which shoulder was anterior.",reviewStatus:"draft",reviewNote:"Pending clinical review."}
+    },
+    chart:{rows:[
+      ["start","avoid"],
+      [{group:"g-first",label:"First line — together",nodes:["mcroberts","suprapubic"],connections:[{to:"delivered1"}]}],
+      ["delivered1"],
+      [{group:"g-next",label:"Next — choose by the situation",nodes:["posterior","rotate","allfours","episiotomy"],connections:[{to:"delivered2"}]}],
+      ["delivered2"],
+      ["lastresort","after"]
+    ]},
+    steps:[
+      {title:"Call for help · start the clock",nodes:["start","avoid"],parallel:true},
+      {title:"McRoberts + suprapubic pressure",nodes:["mcroberts","suprapubic","delivered1"],decision:"delivered1",parallel:true},
+      {title:"Next maneuvers",nodes:["posterior","rotate","allfours","episiotomy","delivered2"],decision:"delivered2"},
+      {title:"Last resort",nodes:["lastresort"],escalation:true},
+      {title:"After delivery",nodes:["after"]}
+    ]
   }
 };
 
@@ -1019,6 +1302,49 @@ const EDU_DECKS = {
       {h:"Vitals",t:"HR ≥120 · RR ≥25 · SpO₂ ≤94% · SBP ≥160 or <90"},
       {h:"Exam",t:"New murmur · S3/S4 · crackles · distended neck veins"}]},
     {kind:"steps",title:"Initial work-up",steps:["ECG · BNP · chest X-ray · troponin","Abnormal or indicated → echocardiogram","OB + cardiology consultation"]}
+  ],
+
+  "shoulder-dystocia":[
+    {kind:"title",title:"Shoulder dystocia maneuvers",sub:"Head delivered · shoulders stuck · every second counts"},
+    {kind:"steps",title:"First 30 seconds",steps:["Say “shoulder dystocia” · call for help","Note the time the head delivered","Stop pushing","Gentle axial traction only"],note:"A recorder calls out the time every 30 seconds."},
+    {kind:"cards",title:"First line — together",cards:[
+      {h:"McRoberts",t:"Hyperflex the thighs onto the abdomen."},
+      {h:"Suprapubic pressure",t:"From the fetal back: push the anterior shoulder down and toward the face."}],
+      note:"Never fundal pressure."},
+    {kind:"cards",title:"Next — choose by situation",cards:[
+      {h:"Posterior arm",t:"Flex the elbow, sweep the forearm across the chest."},
+      {h:"Rotation",t:"Rubin II · Woods screw · reverse Woods."},
+      {h:"All-fours (Gaskin)",t:"Hands and knees, then try again."},
+      {h:"Episiotomy",t:"Room for your hands — not for the bone."}]},
+    {kind:"list",title:"Last resort",items:["Deliberate clavicle fracture","Zavanelli → cesarean","Symphysiotomy","Abdominal rescue (hysterotomy)"],note:"Get the OR and anesthesia ready early."},
+    {kind:"split",tone:"dodont",title:"Avoid",left:{h:"Do",items:["Gentle axial traction","Change maneuver if no progress","Call out the time"]},right:{h:"Never",items:["Fundal pressure","Excess lateral traction","Twisting the neck"]}},
+    {kind:"split",title:"After delivery",left:{h:"Baby",items:["Neonatal resuscitation team","Arm and clavicle exam"]},right:{h:"Document",items:["Head-to-body interval","Maneuvers in order","Who did what","Which shoulder was anterior"]},note:"Watch for postpartum hemorrhage."}
+  ],
+
+  "t3-bleeding":[
+    {kind:"title",title:"Third-trimester bleeding",sub:"Including bleeding after a car crash or other trauma"},
+    {kind:"big",title:"Four causes to consider",items:[{big:"Abruption",label:"Pain · firm uterus"},{big:"Previa",label:"Painless bleeding"},{big:"Vasa previa",label:"Bleeding at rupture"},{big:"Rupture",label:"Prior uterine scar"}],
+      note:"No digital cervical exam until previa is excluded by ultrasound."},
+    {kind:"steps",title:"First steps",steps:["Call OB · continuous fetal monitoring","2 large-bore IVs · type & cross · coags","Ultrasound: where is the placenta?","Unstable mother or fetus → expedite delivery"],note:"A normal ultrasound does not exclude abruption."},
+    {kind:"list",title:"After trauma: what gets missed",items:["Left uterine displacement","Fetal monitoring even after minor trauma","Abruption can appear hours later","Rh immune globulin if Rh-negative","Needed imaging is never withheld"]},
+    {kind:"big",title:"Fetal monitoring after trauma",items:[{big:"4 h",label:"Minimum, even if minor"},{big:"24 h",label:"Contractions, bleeding, tenderness or abnormal FHR"}],
+      note:"At 20 weeks or more. Thresholds vary — follow local protocol."},
+    {kind:"list",title:"Rh and Kleihauer-Betke",items:["Rh-negative → Rh immune globulin","Kleihauer-Betke after major trauma","KB helps size the RhIG dose"],note:"Mother arrests? Switch to the Maternal Cardiac Arrest pathway."}
+  ],
+
+  "arrest-pregnancy":[
+    {kind:"title",title:"Cardiac arrest in pregnancy",sub:"Resuscitate the mother · deliver within 5 minutes"},
+    {kind:"list",title:"What stays the same",items:["High-quality CPR","Defibrillation when indicated","Standard ACLS drug doses"],note:"Pregnancy changes the setup, not the ACLS."},
+    {kind:"cards",title:"What changes",cards:[
+      {h:"Left uterine displacement",t:"Manual and continuous when the fundus is at or above the umbilicus."},
+      {h:"Early airway",t:"Difficult airway is common — most experienced provider."},
+      {h:"IV above the diaphragm",t:"Arms or neck."},
+      {h:"Fetal monitors",t:"Detach them."},
+      {h:"Magnesium running?",t:"Stop it and give calcium."}]},
+    {kind:"big",title:"The clock",items:[{big:"4 min",label:"No ROSC → start delivery"},{big:"5 min",label:"Target: baby delivered"}],
+      note:"Prepare from minute one. Deliver where the resuscitation is happening."},
+    {kind:"split",title:"Find the cause: A–H",left:{h:"A–D",items:["Anesthetic complications","Bleeding","Cardiovascular","Drugs"]},right:{h:"E–H",items:["Embolic: amniotic fluid or PE","Fever","General H’s and T’s","Hypertension (preeclampsia)"]}},
+    {kind:"steps",title:"Amniotic fluid embolism",steps:["Sudden collapse in labor or just after birth","High-quality CPR · deliver if arrested","Activate massive transfusion","Check coagulation early","Avoid fluid overload"],note:"A clinical diagnosis — no test confirms or excludes it."}
   ],
 
   simulation:[
@@ -1344,15 +1670,21 @@ const store = createWorkspaceSessionStore({key:STORAGE_KEY});
 const SHORT_TASKS = {
   "pph-help":"Call hemorrhage response.","pph-assess":"Check bleeding, tone + vitals.","pph-massage":"Massage uterus. Start bimanual compression.","pph-access":"Get IV access, labs + blood.","pph-oxytocin":"Give oxytocin. Add uterotonics.","pph-cause":"Check 4 Ts.","pph-txa":"Consider TXA now.","pph-escalate":"Escalate ongoing bleeding.",
   "htn-help":"Call OB. Activate severe-BP response.","htn-bp":"Repeat BP within 15 minutes.","htn-symptoms":"Check severe symptoms.","htn-labs":"Get preeclampsia labs.","htn-treat":"Give first-line BP medication.","htn-mag":"Start magnesium if indicated.","htn-monitor":"Recheck BP after every dose.","htn-escalate":"Escalate persistent severe BP.",
-  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization."
+  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization.",
+  "arrest-help":"Call arrest team + OB. Note the time.","arrest-cpr":"CPR. Rhythm check every 2 min.","arrest-lud":"Left uterine displacement.","arrest-airway":"Early airway — most experienced.","arrest-iv":"IV above the diaphragm.","arrest-mag":"On magnesium? Stop it. Give calcium.","arrest-monitors":"Detach fetal monitors.","arrest-delivery":"No ROSC? Deliver by 5 min.","arrest-cause":"Treat the cause: A–H.","arrest-afe":"Suspect AFE? Activate massive transfusion.",
+  "tr-help":"Call OB + trauma team.","tr-primary":"Primary survey: ABC.","tr-lud":"Left uterine displacement.","tr-iv":"2 large-bore IVs + labs + KB.","tr-imaging":"Don’t withhold needed imaging.","tr-fetal":"Continuous fetal monitoring.","tr-noexam":"No cervical exam until previa excluded.","tr-abruption":"Look for abruption.","tr-rh":"Rh-negative? Give RhIG.","tr-deliver":"Unstable? Expedite delivery.",
+  "sd-help":"Call for help. Start the clock.","sd-avoid":"No pushing. No fundal pressure.","sd-mcroberts":"McRoberts.","sd-suprapubic":"Suprapubic pressure.","sd-posterior":"Deliver the posterior arm.","sd-rotate":"Rotate: Rubin II / Woods.","sd-allfours":"All-fours (Gaskin).","sd-episiotomy":"Consider episiotomy for room.","sd-lastresort":"Last-resort maneuvers.","sd-after":"Neonatal team · PPH watch · document."
 };
 const SHORT_SUMMARIES = {
   pph:"Resuscitation · 4 Ts · MTP",
   htn:"Treat urgently · Maternal safety",
-  eclampsia:"Stabilize · Magnesium · Airway"
+  eclampsia:"Stabilize · Magnesium · Airway",
+  arrest:"Resuscitation · Perimortem CS",
+  trauma:"MVA · Assess · Stabilize · Deliver",
+  shoulder:"Recognize · Maneuvers · Team"
 };
 // Emergency icons (cropped from the supplied icon set). They identify the pathway at a glance.
-const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia"};
+const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia",arrest:"icon-arrest",trauma:"icon-trauma",shoulder:"icon-shoulder"};
 function emergencyIcon(id,size=56){
   const n=EMERGENCY_ICONS[id];if(!n)return "";
   return `<picture class="em-icon"><source type="image/webp" srcset="img/${n}.webp"><img src="img/${n}.png" alt="" width="${size}" height="${size}" decoding="async"></picture>`;
@@ -1367,7 +1699,7 @@ let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
 let expandedTask = null; // UI-only: which compact row is open in the cockpit
-let flowOpen = false;    // UI-only: flowchart panel in the cockpit starts closed
+let sidePanel = null;   // UI-only: which cockpit side panel is open (flow | meds | timers | timeline); starts closed
 const WIDE = window.matchMedia("(min-width:680px)");
 
 function loadSettings(){
@@ -1435,6 +1767,7 @@ function render(){
   if(route==="flowcharts") renderFlowcharts();
   if(route==="medications") renderMedications();
   if(route==="education") renderEducation();
+  if(cockpit)refreshSideSheet();
   updateHeader();
 }
 
@@ -1521,12 +1854,9 @@ function renderActiveSession(){
     </section>
     ${renderAlertStrip()}
     <nav class="cockpit-tabs" aria-label="Session tools">
-      <button class="tab-flow${flowOpen?" active":""}" data-action="toggle-flow" aria-expanded="${flowOpen}">Flowchart</button>
-      <button data-nav-jump="medications">Meds</button>
-      <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
-      <button data-action="show-timeline">Timeline</button>
+      ${[["flow","Flowchart"],["meds","Meds"],["timers","Timers"],["timeline","Timeline"]].map(([k,l])=>`<button class="${sidePanel===k?"active":""}" data-side="${k}" aria-pressed="${sidePanel===k}">${l}${k==="timers"&&timerCount?` <span>${timerCount}</span>`:""}</button>`).join("")}
     </nav>
-    <div class="cockpit-body${flowOpen?" flow-open":""}">
+    <div class="cockpit-body${sidePanel&&WIDE.matches?" flow-open":""}">
       <section class="task-workspace">
         ${renderDueGroup(e)}
         ${renderTaskGroups(e)}
@@ -1535,11 +1865,7 @@ function renderActiveSession(){
           <div id="completedList" hidden>${renderCompleted(e)}</div>
         </section>
       </section>
-      <aside class="cockpit-side acc-${e.accent}" aria-label="Flowchart and recent events" data-pathway="${e.id}">
-        <div class="side-flow-head"><h2>Pathway</h2><button class="text-button" data-action="open-full-flow">Open full ›</button></div>
-        ${renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true})}
-        <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
-      </aside>
+      <aside class="cockpit-side acc-${e.accent}" aria-label="Session tools panel" data-pathway="${e.id}">${sidePanel&&WIDE.matches?sidePanelHTML(sidePanel):""}</aside>
     </div>`;
   requestAnimationFrame(updateClockDom);
 }
@@ -1665,7 +1991,37 @@ const TASK_SUBTITLES={
   "ec-recur":"Benzodiazepine after magnesium; prepare airway",
   "ec-tox":"Respirations, reflexes, urine output; calcium ready",
   "ec-neuro":"Focal deficit, atypical or refractory seizure",
-  "ec-delivery":"Stabilize first; route by obstetric factors"
+  "ec-delivery":"Stabilize first; route by obstetric factors",
+  "arrest-help":"Leader, anesthesia, OB, neonatology, pharmacy",
+  "arrest-cpr":"Standard ACLS doses and defibrillation",
+  "arrest-lud":"Manual, continuous · fundus at or above umbilicus",
+  "arrest-airway":"Difficult airway is common in pregnancy",
+  "arrest-iv":"Arms or neck — avoids aortocaval delay",
+  "arrest-mag":"Stop the infusion, give calcium",
+  "arrest-monitors":"Out of the way of resuscitation",
+  "arrest-delivery":"Prepare from minute one · deliver where you are",
+  "arrest-cause":"Anesthetic · Bleeding · Cardiac · Drugs · Embolic · Fever · H’s/T’s · HTN",
+  "arrest-afe":"Early coagulation check · avoid fluid overload",
+  "tr-help":"Fundus at umbilicus ≈ 20 weeks",
+  "tr-primary":"Mother first is the best care for the fetus",
+  "tr-lud":"Manual left, or tilt 25–30°",
+  "tr-iv":"Type & cross, coags, fibrinogen, Kleihauer-Betke",
+  "tr-imaging":"Never withheld because of pregnancy",
+  "tr-fetal":"Minimum 4 h; longer with risk signs",
+  "tr-noexam":"Ultrasound: placenta location, FHR",
+  "tr-abruption":"Pain, firm or tender uterus, contractions, abnormal FHR",
+  "tr-rh":"Kleihauer-Betke helps size the dose",
+  "tr-deliver":"With OB, anesthesia, neonatology · often cesarean",
+  "sd-help":"OB, anesthesia, neonatal team · note head-delivery time",
+  "sd-avoid":"Gentle axial traction only",
+  "sd-mcroberts":"Hyperflex thighs onto the abdomen",
+  "sd-suprapubic":"From the fetal back · never fundal",
+  "sd-posterior":"Flex the elbow, sweep across the chest",
+  "sd-rotate":"Into an oblique diameter",
+  "sd-allfours":"Hands and knees, then retry",
+  "sd-episiotomy":"Room for hands — not for the bone",
+  "sd-lastresort":"Clavicle fracture · Zavanelli + cesarean · symphysiotomy",
+  "sd-after":"Head-to-body interval, maneuvers in order, who did what"
 };
 
 const ICON_PATHS={
@@ -1685,7 +2041,10 @@ const ICON_PATHS={
 const TASK_ICONS={
   "pph-help":"call","pph-assess":"pulse","pph-massage":"hand","pph-access":"iv","pph-oxytocin":"syringe","pph-cause":"search","pph-txa":"syringe","pph-escalate":"alert",
   "htn-help":"call","htn-bp":"pulse","htn-symptoms":"eye","htn-labs":"flask","htn-treat":"syringe","htn-mag":"syringe","htn-monitor":"pulse","htn-escalate":"alert",
-  "ec-help":"call","ec-safety":"shield","ec-mag":"syringe","ec-vitals":"pulse","ec-recur":"alert","ec-tox":"eye","ec-neuro":"brain","ec-delivery":"baby"
+  "ec-help":"call","ec-safety":"shield","ec-mag":"syringe","ec-vitals":"pulse","ec-recur":"alert","ec-tox":"eye","ec-neuro":"brain","ec-delivery":"baby",
+  "arrest-help":"call","arrest-cpr":"pulse","arrest-lud":"hand","arrest-airway":"shield","arrest-iv":"iv","arrest-mag":"syringe","arrest-monitors":"alert","arrest-delivery":"baby","arrest-cause":"search","arrest-afe":"alert",
+  "tr-help":"call","tr-primary":"pulse","tr-lud":"hand","tr-iv":"iv","tr-imaging":"eye","tr-fetal":"pulse","tr-noexam":"alert","tr-abruption":"search","tr-rh":"syringe","tr-deliver":"baby",
+  "sd-help":"call","sd-avoid":"alert","sd-mcroberts":"hand","sd-suprapubic":"hand","sd-posterior":"hand","sd-rotate":"hand","sd-allfours":"hand","sd-episiotomy":"shield","sd-lastresort":"alert","sd-after":"baby"
 };
 function taskIcon(t){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[TASK_ICONS[t.id]||(t.type==="med"?"syringe":"pulse")]}</svg>`;}
 
@@ -1803,7 +2162,7 @@ function flowCtx(id){
 }
 function statusStripHTML(){
   const e=EMERGENCIES[session.emergencyId];const due=getDueTimers().length;const sim=session.mode==="simulation";
-  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${esc(e.short.toUpperCase())} ${sim?"SIMULATION":"CLINICAL"}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} overdue</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
+  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${sim?"SIM":"CLINICAL"} · ${esc(e.short.toUpperCase())}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} due</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
 }
 function renderFlowcharts(){
   if(chartCtl){chartSaved=flowView==="chart"?{id:flowEmergency,...chartCtl.state()}:null;chartCtl.destroy();chartCtl=null;}
@@ -1943,6 +2302,44 @@ function recordMedication(id){
 }
 function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
+// ---------- Cockpit side panels: Flowchart · Meds · Timers · Timeline ----------
+// Wide screens: the right-hand column. Phones: the same content in a sheet. Never leaves the session.
+const SIDE_TITLES={flow:"Pathway",meds:"Medications",timers:"Timers and reminders",timeline:"Event timeline"};
+function sessionMeds(e){
+  const ids=new Set();e.tasks.forEach(t=>(t.meds||[]).forEach(m=>ids.add(m)));
+  Object.values(PATHWAYS[e.id]?.nodes||{}).forEach(n=>(n.medicationRefs||[]).forEach(m=>ids.add(m)));
+  return [...ids].map(getMedication).filter(Boolean);
+}
+function sidePanelHTML(k){
+  const e=EMERGENCIES[session.emergencyId];
+  const head=extra=>`<div class="side-flow-head"><h2>${SIDE_TITLES[k]}</h2>${extra||""}</div>`;
+  if(k==="flow")return head(`<button class="text-button" data-action="open-full-flow">Open full ›</button>`)+renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true});
+  if(k==="meds"){
+    const mine=sessionMeds(e),mineIds=new Set(mine.map(m=>m.id)),others=MEDICATIONS.filter(m=>!mineIds.has(m.id));
+    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
+    return head()+`<p class="side-note">Tap a drug for dosing, cautions and to record a dose.</p>
+      ${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
+      <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
+  }
+  if(k==="timers"){
+    const active=session.timers.filter(t=>!t.cancelled).sort((a,b)=>(a.ack-b.ack)||(a.dueAt-b.dueAt));
+    return head()+`<p class="side-note">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · due at ${fmt(t.dueAt*60000)}`:due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`;}).join(""):`<p class="empty">No timers yet.</p>`}</div>`;
+  }
+  if(k==="timeline")return head(`<small class="side-sub">elapsed time</small>`)+`<div class="timeline-list">${session.events.map(ev=>`<article><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  return "";
+}
+function toggleSide(k){
+  if(!session||session.status!=="active")return;
+  if(WIDE.matches){sidePanel=sidePanel===k?null:k;render();return;}
+  // Phone: open as a sheet; the tab shows as active while the sheet is open.
+  sidePanel=k;render();
+  openSheet({eyebrow:"SESSION · "+EMERGENCIES[session.emergencyId].short.toUpperCase(),title:SIDE_TITLES[k],wide:true,html:`<div class="sheet-side" data-pathway="${session.emergencyId}">${sidePanelHTML(k).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">')}</div>`});
+}
+function refreshSideSheet(){
+  // Keep an open phone sheet current when timers fire or a dose is recorded.
+  const host=$("#sheetBody .sheet-side");if(!host||!sidePanel||WIDE.matches)return;
+  host.innerHTML=sidePanelHTML(sidePanel).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">');
+}
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
   openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · ${formatDue(t)}`:formatDue(t)}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
@@ -1954,16 +2351,20 @@ function showDue(id){
   const t=session.timers.find(x=>x.id===id);if(!t)return;
   openSheet({eyebrow:"REMINDER DUE",title:t.label,html:`<div class="due-callout"><strong>${t.message?esc(t.message):"Reassess now and record the applicable clinical action."}</strong><span>${formatDue(t)}</span></div><button class="button primary full" data-action="ack-timer" data-timer-id="${t.id}">Acknowledge reminder</button><p class="microcopy">Acknowledging removes the alert. It does not mark a task complete or medication administered.</p>`});
 }
-function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});closeSheet();render();}
+function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
 function showAbout(){
   openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
 
-function openSheet({eyebrow="",title,html,wide=false}){
+let sheetGen=0; // a sheet opened right after a close must not be hidden by that close's delayed cleanup
+function openSheet({eyebrow="",title,html,wide=false}){sheetGen++;
   $("#sheetEyebrow").textContent=eyebrow;$("#sheetTitle").textContent=title;$("#sheetBody").innerHTML=html;$("#infoSheet").classList.toggle("wide",!!wide);$("#sheetBackdrop").hidden=false;$("#infoSheet").hidden=false;document.body.classList.add("sheet-open");setTimeout(()=>$("#infoSheet").classList.add("open"),10);
 }
-function closeSheet(){$("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");setTimeout(()=>{$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
+function closeSheet(){
+  // Phone: a side-panel sheet closing also clears the active tool tab.
+  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".cockpit-tabs [data-side]").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false");});}
+  $("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");const gen=++sheetGen;setTimeout(()=>{if(gen!==sheetGen)return;$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
   // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
   const cockpit=document.body.classList.contains("in-cockpit");
@@ -2008,14 +2409,14 @@ document.addEventListener("click",e=>{
   if(a==="sim-time")showSimTime();
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
   // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
-  if(a==="toggle-flow"){if(WIDE.matches){flowOpen=!flowOpen;render();}else{flowEmergency=session.emergencyId;navigate("flowcharts");}}
-  if(a==="open-full-flow"){flowEmergency=session.emergencyId;navigate("flowcharts");}
+  if(b.dataset.side)toggleSide(b.dataset.side);
+  if(a==="open-full-flow"){closeSheet();flowEmergency=session.emergencyId;navigate("flowcharts");}
   if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
   if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();render();}
-  if(a==="show-timers")showTimers();
+  if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
   if(a==="open-due")showDue(b.dataset.timerId);
   if(a==="ack-timer")acknowledgeTimer(b.dataset.timerId);

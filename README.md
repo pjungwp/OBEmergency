@@ -89,7 +89,7 @@ The Workspace adapter uses stable event IDs, revisions, Apps Script locking and 
 
 ### Release 1.1 — clinical workflow refinement
 
-- Add approved Holy Name activation language and contacts.
+- Add approved local activation language and contacts.
 - Add role-specific views only if they do not hide the complete action pathway.
 - Add local equipment/device preparation cards.
 - Add printable reviewed flowcharts and version/update notice.

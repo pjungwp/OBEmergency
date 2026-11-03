@@ -477,3 +477,32 @@ body.deck-open{overflow:hidden}
   .dk-nav{height:52px}
 }
 @media(max-width:400px){.nav-item small{font-size:12px;letter-spacing:-.02em}}
+/* Home dashboard: 6 emergencies. Phones: one column (scroll is fine). Wide: 2 columns × 3 rows, no scrolling. */
+@media(min-width:600px){
+  .emergency-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .emergency-grid .emergency-card{grid-template-columns:56px minmax(0,1fr) 16px;min-height:92px;align-content:center}
+  .emergency-grid .emergency-card .chevron{display:block}
+}
+@media(min-width:600px) and (max-height:880px){.hero-aurora{min-height:150px}.home-label{margin-top:10px}}
+.sl-cards.n5,.sl-cards.n6{grid-template-columns:1fr}
+@media(min-width:600px){.sl-cards.n5,.sl-cards.n6{grid-template-columns:1fr 1fr}}
+/* Cockpit side panels (Flowchart · Meds · Timers · Timeline) */
+.cockpit-side .side-flow-head,.sheet-side .side-flow-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.sheet-side .side-flow-head:empty{display:none}
+.side-sub{font-size:14px;color:var(--muted)}
+.side-note{margin:0 0 8px;font-size:15px;line-height:1.4;color:var(--muted)}
+.side-meds{display:grid;gap:8px}
+.side-med{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:10px 12px;text-align:left;background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy);border-radius:12px;color:var(--ink)}
+.side-med.crimson{border-left-color:var(--crimson)}.side-med.amber{border-left-color:var(--amber)}.side-med.violet{border-left-color:var(--violet)}
+.side-med strong{font-size:17px;color:var(--navy)}.side-med span{font-size:15px;line-height:1.35;color:#34445c}
+.side-med em{font-style:normal;font-size:14px;font-weight:800;color:#1f8a5b}
+.side-more{margin-top:10px}.side-more summary{cursor:pointer;min-height:44px;display:flex;align-items:center;font-size:16px;font-weight:800;color:var(--navy-2)}
+.cockpit-side .timer-list article,.sheet-side .timer-list article{background:#fff}
+.cockpit-side .timeline-list,.sheet-side .timeline-list{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 12px 2px}
+/* Flowchart-page session strip on narrow phones: no overflow */
+.fc-strip{gap:8px;flex-wrap:nowrap;min-width:0}
+.fc-strip .mode-tag{white-space:nowrap;flex:none}
+.fc-strip strong{font-size:22px;flex:none}
+.fc-strip .overdue-count{white-space:nowrap;flex:none}
+.fc-strip button{flex:none;white-space:nowrap;padding:0 12px}
+@media(max-width:420px){.fc-strip .mode-tag{font-size:11px;padding:3px 6px}.fc-strip strong{font-size:20px}.fc-strip .overdue-count{font-size:13px;padding:2px 6px}.fc-strip button{font-size:15px;padding:0 10px}}

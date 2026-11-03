@@ -13,15 +13,21 @@ const store = createLocalSessionStore({key:STORAGE_KEY});
 const SHORT_TASKS = {
   "pph-help":"Call hemorrhage response.","pph-assess":"Check bleeding, tone + vitals.","pph-massage":"Massage uterus. Start bimanual compression.","pph-access":"Get IV access, labs + blood.","pph-oxytocin":"Give oxytocin. Add uterotonics.","pph-cause":"Check 4 Ts.","pph-txa":"Consider TXA now.","pph-escalate":"Escalate ongoing bleeding.",
   "htn-help":"Call OB. Activate severe-BP response.","htn-bp":"Repeat BP within 15 minutes.","htn-symptoms":"Check severe symptoms.","htn-labs":"Get preeclampsia labs.","htn-treat":"Give first-line BP medication.","htn-mag":"Start magnesium if indicated.","htn-monitor":"Recheck BP after every dose.","htn-escalate":"Escalate persistent severe BP.",
-  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization."
+  "ec-help":"Call for help.","ec-safety":"Protect. Left lateral. Support airway.","ec-mag":"Give magnesium.","ec-vitals":"Check BP, oxygen + neurologic status.","ec-recur":"Treat persistent/recurrent seizure.","ec-tox":"Watch for magnesium toxicity.","ec-neuro":"Do neurologic exam. Consider head CT.","ec-delivery":"Plan delivery after stabilization.",
+  "arrest-help":"Call arrest team + OB. Note the time.","arrest-cpr":"CPR. Rhythm check every 2 min.","arrest-lud":"Left uterine displacement.","arrest-airway":"Early airway — most experienced.","arrest-iv":"IV above the diaphragm.","arrest-mag":"On magnesium? Stop it. Give calcium.","arrest-monitors":"Detach fetal monitors.","arrest-delivery":"No ROSC? Deliver by 5 min.","arrest-cause":"Treat the cause: A–H.","arrest-afe":"Suspect AFE? Activate massive transfusion.",
+  "tr-help":"Call OB + trauma team.","tr-primary":"Primary survey: ABC.","tr-lud":"Left uterine displacement.","tr-iv":"2 large-bore IVs + labs + KB.","tr-imaging":"Don’t withhold needed imaging.","tr-fetal":"Continuous fetal monitoring.","tr-noexam":"No cervical exam until previa excluded.","tr-abruption":"Look for abruption.","tr-rh":"Rh-negative? Give RhIG.","tr-deliver":"Unstable? Expedite delivery.",
+  "sd-help":"Call for help. Start the clock.","sd-avoid":"No pushing. No fundal pressure.","sd-mcroberts":"McRoberts.","sd-suprapubic":"Suprapubic pressure.","sd-posterior":"Deliver the posterior arm.","sd-rotate":"Rotate: Rubin II / Woods.","sd-allfours":"All-fours (Gaskin).","sd-episiotomy":"Consider episiotomy for room.","sd-lastresort":"Last-resort maneuvers.","sd-after":"Neonatal team · PPH watch · document."
 };
 const SHORT_SUMMARIES = {
   pph:"Resuscitation · 4 Ts · MTP",
   htn:"Treat urgently · Maternal safety",
-  eclampsia:"Stabilize · Magnesium · Airway"
+  eclampsia:"Stabilize · Magnesium · Airway",
+  arrest:"Resuscitation · Perimortem CS",
+  trauma:"MVA · Assess · Stabilize · Deliver",
+  shoulder:"Recognize · Maneuvers · Team"
 };
 // Emergency icons (cropped from the supplied icon set). They identify the pathway at a glance.
-const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia"};
+const EMERGENCY_ICONS = {pph:"icon-pph",htn:"icon-htn",eclampsia:"icon-eclampsia",arrest:"icon-arrest",trauma:"icon-trauma",shoulder:"icon-shoulder"};
 function emergencyIcon(id,size=56){
   const n=EMERGENCY_ICONS[id];if(!n)return "";
   return `<picture class="em-icon"><source type="image/webp" srcset="img/${n}.webp"><img src="img/${n}.png" alt="" width="${size}" height="${size}" decoding="async"></picture>`;
@@ -36,7 +42,7 @@ let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
 let expandedTask = null; // UI-only: which compact row is open in the cockpit
-let flowOpen = false;    // UI-only: flowchart panel in the cockpit starts closed
+let sidePanel = null;   // UI-only: which cockpit side panel is open (flow | meds | timers | timeline); starts closed
 const WIDE = window.matchMedia("(min-width:680px)");
 
 function loadSettings(){
@@ -104,6 +110,7 @@ function render(){
   if(route==="flowcharts") renderFlowcharts();
   if(route==="medications") renderMedications();
   if(route==="education") renderEducation();
+  if(cockpit)refreshSideSheet();
   updateHeader();
 }
 
@@ -190,12 +197,9 @@ function renderActiveSession(){
     </section>
     ${renderAlertStrip()}
     <nav class="cockpit-tabs" aria-label="Session tools">
-      <button class="tab-flow${flowOpen?" active":""}" data-action="toggle-flow" aria-expanded="${flowOpen}">Flowchart</button>
-      <button data-nav-jump="medications">Meds</button>
-      <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
-      <button data-action="show-timeline">Timeline</button>
+      ${[["flow","Flowchart"],["meds","Meds"],["timers","Timers"],["timeline","Timeline"]].map(([k,l])=>`<button class="${sidePanel===k?"active":""}" data-side="${k}" aria-pressed="${sidePanel===k}">${l}${k==="timers"&&timerCount?` <span>${timerCount}</span>`:""}</button>`).join("")}
     </nav>
-    <div class="cockpit-body${flowOpen?" flow-open":""}">
+    <div class="cockpit-body${sidePanel&&WIDE.matches?" flow-open":""}">
       <section class="task-workspace">
         ${renderDueGroup(e)}
         ${renderTaskGroups(e)}
@@ -204,11 +208,7 @@ function renderActiveSession(){
           <div id="completedList" hidden>${renderCompleted(e)}</div>
         </section>
       </section>
-      <aside class="cockpit-side acc-${e.accent}" aria-label="Flowchart and recent events" data-pathway="${e.id}">
-        <div class="side-flow-head"><h2>Pathway</h2><button class="text-button" data-action="open-full-flow">Open full ›</button></div>
-        ${renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true})}
-        <section class="side-timeline"><h2>Recent events <small>(elapsed time)</small></h2>${session.events.slice(0,6).map(ev=>`<article><time>${formatEventTime(ev.at)}</time><span>${esc(ev.text)}</span></article>`).join("")}</section>
-      </aside>
+      <aside class="cockpit-side acc-${e.accent}" aria-label="Session tools panel" data-pathway="${e.id}">${sidePanel&&WIDE.matches?sidePanelHTML(sidePanel):""}</aside>
     </div>`;
   requestAnimationFrame(updateClockDom);
 }
@@ -334,7 +334,37 @@ const TASK_SUBTITLES={
   "ec-recur":"Benzodiazepine after magnesium; prepare airway",
   "ec-tox":"Respirations, reflexes, urine output; calcium ready",
   "ec-neuro":"Focal deficit, atypical or refractory seizure",
-  "ec-delivery":"Stabilize first; route by obstetric factors"
+  "ec-delivery":"Stabilize first; route by obstetric factors",
+  "arrest-help":"Leader, anesthesia, OB, neonatology, pharmacy",
+  "arrest-cpr":"Standard ACLS doses and defibrillation",
+  "arrest-lud":"Manual, continuous · fundus at or above umbilicus",
+  "arrest-airway":"Difficult airway is common in pregnancy",
+  "arrest-iv":"Arms or neck — avoids aortocaval delay",
+  "arrest-mag":"Stop the infusion, give calcium",
+  "arrest-monitors":"Out of the way of resuscitation",
+  "arrest-delivery":"Prepare from minute one · deliver where you are",
+  "arrest-cause":"Anesthetic · Bleeding · Cardiac · Drugs · Embolic · Fever · H’s/T’s · HTN",
+  "arrest-afe":"Early coagulation check · avoid fluid overload",
+  "tr-help":"Fundus at umbilicus ≈ 20 weeks",
+  "tr-primary":"Mother first is the best care for the fetus",
+  "tr-lud":"Manual left, or tilt 25–30°",
+  "tr-iv":"Type & cross, coags, fibrinogen, Kleihauer-Betke",
+  "tr-imaging":"Never withheld because of pregnancy",
+  "tr-fetal":"Minimum 4 h; longer with risk signs",
+  "tr-noexam":"Ultrasound: placenta location, FHR",
+  "tr-abruption":"Pain, firm or tender uterus, contractions, abnormal FHR",
+  "tr-rh":"Kleihauer-Betke helps size the dose",
+  "tr-deliver":"With OB, anesthesia, neonatology · often cesarean",
+  "sd-help":"OB, anesthesia, neonatal team · note head-delivery time",
+  "sd-avoid":"Gentle axial traction only",
+  "sd-mcroberts":"Hyperflex thighs onto the abdomen",
+  "sd-suprapubic":"From the fetal back · never fundal",
+  "sd-posterior":"Flex the elbow, sweep across the chest",
+  "sd-rotate":"Into an oblique diameter",
+  "sd-allfours":"Hands and knees, then retry",
+  "sd-episiotomy":"Room for hands — not for the bone",
+  "sd-lastresort":"Clavicle fracture · Zavanelli + cesarean · symphysiotomy",
+  "sd-after":"Head-to-body interval, maneuvers in order, who did what"
 };
 
 const ICON_PATHS={
@@ -354,7 +384,10 @@ const ICON_PATHS={
 const TASK_ICONS={
   "pph-help":"call","pph-assess":"pulse","pph-massage":"hand","pph-access":"iv","pph-oxytocin":"syringe","pph-cause":"search","pph-txa":"syringe","pph-escalate":"alert",
   "htn-help":"call","htn-bp":"pulse","htn-symptoms":"eye","htn-labs":"flask","htn-treat":"syringe","htn-mag":"syringe","htn-monitor":"pulse","htn-escalate":"alert",
-  "ec-help":"call","ec-safety":"shield","ec-mag":"syringe","ec-vitals":"pulse","ec-recur":"alert","ec-tox":"eye","ec-neuro":"brain","ec-delivery":"baby"
+  "ec-help":"call","ec-safety":"shield","ec-mag":"syringe","ec-vitals":"pulse","ec-recur":"alert","ec-tox":"eye","ec-neuro":"brain","ec-delivery":"baby",
+  "arrest-help":"call","arrest-cpr":"pulse","arrest-lud":"hand","arrest-airway":"shield","arrest-iv":"iv","arrest-mag":"syringe","arrest-monitors":"alert","arrest-delivery":"baby","arrest-cause":"search","arrest-afe":"alert",
+  "tr-help":"call","tr-primary":"pulse","tr-lud":"hand","tr-iv":"iv","tr-imaging":"eye","tr-fetal":"pulse","tr-noexam":"alert","tr-abruption":"search","tr-rh":"syringe","tr-deliver":"baby",
+  "sd-help":"call","sd-avoid":"alert","sd-mcroberts":"hand","sd-suprapubic":"hand","sd-posterior":"hand","sd-rotate":"hand","sd-allfours":"hand","sd-episiotomy":"shield","sd-lastresort":"alert","sd-after":"baby"
 };
 function taskIcon(t){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[TASK_ICONS[t.id]||(t.type==="med"?"syringe":"pulse")]}</svg>`;}
 
@@ -472,7 +505,7 @@ function flowCtx(id){
 }
 function statusStripHTML(){
   const e=EMERGENCIES[session.emergencyId];const due=getDueTimers().length;const sim=session.mode==="simulation";
-  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${esc(e.short.toUpperCase())} ${sim?"SIMULATION":"CLINICAL"}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} overdue</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
+  return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${sim?"SIM":"CLINICAL"} · ${esc(e.short.toUpperCase())}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} due</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
 }
 function renderFlowcharts(){
   if(chartCtl){chartSaved=flowView==="chart"?{id:flowEmergency,...chartCtl.state()}:null;chartCtl.destroy();chartCtl=null;}
@@ -612,6 +645,44 @@ function recordMedication(id){
 }
 function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
+// ---------- Cockpit side panels: Flowchart · Meds · Timers · Timeline ----------
+// Wide screens: the right-hand column. Phones: the same content in a sheet. Never leaves the session.
+const SIDE_TITLES={flow:"Pathway",meds:"Medications",timers:"Timers and reminders",timeline:"Event timeline"};
+function sessionMeds(e){
+  const ids=new Set();e.tasks.forEach(t=>(t.meds||[]).forEach(m=>ids.add(m)));
+  Object.values(PATHWAYS[e.id]?.nodes||{}).forEach(n=>(n.medicationRefs||[]).forEach(m=>ids.add(m)));
+  return [...ids].map(getMedication).filter(Boolean);
+}
+function sidePanelHTML(k){
+  const e=EMERGENCIES[session.emergencyId];
+  const head=extra=>`<div class="side-flow-head"><h2>${SIDE_TITLES[k]}</h2>${extra||""}</div>`;
+  if(k==="flow")return head(`<button class="text-button" data-action="open-full-flow">Open full ›</button>`)+renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true});
+  if(k==="meds"){
+    const mine=sessionMeds(e),mineIds=new Set(mine.map(m=>m.id)),others=MEDICATIONS.filter(m=>!mineIds.has(m.id));
+    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
+    return head()+`<p class="side-note">Tap a drug for dosing, cautions and to record a dose.</p>
+      ${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
+      <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
+  }
+  if(k==="timers"){
+    const active=session.timers.filter(t=>!t.cancelled).sort((a,b)=>(a.ack-b.ack)||(a.dueAt-b.dueAt));
+    return head()+`<p class="side-note">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · due at ${fmt(t.dueAt*60000)}`:due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`;}).join(""):`<p class="empty">No timers yet.</p>`}</div>`;
+  }
+  if(k==="timeline")return head(`<small class="side-sub">elapsed time</small>`)+`<div class="timeline-list">${session.events.map(ev=>`<article><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  return "";
+}
+function toggleSide(k){
+  if(!session||session.status!=="active")return;
+  if(WIDE.matches){sidePanel=sidePanel===k?null:k;render();return;}
+  // Phone: open as a sheet; the tab shows as active while the sheet is open.
+  sidePanel=k;render();
+  openSheet({eyebrow:"SESSION · "+EMERGENCIES[session.emergencyId].short.toUpperCase(),title:SIDE_TITLES[k],wide:true,html:`<div class="sheet-side" data-pathway="${session.emergencyId}">${sidePanelHTML(k).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">')}</div>`});
+}
+function refreshSideSheet(){
+  // Keep an open phone sheet current when timers fire or a dose is recorded.
+  const host=$("#sheetBody .sheet-side");if(!host||!sidePanel||WIDE.matches)return;
+  host.innerHTML=sidePanelHTML(sidePanel).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">');
+}
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
   openSheet({eyebrow:"SESSION CLOCKS",title:"Timers and reminders",html:`<p class="lead">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.sort((a,b)=>a.dueAt-b.dueAt).map(t=>`<article class="${t.dueAt<=sessionMinute()&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · ${formatDue(t)}`:formatDue(t)}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`).join(""):`<p class="empty">No active task timers.</p>`}</div>`});
@@ -623,16 +694,20 @@ function showDue(id){
   const t=session.timers.find(x=>x.id===id);if(!t)return;
   openSheet({eyebrow:"REMINDER DUE",title:t.label,html:`<div class="due-callout"><strong>${t.message?esc(t.message):"Reassess now and record the applicable clinical action."}</strong><span>${formatDue(t)}</span></div><button class="button primary full" data-action="ack-timer" data-timer-id="${t.id}">Acknowledge reminder</button><p class="microcopy">Acknowledging removes the alert. It does not mark a task complete or medication administered.</p>`});
 }
-function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});closeSheet();render();}
+function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
 function showAbout(){
   openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
 
-function openSheet({eyebrow="",title,html,wide=false}){
+let sheetGen=0; // a sheet opened right after a close must not be hidden by that close's delayed cleanup
+function openSheet({eyebrow="",title,html,wide=false}){sheetGen++;
   $("#sheetEyebrow").textContent=eyebrow;$("#sheetTitle").textContent=title;$("#sheetBody").innerHTML=html;$("#infoSheet").classList.toggle("wide",!!wide);$("#sheetBackdrop").hidden=false;$("#infoSheet").hidden=false;document.body.classList.add("sheet-open");setTimeout(()=>$("#infoSheet").classList.add("open"),10);
 }
-function closeSheet(){$("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");setTimeout(()=>{$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
+function closeSheet(){
+  // Phone: a side-panel sheet closing also clears the active tool tab.
+  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".cockpit-tabs [data-side]").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false");});}
+  $("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");const gen=++sheetGen;setTimeout(()=>{if(gen!==sheetGen)return;$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
   // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
   const cockpit=document.body.classList.contains("in-cockpit");
@@ -677,14 +752,14 @@ document.addEventListener("click",e=>{
   if(a==="sim-time")showSimTime();
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
   // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
-  if(a==="toggle-flow"){if(WIDE.matches){flowOpen=!flowOpen;render();}else{flowEmergency=session.emergencyId;navigate("flowcharts");}}
-  if(a==="open-full-flow"){flowEmergency=session.emergencyId;navigate("flowcharts");}
+  if(b.dataset.side)toggleSide(b.dataset.side);
+  if(a==="open-full-flow"){closeSheet();flowEmergency=session.emergencyId;navigate("flowcharts");}
   if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
   if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();render();}
-  if(a==="show-timers")showTimers();
+  if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
   if(a==="open-due")showDue(b.dataset.timerId);
   if(a==="ack-timer")acknowledgeTimer(b.dataset.timerId);

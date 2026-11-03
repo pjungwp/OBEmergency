@@ -50,6 +50,37 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 - [ ] Neuroimaging/alternate diagnosis language
 - [ ] Delivery timing and route language
 
+## Maternal cardiac arrest (incl. amniotic fluid embolism) — new, all draft
+
+- [ ] Team activation and roles (AHA 2025 cardiac arrest in pregnancy algorithm)
+- [ ] Left uterine displacement threshold (fundus at or above umbilicus)
+- [ ] Early airway, IV above diaphragm, stop magnesium + calcium, detach fetal monitors
+- [ ] 4-minute decision / 5-minute delivery target; delivery at the site of resuscitation
+- [ ] A–H etiologies wording
+- [ ] AFE: massive transfusion activation, early coagulation, fluid restriction, vasopressors (SMFM CG 9, 2016)
+- [ ] Milestones: 4 min, 5 min, 10 min; 2-minute rhythm-check timer
+
+## Third-trimester trauma / abruption — new, all draft
+
+- [ ] Uterine displacement / 25–30° tilt; primary survey first
+- [ ] Labs incl. Kleihauer-Betke for major trauma; Rh immune globulin criteria
+- [ ] Fetal monitoring minimum 4 h, extension criteria (AFP 2014; local protocol)
+- [ ] No digital exam until previa excluded; ultrasound limits for abruption
+- [ ] Imaging not withheld (ACOG CO 723) — add a direct source link if available
+- [ ] Delivery criteria and the link to the arrest pathway; 240-minute milestone
+
+## Shoulder dystocia — new, all draft
+
+- [ ] Help/team call; recorder announcing time; clock starts at head delivery
+- [ ] McRoberts + suprapubic pressure first (ACOG PB 178)
+- [ ] Posterior arm, Rubin II, Woods screw, reverse Woods, all-fours, episiotomy wording
+- [ ] Last-resort list and "avoid" list; documentation items
+- [ ] 1–5 minute milestones and their prompts
+
+## New Education decks — draft
+
+- [ ] Shoulder dystocia maneuvers · Third-trimester bleeding and trauma · Cardiac arrest in pregnancy
+
 ## Flowchart pathways (`pathways.js`)
 
 Restructured from the existing flow, task and medication text. Nodes marked `reviewStatus:"draft"` add or infer content:
