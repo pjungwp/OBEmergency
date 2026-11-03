@@ -1,0 +1,38 @@
+const EVENT_HEADERS=["sessionId","eventId","revision","occurredAt","type","taskId","status","actor","schemaVersion","payloadJson","snapshotJson"];
+
+function doGet(){return HtmlService.createHtmlOutputFromFile("Index").setTitle("OB Emergency Assist").addMetaTag("viewport","width=device-width, initial-scale=1, viewport-fit=cover");}
+
+function eventSheet_(){
+  const props=PropertiesService.getScriptProperties();let id=props.getProperty("EVENT_SPREADSHEET_ID");
+  if(!id){const ss=SpreadsheetApp.create("OB Emergency Assist - Coordination Events");id=ss.getId();props.setProperty("EVENT_SPREADSHEET_ID",id);}
+  const ss=SpreadsheetApp.openById(id);let sheet=ss.getSheetByName("Events");
+  if(!sheet){sheet=ss.insertSheet("Events");sheet.appendRow(EVENT_HEADERS);sheet.setFrozenRows(1);}
+  return sheet;
+}
+function rowsForSession_(sessionId){
+  const values=eventSheet_().getDataRange().getValues();
+  return values.slice(1).filter(r=>String(r[0])===String(sessionId)).map(r=>({sessionId:r[0],eventId:r[1],revision:Number(r[2]),occurredAt:r[3],type:r[4],taskId:r[5],status:r[6],actor:r[7],schemaVersion:r[8],payload:JSON.parse(r[9]||"{}"),session:JSON.parse(r[10]||"null")}));
+}
+function latest_(sessionId){const rows=rowsForSession_(sessionId).sort((a,b)=>a.revision-b.revision);return rows.length?rows[rows.length-1]:null;}
+function append_(event,session){eventSheet_().appendRow([event.sessionId,event.eventId,event.revision,event.occurredAt,event.type,event.taskId||"",event.status||"",event.actor||"",event.schemaVersion||"1.0",JSON.stringify(event.payload||{}),JSON.stringify(session)]);}
+
+function createSession(session){
+  const lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    const existing=latest_(session.id);if(existing)return {created:false,session:existing.session};
+    const event={sessionId:session.id,eventId:"created-"+session.id,revision:0,occurredAt:new Date().toISOString(),type:"SESSION_CREATED",taskId:null,status:"active",actor:"shared-session",schemaVersion:"1.0",payload:{}};
+    append_(event,{...session,revision:0});return {created:true,session:{...session,revision:0}};
+  }finally{lock.releaseLock();}
+}
+function loadSession(sessionId){const latest=latest_(sessionId);return latest?latest.session:null;}
+function pollSession(sessionId,sinceRevision){const latest=latest_(sessionId);if(!latest||latest.revision<=Number(sinceRevision))return {changed:false,revision:latest?latest.revision:0};return {changed:true,revision:latest.revision,session:latest.session};}
+function recordAction(event,nextState,expectedRevision){
+  const lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    const rows=rowsForSession_(event.sessionId);
+    if(rows.some(r=>r.eventId===event.eventId)){const latest=rows.sort((a,b)=>a.revision-b.revision).pop();return {applied:false,duplicate:true,session:latest.session};}
+    const latest=rows.sort((a,b)=>a.revision-b.revision).pop();const current=latest?latest.revision:0;
+    if(Number(expectedRevision)!==current||Number(event.revision)!==current+1)return {applied:false,conflict:true,session:latest?latest.session:null};
+    const authoritative={...nextState,revision:event.revision};append_(event,authoritative);return {applied:true,session:authoritative};
+  }finally{lock.releaseLock();}
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b2149">
+  <meta name="description" content="Phone-first obstetric emergency guidance, timers, flowcharts, medications, and simulation.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <title>OB Emergency Assist</title>
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="app-header">
+      <button id="homeButton" class="brand-button" aria-label="Go to emergency home">
+        <span class="brand-mark" aria-hidden="true">OB</span>
+        <span><strong>Emergency Assist</strong><small id="headerSubtitle">Immediate guidance</small></span>
+      </button>
+      <button id="connectionButton" class="status-pill" aria-label="Connection and offline status">
+        <span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span>
+      </button>
+    </header>
+
+    <div id="clinicalNotice" class="clinical-notice">
+      <strong>Clinical prototype:</strong> verify against current Holy Name policy before clinical release.
+      <button data-action="dismiss-notice" aria-label="Dismiss notice">×</button>
+    </div>
+
+    <main id="main" tabindex="-1"></main>
+
+    <nav class="bottom-nav" aria-label="Primary navigation">
+      <button data-nav="emergency" class="nav-item active"><span aria-hidden="true">✚</span><small>Emergency</small></button>
+      <button data-nav="flowcharts" class="nav-item"><span aria-hidden="true">↳</span><small>Flowcharts</small></button>
+      <button data-nav="medications" class="nav-item"><span aria-hidden="true">Rx</span><small>Medications</small></button>
+      <button data-nav="education" class="nav-item"><span aria-hidden="true">i</span><small>Education</small></button>
+    </nav>
+  </div>
+
+  <div id="sheetBackdrop" class="sheet-backdrop" hidden></div>
+  <aside id="infoSheet" class="info-sheet" aria-modal="true" role="dialog" aria-labelledby="sheetTitle" hidden>
+    <div class="sheet-grabber"></div>
+    <div class="sheet-head">
+      <div><small id="sheetEyebrow"></small><h2 id="sheetTitle"></h2></div>
+      <button class="icon-button" data-action="close-sheet" aria-label="Close">×</button>
+    </div>
+    <div id="sheetBody" class="sheet-body"></div>
+  </aside>
+
+  <div id="toastRegion" class="toast-region" aria-live="polite"></div>
+
+  <template id="confirmTemplate">
+    <div class="confirm-card">
+      <h2></h2><p></p>
+      <div class="button-row"><button class="button secondary" data-confirm="cancel">Cancel</button><button class="button danger" data-confirm="yes">Confirm</button></div>
+    </div>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

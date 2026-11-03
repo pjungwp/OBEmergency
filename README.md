@@ -1,6 +1,6 @@
 # OB Emergency Assist — master build
 
-Phone-first, single-device clinical-reference and simulation prototype for postpartum hemorrhage, acute severe hypertension, and eclampsia.
+Phone-first clinical-reference and simulation prototype for postpartum hemorrhage, acute severe hypertension, and eclampsia. The first release is a Netlify-hosted, single-device app. Google Workspace synchronization is packaged as the next-stage target.
 
 ## What is included
 
@@ -17,7 +17,14 @@ Phone-first, single-device clinical-reference and simulation prototype for postp
 - TeamSTEPPS, roles, 4 Ts, severe-hypertension, magnesium-safety, pregnancy-status and cardiovascular education
 - Local event timeline
 - Offline caching after the first successful load
-- Responsive phone/tablet layout
+- Tiny-iPhone-first layout with large action text and 44 px minimum controls
+
+## Release order
+
+1. **Netlify first:** deploy the repository root as a static app. No build command is required.
+2. **Google Workspace next:** build the same interface into `google-apps-script/Index.html`, then deploy it as an Apps Script web app when shared-session testing is approved.
+
+This implements the groundwork in [OBEmergency issue #1](https://github.com/pjungwp/OBEmergency/issues/1) without delaying the Netlify release.
 
 ## Deploy to Netlify
 
@@ -34,6 +41,30 @@ Phone-first, single-device clinical-reference and simulation prototype for postp
 2. Connect the repository in Netlify.
 3. Build command: leave blank.
 4. Publish directory: `.`
+
+## Verify the release
+
+```bash
+npm test
+npm run build:gas
+```
+
+The tests cover duplicate-event idempotency, stale-revision rejection, timer restoration and simulation-time restoration.
+
+## Optional Google Workspace build
+
+The Apps Script package is generated from the same source UI:
+
+```bash
+npm run build:gas
+cd google-apps-script
+clasp create --type webapp --title "OB Emergency Assist"
+clasp push
+```
+
+To link an existing Apps Script project instead, create a local `.clasp.json` with its Script ID, then run `clasp push`. The file is ignored by Git. In Apps Script, deploy as a web app only after approving execution identity and access settings for the intended Workspace group.
+
+The Workspace adapter uses stable event IDs, revisions, Apps Script locking and polling. The server log stores coordination state only; medication details and the local timeline remain on-device. Do not enter PHI, commit Script IDs/tokens, or treat the event sheet as a medical record.
 
 ## Master implementation plan
 
@@ -96,7 +127,7 @@ The synchronized version should transmit events rather than overwrite an entire 
 - `SIMULATION_TIME_ADVANCED`
 - `SESSION_ENDED`
 
-Each event requires `sessionId`, `eventId`, `revision`, `serverTimestamp`, `actor`, `role`, `type`, `targetId` and a minimal payload.
+Each event requires `eventId`, `sessionId`, `taskId`, `type`, `status`, `actor`, `occurredAt`, `schemaVersion`, `revision` and a minimal payload. Duplicate IDs are ignored and stale revisions cannot overwrite the authoritative session.
 
 ## Important limitations
 

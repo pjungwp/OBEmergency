@@ -1,0 +1,8 @@
+.openai/
+dist/
+icons/original-icon-192.png
+.clasp.json
+.clasprc.json
+google-apps-script/.clasp.json
+google-apps-script/.clasprc.json
+npm-debug.log*
