@@ -525,10 +525,17 @@ function updateMedicationList(query){
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
 function renderEducation(){
+  // ACOG source documents first: each opens ACOG's own copy (PDF where a direct one exists, else ACOG's page).
+  const KIND={pdf:"PDF",page:"ACOG page",index:"ACOG listing"};
+  const docs=REFERENCES.filter(r=>r.url&&r.id.startsWith("acog"));
   main.innerHTML=`<section class="page-head"><p class="eyebrow">INFORMATION & EDUCATION</p><h1>Understand the response</h1><p>Operational detail lives here so the emergency workspace stays concise.</p></section>
+    <section class="source-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">ACOG source documents</h2>
+      <div class="doc-list">${docs.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener"><span class="doc-kind ${r.urlKind}">${KIND[r.urlKind]||"Link"}</span><span class="doc-copy"><strong>${esc(r.title)}</strong><small>${esc(r.short)} · ${r.year}</small></span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+      <p class="doc-note">Opens on acog.org and needs internet. Some documents may ask for an ACOG member sign-in. "ACOG listing" opens the page that holds the document.</p>
+    </section>
     <section class="education-grid">${EDUCATION.map(x=>`<button class="education-card ${x.accent}" data-education="${x.id}"><small>${esc(x.kicker)}</small><strong>${esc(x.title)}</strong><p>${esc(x.summary)}</p><span>Open ›</span></button>`).join("")}</section>
     <section class="references"><div class="section-heading"><p class="eyebrow">CONTENT GOVERNANCE</p><h2>Sources and review status</h2></div>
-      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">Open source ↗</a>`:"<span>Supplied PDF</span>"}</article>`).join("")}</div>
+      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${r.urlKind==="pdf"?"Open PDF":"Open on acog.org"} ↗</a>`:"<span>No public link</span>"}</article>`).join("")}</div>
       <div class="version-card"><strong>Prototype ${APP_VERSION}</strong><span>Content review: ${CONTENT_REVIEW_DATE}</span><p>Before clinical release: pharmacy, nursing, obstetric, anesthesia, blood bank, risk/compliance and informatics review; replace all institutional placeholders.</p></div>
     </section>`;
 }

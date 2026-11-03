@@ -1,13 +1,13 @@
-export const APP_VERSION = "0.13.0-prototype";
+export const APP_VERSION = "0.13.1-prototype";
 export const CONTENT_REVIEW_DATE = "2026-11-02";
 
 export const REFERENCES = [
-  {id:"acog-pph-183",short:"ACOG PB 183",title:"ACOG Practice Bulletin No. 183: Postpartum Hemorrhage",year:"2017",note:"Definition, 4 Ts, uterotonics, TXA, escalation and transfusion principles."},
-  {id:"acog-pph-device",short:"ACOG CPU",title:"Use of Nonsurgical Hemorrhage-Control Devices for Postpartum Hemorrhage Management",year:"2025",note:"Balloon tamponade and vacuum-induced hemorrhage-control devices within a comprehensive algorithm."},
-  {id:"acog-htn",short:"ACOG PB 222",title:"ACOG Practice Bulletin No. 222: Gestational Hypertension and Preeclampsia",year:"2020",note:"Severe features, urgent antihypertensive therapy, magnesium sulfate and delivery principles."},
-  {id:"acog-ed-htn",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
-  {id:"acog-ed-eclampsia",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
-  {id:"acog-ed-cvd",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
+  {id:"acog-pph-183",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2017/10/postpartum-hemorrhage",urlKind:"page",short:"ACOG PB 183",title:"ACOG Practice Bulletin No. 183: Postpartum Hemorrhage",year:"2017",note:"Definition, 4 Ts, uterotonics, TXA, escalation and transfusion principles."},
+  {id:"acog-pph-device",url:"https://www.acog.org/clinical/clinical-guidance/clinical-practice-update",urlKind:"index",short:"ACOG CPU",title:"Use of Nonsurgical Hemorrhage-Control Devices for Postpartum Hemorrhage Management",year:"2025",note:"Balloon tamponade and vacuum-induced hemorrhage-control devices within a comprehensive algorithm."},
+  {id:"acog-htn",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2020/06/gestational-hypertension-and-preeclampsia",urlKind:"page",short:"ACOG PB 222",title:"ACOG Practice Bulletin No. 222: Gestational Hypertension and Preeclampsia",year:"2020",note:"Severe features, urgent antihypertensive therapy, magnesium sulfate and delivery principles."},
+  {id:"acog-ed-htn",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
+  {id:"acog-ed-eclampsia",url:"https://www.acog.org/-/media/project/acog/acogorg/files/pdfs/programs/ob-emergencies/eclampsia_algorithm.pdf",urlKind:"pdf",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
+  {id:"acog-ed-cvd",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
   {id:"ahrq-teamstepps",short:"AHRQ TeamSTEPPS",title:"TeamSTEPPS 3.0 Curriculum",year:"2023",url:"https://www.ahrq.gov/teamstepps-program/curriculum/intro/overview.html",note:"Communication, leadership, situation monitoring and mutual support."}
 ];
 

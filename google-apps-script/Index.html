@@ -371,6 +371,18 @@ body:has(.fc-strip) .fc-views{top:112px}
 @media(max-width:360px){.nav-item small{font-size:12px;letter-spacing:-.01em}.bottom-nav{padding-left:2px;padding-right:2px}}
 html.text-lg .ov-row.n2{grid-template-columns:1fr}
 .ov-box,.ov-group{hyphens:manual}
+/* Education: ACOG source documents */
+.source-docs{margin:12px 12px 4px}
+.source-docs h2{margin:0 2px 8px;font-size:14px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#4a5a72}
+.doc-list{display:grid;gap:8px}
+.doc-link{display:flex;align-items:center;gap:12px;min-height:60px;padding:10px 12px;background:#fff;border:1px solid var(--line);border-left:5px solid #1d55c4;border-radius:14px;text-decoration:none;color:var(--ink)}
+.doc-kind{flex:none;min-width:58px;text-align:center;font-size:12px;font-weight:900;letter-spacing:.04em;border-radius:8px;padding:5px 6px;background:#eef3fa;color:#1d3f7a}
+.doc-kind.pdf{background:#c4314b;color:#fff}
+.doc-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.doc-copy strong{font-size:17px;line-height:1.25}.doc-copy small{font-size:14px;color:var(--muted)}
+.doc-link b{flex:none;font-size:20px;color:#1d55c4}
+.doc-note{margin:8px 2px 0;font-size:14px;color:var(--muted);line-height:1.4}
+@media(min-width:760px){.doc-list{grid-template-columns:1fr 1fr}}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -443,16 +455,16 @@ html.text-lg .ov-row.n2{grid-template-columns:1fr}
     </div>
   </template>
   <script>
-const APP_VERSION = "0.13.0-prototype";
+const APP_VERSION = "0.13.1-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
-  {id:"acog-pph-183",short:"ACOG PB 183",title:"ACOG Practice Bulletin No. 183: Postpartum Hemorrhage",year:"2017",note:"Definition, 4 Ts, uterotonics, TXA, escalation and transfusion principles."},
-  {id:"acog-pph-device",short:"ACOG CPU",title:"Use of Nonsurgical Hemorrhage-Control Devices for Postpartum Hemorrhage Management",year:"2025",note:"Balloon tamponade and vacuum-induced hemorrhage-control devices within a comprehensive algorithm."},
-  {id:"acog-htn",short:"ACOG PB 222",title:"ACOG Practice Bulletin No. 222: Gestational Hypertension and Preeclampsia",year:"2020",note:"Severe features, urgent antihypertensive therapy, magnesium sulfate and delivery principles."},
-  {id:"acog-ed-htn",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
-  {id:"acog-ed-eclampsia",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
-  {id:"acog-ed-cvd",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
+  {id:"acog-pph-183",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2017/10/postpartum-hemorrhage",urlKind:"page",short:"ACOG PB 183",title:"ACOG Practice Bulletin No. 183: Postpartum Hemorrhage",year:"2017",note:"Definition, 4 Ts, uterotonics, TXA, escalation and transfusion principles."},
+  {id:"acog-pph-device",url:"https://www.acog.org/clinical/clinical-guidance/clinical-practice-update",urlKind:"index",short:"ACOG CPU",title:"Use of Nonsurgical Hemorrhage-Control Devices for Postpartum Hemorrhage Management",year:"2025",note:"Balloon tamponade and vacuum-induced hemorrhage-control devices within a comprehensive algorithm."},
+  {id:"acog-htn",url:"https://www.acog.org/clinical/clinical-guidance/practice-bulletin/articles/2020/06/gestational-hypertension-and-preeclampsia",urlKind:"page",short:"ACOG PB 222",title:"ACOG Practice Bulletin No. 222: Gestational Hypertension and Preeclampsia",year:"2020",note:"Severe features, urgent antihypertensive therapy, magnesium sulfate and delivery principles."},
+  {id:"acog-ed-htn",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED HTN",title:"Acute Hypertension in Pregnancy & Postpartum Algorithm",year:"2023",note:"Emergency department recognition and sequential labetalol, hydralazine and nifedipine pathways."},
+  {id:"acog-ed-eclampsia",url:"https://www.acog.org/-/media/project/acog/acogorg/files/pdfs/programs/ob-emergencies/eclampsia_algorithm.pdf",urlKind:"pdf",short:"ACOG ED Eclampsia",title:"Eclampsia Algorithm",year:"2023",note:"Initial seizure care, magnesium, refractory seizure management and toxicity monitoring."},
+  {id:"acog-ed-cvd",url:"https://www.acog.org/programs/obstetric-emergencies-in-nonobstetric-settings",urlKind:"index",short:"ACOG ED CVD",title:"Cardiovascular Disease in Pregnancy & Postpartum Algorithm",year:"2023",note:"Pregnancy-status screening, cardiovascular red flags and initial work-up."},
   {id:"ahrq-teamstepps",short:"AHRQ TeamSTEPPS",title:"TeamSTEPPS 3.0 Curriculum",year:"2023",url:"https://www.ahrq.gov/teamstepps-program/curriculum/intro/overview.html",note:"Communication, leadership, situation monitoring and mutual support."}
 ];
 
@@ -1643,10 +1655,17 @@ function updateMedicationList(query){
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
 function renderEducation(){
+  // ACOG source documents first: each opens ACOG's own copy (PDF where a direct one exists, else ACOG's page).
+  const KIND={pdf:"PDF",page:"ACOG page",index:"ACOG listing"};
+  const docs=REFERENCES.filter(r=>r.url&&r.id.startsWith("acog"));
   main.innerHTML=`<section class="page-head"><p class="eyebrow">INFORMATION & EDUCATION</p><h1>Understand the response</h1><p>Operational detail lives here so the emergency workspace stays concise.</p></section>
+    <section class="source-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">ACOG source documents</h2>
+      <div class="doc-list">${docs.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener"><span class="doc-kind ${r.urlKind}">${KIND[r.urlKind]||"Link"}</span><span class="doc-copy"><strong>${esc(r.title)}</strong><small>${esc(r.short)} · ${r.year}</small></span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+      <p class="doc-note">Opens on acog.org and needs internet. Some documents may ask for an ACOG member sign-in. "ACOG listing" opens the page that holds the document.</p>
+    </section>
     <section class="education-grid">${EDUCATION.map(x=>`<button class="education-card ${x.accent}" data-education="${x.id}"><small>${esc(x.kicker)}</small><strong>${esc(x.title)}</strong><p>${esc(x.summary)}</p><span>Open ›</span></button>`).join("")}</section>
     <section class="references"><div class="section-heading"><p class="eyebrow">CONTENT GOVERNANCE</p><h2>Sources and review status</h2></div>
-      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">Open source ↗</a>`:"<span>Supplied PDF</span>"}</article>`).join("")}</div>
+      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${r.urlKind==="pdf"?"Open PDF":"Open on acog.org"} ↗</a>`:"<span>No public link</span>"}</article>`).join("")}</div>
       <div class="version-card"><strong>Prototype ${APP_VERSION}</strong><span>Content review: ${CONTENT_REVIEW_DATE}</span><p>Before clinical release: pharmacy, nursing, obstetric, anesthesia, blood bank, risk/compliance and informatics review; replace all institutional placeholders.</p></div>
     </section>`;
 }
