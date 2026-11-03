@@ -1,6 +1,7 @@
 import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
 import {PATHWAYS} from "./pathways.js";
+import {EDU_DECKS} from "./edu-decks.js";
 import {renderOverview,renderGuided,renderChart,mountChart,nodeStatus,TYPE_LABEL} from "./flowchart.js";
 
 const $ = (s,root=document)=>root.querySelector(s);
@@ -525,20 +526,64 @@ function updateMedicationList(query){
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
 function renderEducation(){
-  // ACOG source documents first: each opens ACOG's own copy (PDF where a direct one exists, else ACOG's page).
+  // Topics open as built-in slide decks. Sources are links, not paragraphs.
   const KIND={pdf:"PDF",page:"ACOG page",index:"ACOG listing"};
-  const docs=REFERENCES.filter(r=>r.url&&r.id.startsWith("acog"));
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">INFORMATION & EDUCATION</p><h1>Understand the response</h1><p>Operational detail lives here so the emergency workspace stays concise.</p></section>
-    <section class="source-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">ACOG source documents</h2>
-      <div class="doc-list">${docs.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener"><span class="doc-kind ${r.urlKind}">${KIND[r.urlKind]||"Link"}</span><span class="doc-copy"><strong>${esc(r.title)}</strong><small>${esc(r.short)} · ${r.year}</small></span><b aria-hidden="true">↗</b></a>`).join("")}</div>
-      <p class="doc-note">Opens on acog.org and needs internet. Some documents may ask for an ACOG member sign-in. "ACOG listing" opens the page that holds the document.</p>
+  const docs=REFERENCES.filter(r=>r.url);
+  main.innerHTML=`<section class="page-head compact"><h1>Education</h1><p>Short slide decks. Tap a topic, then swipe.</p></section>
+    <section class="edu-decks" aria-label="Topics">${EDUCATION.map(x=>{const n=(EDU_DECKS[x.id]||[]).length;return `<button class="edu-deck ${x.accent}" data-education="${x.id}"><span class="edu-kicker">${esc(x.kicker)}</span><strong>${esc(x.title)}</strong><span class="edu-meta">${n} slides <b aria-hidden="true">›</b></span></button>`;}).join("")}</section>
+    <section class="source-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">Source documents</h2>
+      <div class="doc-list">${docs.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener"><span class="doc-kind ${r.urlKind||"page"}">${KIND[r.urlKind]||"Web page"}</span><span class="doc-copy"><strong>${esc(r.title)}</strong><small>${esc(r.short)} · ${r.year}</small></span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+      <p class="doc-note">Opens the publisher’s site · needs internet · some ACOG documents ask for a member sign-in.</p>
     </section>
-    <section class="education-grid">${EDUCATION.map(x=>`<button class="education-card ${x.accent}" data-education="${x.id}"><small>${esc(x.kicker)}</small><strong>${esc(x.title)}</strong><p>${esc(x.summary)}</p><span>Open ›</span></button>`).join("")}</section>
-    <section class="references"><div class="section-heading"><p class="eyebrow">CONTENT GOVERNANCE</p><h2>Sources and review status</h2></div>
-      <div class="reference-list">${REFERENCES.map(r=>`<article><div><strong>${esc(r.title)}</strong><small>${r.year} · ${esc(r.short)}</small><p>${esc(r.note)}</p></div>${r.url?`<a href="${r.url}" target="_blank" rel="noopener">${r.urlKind==="pdf"?"Open PDF":"Open on acog.org"} ↗</a>`:"<span>No public link</span>"}</article>`).join("")}</div>
-      <div class="version-card"><strong>Prototype ${APP_VERSION}</strong><span>Content review: ${CONTENT_REVIEW_DATE}</span><p>Before clinical release: pharmacy, nursing, obstetric, anesthesia, blood bank, risk/compliance and informatics review; replace all institutional placeholders.</p></div>
-    </section>`;
+    <p class="home-meta">Prototype ${APP_VERSION} · content review ${CONTENT_REVIEW_DATE} · <button class="text-button" data-action="show-about">About</button></p>`;
 }
+
+// ---------- Built-in slide decks ----------
+let deck=null; // {id, i}
+function li(items){return `<ul class="sl-list">${items.map(t=>`<li>${esc(t)}</li>`).join("")}</ul>`;}
+function slideHTML(x,s){
+  const note=s.note?`<p class="sl-note">${esc(s.note)}</p>`:"";
+  const h=`<h2 class="sl-title">${esc(s.title)}</h2>`;
+  switch(s.kind){
+    case "title":return `<div class="sl sl-cover"><span class="sl-kicker">${esc(x.kicker)}</span><h2>${esc(s.title)}</h2><p>${esc(s.sub||"")}</p><span class="sl-hint">Swipe or tap › to begin</span></div>`;
+    case "cards":return `<div class="sl">${h}<div class="sl-cards n${s.cards.length}">${s.cards.map(c=>`<div class="sl-card"><h3>${esc(c.h)}</h3><p>${esc(c.t)}</p></div>`).join("")}</div>${note}</div>`;
+    case "steps":return `<div class="sl">${h}<ol class="sl-steps">${s.steps.map((t,i)=>`<li><span>${i+1}</span><p>${esc(t)}</p></li>`).join("")}</ol>${s.example?`<blockquote class="sl-example"><span>Example</span>${esc(s.example)}</blockquote>`:""}${note}</div>`;
+    case "script":return `<div class="sl">${h}<div class="sl-script">${s.lines.map((l,i)=>`<div class="sl-line ${i%2?"reply":""}"><span>${esc(l.who)}</span><p>${esc(l.say)}</p></div>`).join("")}</div>${note}</div>`;
+    case "big":return `<div class="sl">${h}<div class="sl-big n${s.items.length}">${s.items.map(it=>`<div><strong>${esc(it.big)}</strong><span>${esc(it.label)}</span></div>`).join("")}</div>${note}</div>`;
+    case "list":return `<div class="sl">${h}${li(s.items)}${note}</div>`;
+    case "split":return `<div class="sl">${h}<div class="sl-split ${s.tone||""}"><div class="a"><h3>${esc(s.left.h)}</h3>${li(s.left.items)}</div><div class="b"><h3>${esc(s.right.h)}</h3>${li(s.right.items)}</div></div>${note}</div>`;
+    case "do":return `<div class="sl">${h}<p class="sl-lead">${esc(s.lead)}</p><div class="sl-split do"><div class="a"><h3>Check</h3>${li(s.check)}</div><div class="b"><h3>Act</h3>${li(s.act)}</div></div>${note}</div>`;
+    default:return `<div class="sl">${h}</div>`;
+  }
+}
+function renderDeck(){
+  const x=EDUCATION.find(e=>e.id===deck.id),slides=EDU_DECKS[deck.id]||[],n=slides.length,i=deck.i;
+  const el=$("#eduDeck");
+  el.className=`edu-deck-view ${x.accent}`;
+  el.innerHTML=`<header class="dk-top"><button class="dk-x" data-deck="close" aria-label="Close slides">×</button><strong>${esc(x.title)}</strong><span class="dk-count">${i+1} / ${n}</span></header>
+    <div class="dk-stage" aria-live="polite" aria-roledescription="slide" aria-label="${i+1} of ${n}">${slideHTML(x,slides[i])}</div>
+    <footer class="dk-bot"><button class="dk-nav" data-deck="prev" ${i===0?"disabled":""} aria-label="Previous slide">‹</button>
+      <div class="dk-dots" role="tablist">${slides.map((_,k)=>`<button role="tab" aria-selected="${k===i}" aria-label="Slide ${k+1}" class="${k===i?"on":""}" data-deck-go="${k}"></button>`).join("")}</div>
+      ${i<n-1?`<button class="dk-nav next" data-deck="next" aria-label="Next slide">›</button>`:`<button class="dk-nav done" data-deck="close">Done</button>`}</footer>`;
+}
+function openEducation(id){
+  if(!EDU_DECKS[id])return;
+  deck={id,i:0};
+  let el=$("#eduDeck");
+  if(!el){el=document.createElement("div");el.id="eduDeck";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");document.body.appendChild(el);bindDeckGestures(el);}
+  el.hidden=false;document.body.classList.add("deck-open");renderDeck();el.querySelector(".dk-nav.next,.dk-nav.done")?.focus({preventScroll:true});
+}
+function deckMove(d){if(!deck)return;const n=(EDU_DECKS[deck.id]||[]).length;const j=Math.max(0,Math.min(n-1,deck.i+d));if(j!==deck.i){deck.i=j;renderDeck();}}
+function closeDeck(){const el=$("#eduDeck");if(el)el.hidden=true;document.body.classList.remove("deck-open");deck=null;}
+function bindDeckGestures(el){
+  let x0=null,y0=null;
+  el.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;x0=e.clientX;y0=e.clientY;});
+  el.addEventListener("pointerup",e=>{if(x0==null)return;const dx=e.clientX-x0,dy=e.clientY-y0;x0=null;if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.3)deckMove(dx<0?1:-1);});
+  el.addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    if(b.dataset.deck==="next")deckMove(1);if(b.dataset.deck==="prev")deckMove(-1);if(b.dataset.deck==="close")closeDeck();
+    if(b.dataset.deckGo!=null){deck.i=Number(b.dataset.deckGo);renderDeck();}});
+}
+document.addEventListener("keydown",e=>{if(!deck)return;if(e.key==="ArrowRight"||e.key==="PageDown"){deckMove(1);e.preventDefault();}if(e.key==="ArrowLeft"||e.key==="PageUp"){deckMove(-1);e.preventDefault();}if(e.key==="Escape")closeDeck();});
 
 function openTaskInfo(emergencyId,taskId){
   const e=EMERGENCIES[emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
@@ -564,10 +609,6 @@ function recordMedication(id){
   const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
   expandedTask=null;
   saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:session.doseCounts[id]}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${m.timer} min`:""}`);
-}
-function openEducation(id){
-  const x=EDUCATION.find(e=>e.id===id);if(!x)return;
-  openSheet({eyebrow:x.kicker,title:x.title,wide:true,html:`<p class="lead">${esc(x.summary)}</p><div class="lesson-sections">${x.sections.map(s=>`<section><h3>${esc(s.h)}</h3>${s.p?`<p>${esc(s.p)}</p>`:""}${s.bullets?`<ul>${s.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul>`:""}</section>`).join("")}</div>${id==="teamstepps"?refTags(["ahrq-teamstepps"]):""}`});
 }
 function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 

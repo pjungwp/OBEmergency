@@ -54,6 +54,10 @@ One pathway record per emergency (`pathways.js`) drives three views (`flowchart.
 
 Switching views never changes session or task state. A status strip (mode, clock, overdue, Actions) shows on the flowchart page whenever a session is running. In the cockpit, the Flowchart tab opens the side Overview on wide screens and the full pathway page on phones.
 
+## Education
+
+Every Education topic is a built-in slide deck (`edu-decks.js`): one idea per slide, short lines, no paragraphs. Slides open full-screen with swipe, ‹ › buttons, arrow keys and dots; the first slide is always a title. A test fails if a line runs long or a list passes six items. `EDUCATION[].sections` in `data.js` remains the reviewed long-form source; keep the decks in sync with it.
+
 ## Alerts
 
 - Overdue items are visible without a tap (on the card or in the alert strip).
