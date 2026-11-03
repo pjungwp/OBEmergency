@@ -78,6 +78,7 @@ body.in-cockpit .toast-region{top:auto;bottom:calc(14px + var(--safe-bottom))}
 .alert-more{flex:none;min-width:52px;font-size:17px;font-weight:900;text-align:center!important}
 .cockpit-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px 2px}
 .cockpit-tabs button{min-height:44px;border:1px solid var(--line);background:#fff;border-radius:11px;font-size:15px;font-weight:800;color:var(--navy);padding:0 4px;display:flex;align-items:center;justify-content:center;gap:5px}
+.cockpit-tabs button.active{background:var(--navy);color:#fff;border-color:var(--navy)}
 .cockpit-tabs button span{background:var(--navy);color:#fff;border-radius:999px;min-width:20px;height:20px;display:grid;place-items:center;font-size:12px;padding:0 5px}
 body.in-cockpit .task-workspace{display:block;padding:0 10px}
 body.in-cockpit .task-group h2{font-size:14px;letter-spacing:.08em;color:#4a5a72;margin:12px 2px 6px}
@@ -145,13 +146,14 @@ body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-he
 /* Wide/unfolded: actions left, flowchart + timeline right. Same type sizes. */
 @media(min-width:680px){
   body.in-cockpit .app-shell{width:min(100%,1200px)}
-  .cockpit-body{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);gap:4px;align-items:start}
-  .cockpit-side{display:block;position:sticky;top:104px;max-height:calc(100vh - 112px);overflow:auto;padding:12px 10px 0 0}
+  .cockpit-body.flow-open{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(300px,1fr);gap:4px;align-items:start}
+  .flow-open .cockpit-side{display:block;position:sticky;top:104px;max-height:calc(100vh - 112px);overflow:auto;padding:12px 10px 0 0}
   .cockpit-side .flowchart{margin:0 0 12px}
   .cockpit-side .flow-node h3{font-size:17px}.cockpit-side .flow-node p{font-size:15px}
-  .cockpit-tabs{grid-template-columns:repeat(3,1fr);max-width:620px}.cockpit-tabs .tab-flow{display:none}
+  .cockpit-tabs{max-width:760px}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+.sim-master-link{background:#e3f5f2}.sim-master-link strong{color:#0f6f66}.sim-master-link small{color:#2f6f68}.sim-master-link a{white-space:nowrap;align-self:center;text-decoration:none;font-size:15px}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -201,7 +203,7 @@ body.in-cockpit .task-actions .card-primary{flex:0 1 auto;min-width:170px;min-he
     </div>
   </template>
   <script>
-const APP_VERSION = "0.10.2-prototype";
+const APP_VERSION = "0.11.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -489,6 +491,8 @@ let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
 let expandedTask = null; // UI-only: which compact row is open in the cockpit
+let flowOpen = false;    // UI-only: flowchart panel in the cockpit starts closed
+const WIDE = window.matchMedia("(min-width:680px)");
 
 function loadSettings(){
   try{return {...{noticeDismissed:false,sound:true},...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")};}catch{return {noticeDismissed:false,sound:true};}
@@ -587,6 +591,10 @@ function renderEmergency(){
     <section class="home-foot">
       <div><strong>Works offline after first load</strong><small>This prototype stores sessions only on this device.</small></div>
       <button class="text-button" data-action="show-about">About & sources</button>
+    </section>
+    <section class="home-foot sim-master-link">
+      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Open it on a laptop.</small></div>
+      <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
     </section>`;
 }
 
@@ -636,12 +644,12 @@ function renderActiveSession(){
     </section>
     ${renderAlertStrip()}
     <nav class="cockpit-tabs" aria-label="Session tools">
-      <button class="tab-flow" data-action="open-flow" data-id="${e.id}">Flowchart</button>
+      <button class="tab-flow${flowOpen?" active":""}" data-action="toggle-flow" aria-expanded="${flowOpen}">Flowchart</button>
       <button data-nav-jump="medications">Meds</button>
       <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
       <button data-action="show-timeline">Timeline</button>
     </nav>
-    <div class="cockpit-body">
+    <div class="cockpit-body${flowOpen?" flow-open":""}">
       <section class="task-workspace">
         ${renderDueGroup(e)}
         ${renderTaskGroups(e)}
@@ -1027,6 +1035,8 @@ document.addEventListener("click",e=>{
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
   if(a==="sim-time")showSimTime();
+  // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
+  if(a==="toggle-flow"){const e=EMERGENCIES[session.emergencyId];if(WIDE.matches){flowOpen=!flowOpen;render();}else{openSheet({eyebrow:"FULL PATHWAY",title:e.name,wide:true,html:flowHTML(e,true)});}}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}

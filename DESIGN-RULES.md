@@ -41,7 +41,8 @@ Never show a bare time next to the elapsed clock without one of these labels.
 ## Adaptive width
 
 - **Under 760 px** (Fold outer screen, phones): single column.
-- **760 px and up** (Fold unfolded, tablets): actions left; flowchart and recent events right, sticky. Same type sizes — extra width shows more context, not smaller text.
+- **680 px and up** (Fold unfolded, tablets): actions use the full width. The Flowchart tab opens a sticky right-hand panel (flowchart + recent events) and closes it again. Same type sizes — extra width shows more context, not smaller text.
+- **Flowchart is closed by default** on every width. On narrow screens the tab opens it in a sheet over the cockpit.
 
 ## Alerts
 

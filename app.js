@@ -27,6 +27,8 @@ let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
 let expandedTask = null; // UI-only: which compact row is open in the cockpit
+let flowOpen = false;    // UI-only: flowchart panel in the cockpit starts closed
+const WIDE = window.matchMedia("(min-width:680px)");
 
 function loadSettings(){
   try{return {...{noticeDismissed:false,sound:true},...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")};}catch{return {noticeDismissed:false,sound:true};}
@@ -125,6 +127,10 @@ function renderEmergency(){
     <section class="home-foot">
       <div><strong>Works offline after first load</strong><small>This prototype stores sessions only on this device.</small></div>
       <button class="text-button" data-action="show-about">About & sources</button>
+    </section>
+    <section class="home-foot sim-master-link">
+      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Open it on a laptop.</small></div>
+      <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
     </section>`;
 }
 
@@ -174,12 +180,12 @@ function renderActiveSession(){
     </section>
     ${renderAlertStrip()}
     <nav class="cockpit-tabs" aria-label="Session tools">
-      <button class="tab-flow" data-action="open-flow" data-id="${e.id}">Flowchart</button>
+      <button class="tab-flow${flowOpen?" active":""}" data-action="toggle-flow" aria-expanded="${flowOpen}">Flowchart</button>
       <button data-nav-jump="medications">Meds</button>
       <button data-action="show-timers">Timers${timerCount?` <span>${timerCount}</span>`:""}</button>
       <button data-action="show-timeline">Timeline</button>
     </nav>
-    <div class="cockpit-body">
+    <div class="cockpit-body${flowOpen?" flow-open":""}">
       <section class="task-workspace">
         ${renderDueGroup(e)}
         ${renderTaskGroups(e)}
@@ -565,6 +571,8 @@ document.addEventListener("click",e=>{
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
   if(a==="sim-time")showSimTime();
+  // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
+  if(a==="toggle-flow"){const e=EMERGENCIES[session.emergencyId];if(WIDE.matches){flowOpen=!flowOpen;render();}else{openSheet({eyebrow:"FULL PATHWAY",title:e.name,wide:true,html:flowHTML(e,true)});}}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}

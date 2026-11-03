@@ -50,6 +50,14 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 - [ ] Neuroimaging/alternate diagnosis language
 - [ ] Delivery timing and route language
 
+## Sim Master scenarios (`scenarios.js`)
+
+- [ ] PPH atony: vitals trajectory, event timings, expected-action targets
+- [ ] PPH with severe preeclampsia: methylergonovine trap, second-line agent choices, magnesium monitoring
+- [ ] PPH firm uterus / trauma: exam finding, escalation-to-OR criteria
+- [ ] Subtitle lines on cockpit task cards (`TASK_SUBTITLES` in `app.js`)
+- [ ] Debrief questions and confederate lines reviewed by simulation faculty
+
 ## TeamSTEPPS and simulation
 
 - [ ] Local role names and responsibilities

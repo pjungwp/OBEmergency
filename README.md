@@ -19,6 +19,10 @@ Phone-first clinical-reference and simulation prototype for postpartum hemorrhag
 - Offline caching after the first successful load
 - Tiny-iPhone-first layout with large action text and 44 px minimum controls
 
+## Sim Master (facilitator view)
+
+`sim-master.html` is a laptop page for running scripted mixed-team simulations: a scenario library with focus-based suggestions, a briefing screen (patient, vitals, roles, pre-brief script), a run screen (timed and conditional events, live vitals, "if the team asks" answers, an expected-actions checklist the facilitator taps), and a debrief (actions vs targets, what the team triggered or averted, debrief questions, Plus/Delta notes, print to PDF). Team phones run the normal Simulation cockpit separately; there is no sync in this release. Scenario content lives in `scenarios.js` and is draft until reviewed (see `CLINICAL-REVIEW.md`).
+
 ## Release order
 
 1. **Netlify first:** deploy the repository root as a static app. No build command is required.
