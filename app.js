@@ -26,6 +26,7 @@ let clockHandle = null;
 let audioContext = null;
 let settings = loadSettings();
 let suppressStoreNotification = false;
+let expandedTask = null; // UI-only: which compact row is open in the cockpit
 
 function loadSettings(){
   try{return {...{noticeDismissed:false,sound:true},...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")};}catch{return {noticeDismissed:false,sound:true};}
@@ -227,33 +228,42 @@ function renderDueGroup(e){
   if(!items.length)return "";
   return `<div class="task-group due-group"><h2>DUE NOW</h2>${items.map(renderTaskCard).join("")}</div>`;
 }
+// Full cards: overdue tasks (DUE NOW) and the first open pathway group.
+// Everything below is a one-line row; tapping a row expands it (one at a time).
 function renderTaskGroups(e){
   const groups=[...new Set(e.tasks.map(t=>t.group))];
+  let primaryShown=false;
   return groups.map(group=>{
     const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
     if(!items.length)return "";
-    return `<div class="task-group"><h2>${esc(group)}</h2>${items.map(renderTaskCard).join("")}</div>`;
+    const primary=!primaryShown;primaryShown=true;
+    return `<div class="task-group${primary?"":" compact-group"}"><h2>${esc(group)}</h2>${items.map(t=>primary?renderTaskCard(t):expandedTask===t.id?renderTaskCard(t,true):renderTaskRow(t)).join("")}</div>`;
   }).join("");
+}
+
+function renderTaskRow(t){
+  const st=taskState(t.id);
+  return `<button class="task-row ${t.priority} ${st.status}" data-action="expand-task" data-task-id="${t.id}" aria-expanded="false"><span class="row-copy">${taskStatusHTML(t,st)}<strong>${esc(taskLabel(t))}</strong></span><span class="row-chev" aria-hidden="true">›</span></button>`;
 }
 
 function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
 function taskStatusHTML(t,st){
   const overdue=overdueTimerFor(t.id);
-  if(overdue)return `<div class="task-status overdue">${overdueSpan(overdue)}</div>`;
+  if(overdue)return `<span class="task-status overdue">${overdueSpan(overdue)}</span>`;
   const next=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);
   const parts=[];
   if(st.status==="progress")parts.push("In progress");
   if(st.status==="ongoing")parts.push("Ongoing");
   if(next)parts.push(`Next in <span class="live-countdown" data-due-at="${next.dueAt}">${formatCountdown(next)}</span>`);
-  return parts.length?`<div class="task-status">${parts.join(" · ")}</div>`:"";
+  return parts.length?`<span class="task-status">${parts.join(" · ")}</span>`:"";
 }
 
-function renderTaskCard(t){
+function renderTaskCard(t,expandedRow=false){
   const st=taskState(t.id);
   const overdue=!!overdueTimerFor(t.id);
-  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}">
+  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}${expandedRow?" expanded-row":""}" id="card-${t.id}">
     <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3></div>
-    <button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>
+    <div class="card-tools"><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>${expandedRow?`<button class="collapse-btn" data-action="collapse-task" aria-label="Collapse">‹</button>`:""}</div>
     <div class="task-actions">
       ${st.status==="todo"?`<button class="button compact secondary" data-task-action="start" data-task-id="${t.id}">Start</button>`:""}
       ${t.type==="ongoing"&&st.status==="todo"?`<button class="button compact primary" data-task-action="ongoing" data-task-id="${t.id}">Ongoing</button>`:""}
@@ -283,6 +293,7 @@ function handleTask(taskId,action){
     if(t.type==="repeat"&&t.repeatMin) addTimer({taskId,label:t.title,dueAt:sessionMinute()+t.repeatMin,kind:"repeat"});
   }
   if(action==="reopen"){session.tasks[taskId]={status:"todo"};cancelTaskTimers(taskId);logEvent(`Reopened: ${t.title}`,"task");}
+  if(action==="done"||action==="reopen")expandedTask=null;
   const type={start:"TASK_STARTED",ongoing:"TASK_MARKED_ONGOING",done:t.type==="repeat"?"ASSESSMENT_RECORDED":"TASK_COMPLETED",reopen:"TASK_REOPENED"}[action]||"TASK_UPDATED";
   saveSession({type,taskId,status:session.tasks[taskId]?.status||null});render();
 }
@@ -420,6 +431,7 @@ function recordMedication(id){
   logEvent(`${m.name} administered · dose ${session.doseCounts[id]}`,"medication");
   if(m.timer)addTimer({label:m.timerLabel||`Reassess after ${m.name}`,dueAt:sessionMinute()+m.timer,kind:"medication",medId:id});
   const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
+  expandedTask=null;
   saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:session.doseCounts[id]}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${m.timer} min`:""}`);
 }
 function openEducation(id){
@@ -484,6 +496,8 @@ document.addEventListener("click",e=>{
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
+  if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
+  if(a==="collapse-task"){expandedTask=null;render();}
   if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
   if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();render();}
   if(a==="show-timers")showTimers();

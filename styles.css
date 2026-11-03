@@ -78,6 +78,19 @@ body.in-cockpit .task-actions .button{flex:1;min-height:48px;font-size:17px;padd
 body.in-cockpit .completed-panel{margin:10px 0 14px}
 body.in-cockpit .completed-panel>button{font-size:16px;min-height:48px;padding:0 14px;align-items:center}
 body.in-cockpit .completed-panel>button span{font-size:15px}
+body.in-cockpit .task-status{display:block}
+body.in-cockpit .card-tools{display:flex;flex-direction:column;gap:6px;align-items:center}
+.collapse-btn{width:40px;height:40px;border-radius:50%;border:1px solid #cbd6e4;background:#fff;color:var(--navy);font-size:22px;font-weight:900;transform:rotate(90deg)}
+body.in-cockpit .task-card.expanded-row{border-top-color:#8fa3bf;border-right-color:#8fa3bf;border-bottom-color:#8fa3bf;box-shadow:0 6px 18px rgba(11,33,73,.10)}
+.task-row{width:100%;min-height:56px;margin-bottom:6px;padding:9px 12px;display:flex;align-items:center;gap:10px;text-align:left;background:#fff;border:1px solid var(--line);border-left:5px solid #7e8ba0;border-radius:12px;color:var(--ink)}
+.task-row.critical{border-left-color:#c72f48}.task-row.high{border-left-color:#d78300}
+.task-row.progress{background:#fffdf5;border-color:#e5c874}.task-row.ongoing{background:#edf8f5;border-color:#9fd4ca}
+.task-row:active{background:#eef3fa}
+.row-copy{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.row-copy strong{font-size:20px;font-weight:800;line-height:1.22;letter-spacing:-.01em}
+.row-copy .task-status{font-size:14px!important;margin:0!important}
+.row-chev{flex:none;font-size:28px;color:#7d8da3;line-height:1}
+body.in-cockpit .compact-group h2{margin-top:10px}
 .cockpit-side{display:none}
 .side-timeline{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:12px}
 .side-timeline h2{font-size:14px;letter-spacing:.06em;color:#4a5a72;margin:0 0 6px;text-transform:uppercase}

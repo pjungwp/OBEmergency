@@ -12,7 +12,7 @@ An active session is a **clinical cockpit**, not a scrolling dashboard. Reduce n
 2. **Simulation controls** (simulation only, one row, scrolls away).
 3. **Alert strip**: overdue reminders not tied to a task card (milestones, post-dose reassessment). Shows the most overdue item in full; `+N` opens the rest. Never collapsed.
 4. **Tool tabs**: Flowchart · Meds · Timers · Timeline (44 px).
-5. **Actions**: a `DUE NOW` group first (overdue task cards, red), then the pathway groups.
+5. **Actions**: a `DUE NOW` group first (overdue task cards, red), then the pathway groups. Overdue tasks and the first open group are full cards with their buttons. Every later task is a one-line row (title + status + chevron); tapping it expands it into a full card, one at a time, and it collapses again once completed.
 
 Focus mode is the default: once a session starts, the app header, disclaimer and bottom navigation are hidden. Disclaimers live on the start screen. The simulation indicator (teal tag + striped header) is always visible while simulating.
 
