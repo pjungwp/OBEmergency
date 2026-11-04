@@ -29,7 +29,8 @@ export function createRun(scn,level,wall=Date.now()){
     clock:{elapsedBase:0,running:false,lastTickAt:wall},
     state:r.start,stateAt:0,hold:false,overrides:null,
     anchor:{at:0,vals:{...st.v},qbl:r.qblStart},
-    obs:{},shown:[],notes:[],log:[],seq:0,narrative:"",confirm:{}};
+    obs:{},shown:[],notes:[],log:[],seq:0,narrative:"",confirm:{},queue:[],delivery:{},summary:{strengths:"",opportunities:"",teaching:""},
+    scenarioVersion:scn.version||"1.0",reviewed:scn.reviewed??null};
 }
 export function simNow(run,wall=Date.now()){const c=run.clock;return c.elapsedBase+(c.running?wall-c.lastTickAt:0);}
 export function startRun(run,wall=Date.now()){run.phase="run";run.clock.running=true;run.clock.lastTickAt=wall;push(run,{kind:"clock",what:"start",text:"Scenario started"},0);}
@@ -40,8 +41,8 @@ export function advance(run,ms,wall=Date.now()){
   push(run,{kind:"clock",what:"advance",text:`Time advanced +${Math.round(ms/60000*10)/10} min`},c.elapsedBase);
 }
 
-function push(run,entry,at,prev){run.seq++;run.log.push({seq:run.seq,at,...entry,...(prev?{prev}:{})});return run.log[run.log.length-1];}
-function snap(run){return clone({state:run.state,stateAt:run.stateAt,hold:run.hold,overrides:run.overrides,anchor:run.anchor,obs:run.obs,shown:run.shown});}
+function push(run,entry,at,prev){run.seq++;run.log.push({seq:run.seq,at,wallAt:new Date().toISOString(),...entry,...(prev?{prev}:{})});return run.log[run.log.length-1];}
+function snap(run){return clone({state:run.state,stateAt:run.stateAt,hold:run.hold,overrides:run.overrides,anchor:run.anchor,obs:run.obs,shown:run.shown,queue:run.queue||[],delivery:run.delivery||{}});}
 
 // ---------- physiology ----------
 function targetOf(run,scn){
@@ -86,14 +87,55 @@ export function inject(run,scn,id,now){
   if(i.qbl)run.anchor.qbl+=i.qbl;
   if(i.v){run.anchor.vals={...run.anchor.vals,...i.v};run.overrides={...(run.overrides||{}),...i.v};}
   if(i.to&&scn.states[i.to]){run.state=i.to;run.stateAt=now;run.overrides=null;run.hold=false;}
-  if(i.show)run.shown.push({id,text:i.text,at:now});
-  return push(run,{kind:"inject",id,cat:i.kind,text:`${i.label}: ${i.text}`,...(i.to?{to:i.to}:{})},now,prev);
+  const forWho=i.for||(i.show?"monitor":"instructor");
+  if(i.show||forWho==="monitor"||forWho==="learner"&&i.show)run.shown.push({id,text:i.text,at:now});
+  const e=push(run,{kind:"inject",id,cat:i.kind,for:forWho,label:i.label,text:`${i.label}: ${i.text}`,...(i.to?{to:i.to}:{})},now,prev);
+  run.delivery=run.delivery||{};run.delivery[e.seq]="delivered";
+  return e;
+}
+/** A custom event typed by the instructor. */
+export function injectCustom(run,{title,text,recipient="instructor",showOnMonitor=false},now){
+  const prev=snap(run);
+  if(showOnMonitor||recipient==="monitor")run.shown.push({id:"custom",text:text||title,at:now});
+  const e=push(run,{kind:"inject",id:"custom",cat:"custom",for:recipient,label:title,text:`${title}${text?`: ${text}`:""}`},now,prev);
+  run.delivery=run.delivery||{};run.delivery[e.seq]="delivered";return e;
+}
+/** Schedule an inject for later sim time. It fires from processDue(). */
+export function schedule(run,scn,id,atMs,now){
+  if(!(scn.injects||[]).some(x=>x.id===id))throw new Error(`Unknown inject ${id}`);
+  const prev=snap(run);run.queue=run.queue||[];
+  const q={qid:`q${run.seq+1}`,id,dueAt:atMs};run.queue.push(q);
+  push(run,{kind:"schedule",id,dueAt:atMs,text:`Scheduled ${scn.injects.find(x=>x.id===id).label} for ${Math.round(atMs/1000)} s`},now,prev);
+  return q;
+}
+export function cancelScheduled(run,qid,now){
+  const q=(run.queue||[]).find(x=>x.qid===qid);if(!q)return null;
+  const prev=snap(run);run.queue=run.queue.filter(x=>x.qid!==qid);
+  return push(run,{kind:"unschedule",id:q.id,text:`Cancelled scheduled ${q.id}`},now,prev);
+}
+/** Fire every queued inject whose time has come (logged at its scheduled time). */
+export function processDue(run,scn,now){
+  const due=(run.queue||[]).filter(q=>q.dueAt<=now).sort((a,b)=>a.dueAt-b.dueAt);
+  for(const q of due){run.queue=run.queue.filter(x=>x.qid!==q.qid);inject(run,scn,q.id,q.dueAt);}
+  return due;
+}
+/** Delivery status for an inject log entry: queued (in run.queue), delivered, acknowledged. */
+export function acknowledge(run,seq,now){
+  const e=run.log.find(x=>x.seq===seq);if(!e)return null;
+  run.delivery=run.delivery||{};run.delivery[seq]="acknowledged";
+  return push(run,{kind:"ack",ref:seq,text:`Acknowledged: ${e.label||e.text}`},now);
 }
 /** status: "observed" | "missed" | "na" | null (clear) */
 export function observe(run,actionId,status,now){
   const prev=snap(run);
   if(status)run.obs[actionId]={status,at:now};else delete run.obs[actionId];
   return push(run,{kind:"obs",action:actionId,status,text:status?`${status}: ${actionId}`:`cleared: ${actionId}`},now,prev);
+}
+/** Quality and comment for an observation (does not change its status). */
+export function observeDetail(run,actionId,{quality,comment},now){
+  const prev=snap(run),o=run.obs[actionId]||{status:null,at:null};
+  run.obs[actionId]={...o,...(quality!==undefined?{quality}:{}),...(comment!==undefined?{comment}:{})};
+  return push(run,{kind:"obsdetail",action:actionId,quality,comment,text:`Detail: ${actionId}${quality?` · ${quality}`:""}${comment?` · ${comment}`:""}`},now,prev);
 }
 export function note(run,text,now){run.notes.push({at:now,text});return push(run,{kind:"note",text},now,snap(run));}
 export function undo(run){
@@ -141,26 +183,65 @@ export function eventClock(run,scn,now,startId){
   return {label:ec.label,ms:(stop??now)-from,stopped:stop!=null};
 }
 
+// ---------- checklist (primary vs optional) ----------
+/** Critical actions plus any optional action surfaced by the current state go first; the rest are optional. */
+export function checklist(run,scn){
+  const r=scn.states?scn:resolve(scn,run.level);
+  const surfaced=a=>!a.critical&&(a.surface||[]).includes(run.state);
+  const primary=r.actions.filter(a=>a.critical||surfaced(a)).map(a=>({...a,surfaced:surfaced(a)}));
+  const optional=r.actions.filter(a=>!a.critical&&!surfaced(a));
+  return {primary,optional};
+}
+
 // ---------- debrief ----------
+/** Status words used everywhere; "not documented" never means "not performed". */
+export const STATUS={observed:"Recorded on time",late:"Recorded after target",missed:"Missed",na:"Not applicable / not assessed","not documented":"Not documented"};
 export function debrief(run,scn){
   const r=resolve(scn,run.level);
   const ec=scn.eventClock,origin=ec?.from&&ec.from!=="start"?firstEntry(run,r,ec.from,r.start)??0:0;
   const actions=r.actions.map(a=>{
     const o=run.obs[a.id],conf=run.confirm[a.id];
-    let status=o?o.status:"not documented";
-    if(status==="observed"&&a.target!=null&&o.at>a.target*60000)status="late";
+    const trig=a.from?firstEntry(run,r,a.from,r.start):0;          // timing starts at the action's trigger event
+    let status=o?.status||"not documented";
+    if(status==="observed"&&a.target!=null&&trig!=null&&o.at-trig>a.target*60000)status="late";
+    if(!o?.status&&a.from&&trig==null)status="na";                   // trigger never happened: not applicable, not missed
     if(conf)status=conf;
-    return {...a,status,at:o?.status==="observed"?o.at:null,fromEvent:o?.status==="observed"?o.at-origin:null};
+    const at=o?.status==="observed"?o.at:null;
+    return {...a,status,at,trigger:trig,fromTrigger:at!=null&&trig!=null?at-trig:null,fromEvent:at!=null?at-origin:null,quality:o?.quality||null,comment:o?.comment||""};
   });
-  const timeline=run.log.filter(e=>!e.undone&&e.kind!=="clock"||e.kind==="clock"&&!e.undone&&["start","advance"].includes(e.what)).map(e=>({at:e.at,kind:e.kind,status:e.kind==="obs"?e.status:undefined,text:e.kind==="obs"?obsText(e,r):e.kind==="state"?`→ ${r.states[e.to]?.name||e.to}`:e.text}));
+  const live=run.log.filter(e=>!e.undone);
+  const timeline=live.filter(e=>e.kind!=="clock"||["start","advance","pause","resume"].includes(e.what)).map(e=>({seq:e.seq,at:e.at,wallAt:e.wallAt,kind:e.kind,status:e.kind==="obs"?e.status:undefined,text:e.kind==="obs"?obsText(e,r):e.kind==="state"?`→ ${r.states[e.to]?.name||e.to}`:e.text}));
+  const critIds=new Set(actions.filter(a=>a.critical).map(a=>a.id));
+  const keyTimeline=timeline.filter(e=>e.kind==="state"||e.kind==="stop"||e.kind==="inject"&&live.find(x=>x.seq===e.seq)?.to||e.kind==="obs"&&e.status==="observed"&&critIds.has(live.find(x=>x.seq===e.seq)?.action));
   const weak=actions.filter(a=>["late","missed","not documented"].includes(a.status));
   const prompts=[...weak.flatMap(a=>a.prompts||[]),...(scn.debrief||[])];
   const counts={observed:0,late:0,missed:0,na:0,"not documented":0};actions.forEach(a=>counts[a.status]=(counts[a.status]||0)+1);
-  const end=run.log.findLast?.(e=>e.kind==="end")?.at??simNow(run);
-  return {actions,timeline,prompts:[...new Set(prompts)],suggested:[...new Set(prompts)].slice(0,3),counts,elapsed:end,origin,
-    critical:actions.filter(a=>a.critical),states:[...new Set(run.log.filter(e=>!e.undone&&e.kind==="state").map(e=>e.to))]};
+  const end=[...run.log].reverse().find(e=>e.kind==="end")?.at??simNow(run);
+  const team=actions.filter(a=>a.cat==="Teamwork");
+  return {actions,timeline,keyTimeline,prompts:[...new Set(prompts)],suggested:[...new Set(prompts)].slice(0,3),counts,elapsed:end,origin,
+    strengths:actions.filter(a=>a.status==="observed"),opportunities:actions.filter(a=>a.status==="late"||a.status==="missed"),
+    undocumented:actions.filter(a=>a.critical&&a.status==="not documented"),team,notes:run.notes||[],
+    critical:actions.filter(a=>a.critical),states:[...new Set(live.filter(e=>e.kind==="state").map(e=>e.to))]};
 }
 function obsText(e,r){const a=r.actions.find(x=>x.id===e.action);const l=a?a.label:e.action;return e.status==="observed"?l:e.status?`${l} — ${e.status==="na"?"not assessed":e.status}`:`${l} — cleared`;}
+
+// ---------- exports (no identifiers) ----------
+const csvCell=v=>{const s=String(v??"");return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};
+const mmss=ms=>{ms=Math.max(0,Math.round(ms||0)/1000|0);return `${String(ms/60|0).padStart(2,"0")}:${String(ms%60).padStart(2,"0")}`;};
+export function exportCSV(run,scn){
+  const d=debrief(run,scn);
+  const rows=[["section","sim_time","wall_time","kind","item","status","detail"]];
+  for(const e of d.timeline)rows.push(["timeline",mmss(e.at),e.wallAt||"",e.kind,e.text,e.status||"",""]);
+  for(const a of d.actions)rows.push(["action",a.at!=null?mmss(a.at):"","",a.cat,a.label,STATUS[a.status],[a.fromTrigger!=null?`${mmss(a.fromTrigger)} from trigger`:"",a.target!=null?`target ${a.target} min`:"",a.quality||"",a.comment||""].filter(Boolean).join("; ")]);
+  return rows.map(r=>r.map(csvCell).join(",")).join("\n");
+}
+export function exportJSON(run,scn){
+  const d=debrief(run,scn);
+  return JSON.stringify({format:"ob-sim-debrief/1",scenario:{id:scn.id,title:scn.title,version:run.scenarioVersion||scn.version,reviewed:run.reviewed??scn.reviewed??null},level:run.level,
+    createdAt:run.createdAt,elapsedMs:d.elapsed,counts:d.counts,summary:run.summary,narrative:run.narrative||"",
+    actions:d.actions.map(a=>({id:a.id,label:a.label,category:a.cat,critical:!!a.critical,status:a.status,simMs:a.at,fromTriggerMs:a.fromTrigger,targetMin:a.target,quality:a.quality,comment:a.comment})),
+    timeline:d.timeline.map(e=>({simMs:e.at,wallAt:e.wallAt,kind:e.kind,text:e.text,status:e.status}))},null,2);
+}
 
 // ---------- content checks (used by tests) ----------
 export function validate(scn,levels=["basic","intermediate","advanced"]){
@@ -181,6 +262,12 @@ export function validate(scn,levels=["basic","intermediate","advanced"]){
     }
     if(!r.actions.some(a=>a.critical))errs.push(`${level}: no critical actions`);
   }
+  for(const a of scn.actions){
+    for(const st of [a.from,...(a.surface||[])].filter(Boolean))if(!scn.states[st])errs.push(`action ${a.id}: unknown state ${st}`);
+  }
+  for(const s of Object.values(scn.states))for(const i of s.injects||[])if(!scn.injects.some(x=>x.id===i))errs.push(`state ${s.name}: unknown inject ${i}`);
+  for(const i of scn.injects)if(!["learner","confederate","monitor","instructor"].includes(i.for||""))errs.push(`inject ${i.id}: recipient`);
+  if(!scn.version)errs.push("no version");
   for(const a of scn.actions){if(!CATS.has(a.cat))errs.push(`action ${a.id}: category ${a.cat}`);if(!(a.target===null||typeof a.target==="number"))errs.push(`action ${a.id}: target`);}
   for(const s of Object.values(scn.states))if(!s.v)errs.push(`state ${s.name}: no vitals`);
   return errs;

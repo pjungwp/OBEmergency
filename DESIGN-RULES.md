@@ -2,6 +2,21 @@
 
 These apply to every emergency module (PPH, severe hypertension, eclampsia, and anything added later), not just one screen.
 
+## Progressive disclosure by default (mandatory, app-wide)
+
+Every optional action, script line, secondary observation, teaching explanation, advanced control and reference item is collapsed by default. The primary view stays focused on patient status, immediate decisions and critical actions. Expanded content is contextual, quickly dismissible, and never obstructs essential controls.
+
+| Level | Visibility | Examples |
+| --- | --- | --- |
+| Primary | Always visible | Clock, vitals, current state, next-state choices, critical observations / most-urgent action |
+| Secondary | Collapsible | More options, optional observations, injects sent, notes, event log, completed / up-next tasks |
+| Reference | Hidden until requested | Scripts, rationale, expected responses, rubrics, teaching notes, task details |
+
+- Only one secondary section is open at a time; a section can be pinned to stay open. Open/pinned state lasts for the session.
+- Longer content opens in a bottom sheet rather than expanding inline over critical controls.
+- Advancing the scenario never closes a section the user is working in.
+- If an optional item becomes urgent because of a state change, it moves into the primary view (e.g. TXA "Now relevant" in hemorrhagic shock).
+
 ## Principle
 
 An active session is a **clinical cockpit**, not a scrolling dashboard. Reduce nonclinical vertical space; never shrink clinical text to fit more on screen.
@@ -74,20 +89,21 @@ One pathway record per emergency (`pathways.js`) drives three views (`flowchart.
 
 Switching views never changes session or task state. A status strip (mode, clock, overdue, Actions) shows on the flowchart page whenever a session is running. In the cockpit, the Flowchart tab opens the side Overview on wide screens and the full pathway page on phones.
 
-## Sim Master (facilitator)
+## Sim Master (facilitator) — 2.0
 
-A separate page (`sim-master.html`) — the facilitator's control center, not another copy of the clinical dashboard. Trainees use the normal Simulation cockpit (or just the mannequin); its Team tab only links here.
+A separate page (`sim-master.html`): the facilitator's command center, operable one-handed on a phone. The instructor watches the learners, not the app. Trainees use the normal Simulation cockpit (or just the mannequin); its Team tab only links here.
 
-- **Flow**: Scenario library (level per scenario) → Prebrief → Run → Debrief.
-- **Run screen**: current state on the left with *What happens next?* (Worsen · Respond · Hold, each naming the target state), Jump to state, and Quick inject. Patient status and one-tap observations on the right. On phones the order is state · vitals · next · observations · injects, with Undo · Pause · +1 min · End in the thumb bar.
-- **Suggestions highlight, never act.** A rule like "no uterotonic by 4 min" outlines the Worsen button with the reason; only a tap changes the patient.
-- **Patient states are coherent presets.** Vitals drift toward each state's targets; blood loss accumulates at the state's rate. Hold freezes the patient. Set vitals overrides until the next state.
-- **Undo** reverses the last instructor event exactly (state, inject, override, hold, observation, note).
-- **STOP · real emergency** is always visible: pauses the clock, keeps the log, offers Clinical Assist.
-- **Observations**: tap = observed with the scenario time; ⋯ = missed or not assessed. Unchecked means not documented, never failed. The debrief marks observed-after-target as late, and the instructor confirms every status.
-- **Clocks**: scenario clock always; a second event clock when it differs (time since severe BP confirmed; head-to-body, which stops at delivery and replaces the scenario clock on phones).
-- **Monitor window** (`sim-monitor.html`): large simulated vitals for a projector or bedside tablet, synced on the same device with no server. Shows labs the instructor sends and SIMULATION STOPPED / Paused.
-- **Debrief**: counts, critical actions with editable status and time from the event, suggested questions (missed and late first), narrative feedback, timeline; Copy summary and Print / save PDF. No names.
+- **Flow**: library (level per scenario) → prebrief (one-liner visible; roles, script, critical actions, history collapsed) → cockpit → debrief.
+- **Always visible**: navy header with SIM tag, scenario clock (head-to-body replaces it on phones for shoulder dystocia), RUNNING/PAUSED, STOP; a vitals strip that fits the screen width; current state; 2–3 next-state cards (Deteriorate / Improve, naming the target state); critical observations.
+- **Dock**: Inject · +1 min · Pause · Undo · Debrief, on every cockpit screen.
+- **Collapsed**: More options (hold, rare branches, jump to state, set vitals, +5 min / advance by…, monitor window), Instructor reference (scripts, confederate lines, targets, teaching points), More observations, Team notes, Injects sent, Event log. Desktop pins Injects sent and Event log open in a third column.
+- **Inject drawer** (bottom sheet): suggested-now injects for the current state, then categories (one open at a time), then Custom event. Each inject shows recipient (learner / confederate / monitor / instructor); the script is folded behind "Script"; send now or later (1/2/5 min, queued and cancellable). Sent injects show delivered / acknowledged.
+- **Observations**: tap the row = recorded with sim time; tap again clears (both logged). ••• opens status (recorded / missed / not applicable / clear), quality and comment. Targets are teaching references measured from each action's trigger event (e.g. MTP from entering shock). An action whose trigger never happened is "not applicable", never missed.
+- **Suggestions highlight, never act.** Recording an action never changes physiology.
+- **Undo** restores the full prior scenario state, including queued injects.
+- Every event carries simulation time and a wall-clock audit time. Scenario version and review status show in the prebrief, cockpit footer, debrief and exports.
+- **Debrief**: primary = counts, strengths, opportunities, not documented (confirm), critical timeline, three discussion prompts, instructor summary (strengths · opportunities · teaching points). Collapsed = all actions with timing/quality, team performance, more questions, full log with wall-clock time. Exports: Copy, CSV, JSON, Print/PDF (prints everything expanded). No names.
+- **Monitor window** (`sim-monitor.html`) is the learner display on the same device, fed by `sim-sync.js` — the same adapter interface a networked version will implement.
 
 ## Education
 

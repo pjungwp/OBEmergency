@@ -110,3 +110,46 @@ test("stopping for a real emergency pauses the clock and is logged",()=>{
   S.stopForEmergency(x,MIN);assert.equal(x.phase,"stopped");assert.equal(x.clock.running,false);assert.equal(S.simNow(x,10*MIN),MIN);
   assert.equal(x.log.at(-1).kind,"stop");
 });
+
+test("2.0: scheduled injects fire at their sim time; undo cancels; delivery can be acknowledged",()=>{
+  const {r,x}=run();
+  S.schedule(x,r,"i-cbc",3*MIN,MIN);
+  assert.equal(S.processDue(x,r,2*MIN).length,0);
+  assert.equal(S.processDue(x,r,3.5*MIN).length,1);
+  const e=x.log.findLast(l=>l.kind==="inject");assert.equal(e.at,3*MIN,"logged at its scheduled time");
+  assert.equal(x.delivery[e.seq],"delivered");S.acknowledge(x,e.seq,4*MIN);assert.equal(x.delivery[e.seq],"acknowledged");
+  S.schedule(x,r,"i-dizzy",9*MIN,5*MIN);assert.equal(x.queue.length,1);S.undo(x);assert.equal(x.queue.length,0);
+});
+
+test("2.0: every event carries a sim time and a wall-clock audit time",()=>{
+  const {r,x}=run();S.inject(x,r,"i-dizzy",MIN);
+  assert.ok(x.log.every(e=>typeof e.at==="number"&&/T/.test(e.wallAt)));
+});
+
+test("2.0: timing is measured from the action's trigger; trigger never reached = not applicable",()=>{
+  const {scn,r,x}=run();
+  let d=S.debrief(x,scn);assert.equal(d.actions.find(a=>a.id==="a-mtp").status,"na","no shock → MTP not applicable");
+  S.goTo(x,r,"shock",6*MIN);S.observe(x,"a-mtp","observed",8*MIN);     // 2 min after shock, target 3
+  d=S.debrief(x,scn);const m=d.actions.find(a=>a.id==="a-mtp");
+  assert.equal(m.status,"observed");assert.equal(m.fromTrigger,2*MIN);
+  S.observe(x,"a-mtp","observed",10*MIN);assert.equal(S.debrief(x,scn).actions.find(a=>a.id==="a-mtp").status,"late");
+});
+
+test("2.0: optional actions surface into the primary checklist when the state makes them relevant",()=>{
+  const {r,x}=run();
+  assert.ok(!S.checklist(x,r).primary.some(a=>a.id==="a-txa"));
+  S.goTo(x,r,"shock",MIN);const c=S.checklist(x,r);
+  assert.ok(c.primary.find(a=>a.id==="a-txa").surfaced);assert.ok(!c.optional.some(a=>a.id==="a-txa"));
+});
+
+test("2.0: debrief separates strengths, opportunities and not documented; exports carry no names",()=>{
+  const {scn,r,x}=run();
+  S.observe(x,"a-help","observed",30000);S.observe(x,"a-uterotonic","observed",6*MIN);S.note(x,"Clear role assignment",MIN);
+  const d=S.debrief(x,scn);
+  assert.ok(d.strengths.some(a=>a.id==="a-help"));assert.ok(d.opportunities.some(a=>a.id==="a-uterotonic"));
+  assert.ok(d.undocumented.some(a=>a.id==="a-recognize"));
+  const csv=S.exportCSV(x,scn),json=JSON.parse(S.exportJSON(x,scn));
+  assert.match(csv,/^section,sim_time,wall_time/);assert.match(csv,/Not documented/);
+  assert.equal(json.format,"ob-sim-debrief/1");assert.equal(json.scenario.version,"2.0");assert.equal(json.scenario.reviewed,null);
+  assert.ok(!/patient name|MRN/i.test(csv+JSON.stringify(json)));
+});

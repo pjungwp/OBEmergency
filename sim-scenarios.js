@@ -200,7 +200,7 @@ export const SIM_SCENARIOS = [
       {id:"i-fundal",kind:"confederate",label:"“Push on top?”",text:"Nurse: “Should I push on the top of her belly?”"},
       {id:"i-partner",kind:"confederate",label:"Partner asks",text:"Partner: “What's happening? Is the baby stuck?”"},
       {id:"i-apgar",kind:"complication",label:"Apgar 3",text:"Infant: Apgar 3 at 1 minute; neonatal team starts NRP.",show:true},
-      {id:"i-right",kind:"vitals",label:"Anterior shoulder",text:"Anterior shoulder is the fetal right.",show:false}
+      {id:"i-right",kind:"vitals",label:"Anterior shoulder",text:"Anterior shoulder is the fetal right.",for:"instructor"}
     ],
     actions:[
       {id:"a-call",label:"Announces shoulder dystocia; calls for help",cat:"Teamwork",target:0.5,critical:true,prompts:["How quickly did everyone know what was happening?"]},
@@ -334,5 +334,37 @@ export const SIM_SCENARIOS = [
     debrief:["What made it easier or harder to speak up about an unsafe order?"]
   });
 })();
+
+// ---------------------------------------------------------------- context (Sim Master 2.0)
+// state.injects   injects offered first in that state ("Suggested now")
+// action.from     state whose first entry starts that action's timing (default: scenario start)
+// action.surface  states in which a non-critical action is promoted to the primary checklist
+// inject.for      recipient: learner | confederate | monitor | instructor
+// version / reviewed: scenario content version and clinical review date (null = not reviewed)
+const CONTEXT={
+  "pph-atony":{states:{atony:["i-cbc","i-dizzy","i-clot"],responding:["i-cbc","i-family"],shock:["i-bloodbank","i-fib","i-family"],stabilizing:["i-fib"],dic:["i-fib"]},
+    actions:{"a-mtp":{from:"shock",target:3,surface:["shock","stabilizing","dic"]},"a-txa":{surface:["shock","dic"]},"a-reassess":{surface:["responding","stabilizing"]}}},
+  "pph-preeclampsia":{states:{atony:["i-methergine","i-cbc","i-dizzy"],responding:["i-family"],shock:["i-bloodbank","i-fib"],dic:["i-fib"]},
+    actions:{"a-mtp":{from:"shock",target:3,surface:["shock","stabilizing","dic"]},"a-txa":{surface:["shock","dic"]},"a-bp":{surface:["atony","responding"]}}},
+  "pph-trauma":{states:{firm:["i-more","i-cbc"],found:["i-exam","i-exposure"],shock:["i-cbc"]},
+    actions:{"a-escalate":{from:"found",target:4},"a-nofix":{surface:["firm"]}}},
+  "htn-eclampsia":{states:{severe:["i-headache","i-labs"],confirmed:["i-labs","i-noiv","i-seize"],treated:["i-seize"],seizure:["i-noiv"],postictal:["i-mglevel"],magtox:["i-mglevel"]},
+    actions:{"a-treat":{from:"confirmed",target:5},"a-safety":{from:"seizure",target:0.5},"a-tox":{from:"magtox",target:2},"a-mag":{surface:["seizure","postictal"]}}},
+  "shoulder":{states:{impacted:["i-fundal","i-partner","i-right"],delivered:["i-apgar"]},
+    actions:{"a-neonatal":{surface:["delivered"]},"a-document":{surface:["delivered"]}}},
+  "arrest":{states:{arrest:["i-rhythm","i-mag"],noROSC:["i-rhythm"],delivered:["i-neonate","i-fib"],afe:["i-fib"]},
+    actions:{"a-afe":{surface:["afe"],from:"afe",target:2},"a-causes":{surface:["noROSC"]}}},
+  "trauma-abruption":{states:{arrival:["i-type","i-ct","i-exam"],abruption:["i-us","i-kb"],shock:["i-type"]},
+    actions:{"a-abruption":{from:"abruption",target:3},"a-deliver":{from:"shock",target:5},"a-rh":{surface:["arrival"]},"a-noexam":{surface:["arrival"]}}}
+};
+const RECIPIENT={lab:"monitor",vitals:"monitor",confederate:"confederate",complication:"instructor"};
+export const SIM_CONTENT_VERSION="2.0";
+for(const s of SIM_SCENARIOS){
+  const c=CONTEXT[s.id]||{};
+  s.version=s.version||"2.0";s.reviewed=s.reviewed??null;
+  for(const [id,list] of Object.entries(c.states||{}))if(s.states[id])s.states[id].injects=list;
+  for(const [id,extra] of Object.entries(c.actions||{})){const a=s.actions.find(x=>x.id===id);if(a)Object.assign(a,extra);}
+  for(const i of s.injects){i.for=i.for||(i.show?"monitor":RECIPIENT[i.kind]||"instructor");if(i.kind==="confederate"&&/^Patient:/.test(i.text))i.for="learner";}
+}
 
 export function getSimScenario(id){return SIM_SCENARIOS.find(s=>s.id===id);}
