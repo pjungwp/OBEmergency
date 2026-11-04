@@ -6,15 +6,28 @@ These apply to every emergency module (PPH, severe hypertension, eclampsia, and 
 
 An active session is a **clinical cockpit**, not a scrolling dashboard. Reduce nonclinical vertical space; never shrink clinical text to fit more on screen.
 
-## Active-session layout (top to bottom)
+## Active session: two display states (v2.1)
 
-1. **Cockpit header** (sticky, ~85 px): mode tag (SIMULATION / CLINICAL), emergency name, elapsed clock, sound, End. One status line: overdue count + next reminder.
-2. **Simulation** uses the identical cockpit. The only differences: a teal SIMULATION tag (instead of red CLINICAL), a teal top rule, and a "Sim time" button on the status line that opens Pause / +1 / +5 / Jump to next event in a sheet. The button turns solid teal and reads "Paused" while the clock is stopped.
-3. **Alert strip**: overdue reminders not tied to a task card (milestones, post-dose reassessment). Shows the most overdue item in full; `+N` opens the rest. Never collapsed.
-4. **Tool tabs**: Flowchart · Meds · Timers · Timeline (44 px).
-5. **Actions**: a `DUE NOW` group first (overdue task cards, red), then the pathway groups. Overdue tasks and the first open group are full cards with their buttons. Every later task is a one-line row (title + status + chevron); tapping it expands it into a full card, one at a time, and it collapses again once completed.
+The workflow decides the screen, not a layout picker.
 
-Focus mode is the default: once a session starts, the app header, disclaimer and bottom navigation are hidden. Disclaimers live on the start screen. The simulation indicator (teal tag + striped header) is always visible while simulating.
+**State A — Decision Mode.** When a clinically reviewed trigger fires (`cockpit-config.js` → `DECISIONS`), the whole screen becomes one question (≤ 5 words) with two enormous answers. Answering records the decision, applies its branch and returns to the dashboard. **Back to actions** returns without recording anything; the question stays queued and shows as a chip in the status strip. The app never answers a question from a timer: triggers only ask. Y / N / Esc work on a keyboard.
+
+**State B — Split Action Dashboard** (default whenever a session is active):
+
+1. **Header**: back/menu, emergency icon + name, elapsed clock, SIMULATION / LIVE badge, ⋮ session menu (sound, larger text, sim clock, End).
+2. **Status strip** (only when needed): queued question chip · overdue count · next reminder · Sim time.
+3. **Banners** (P2): milestones and minute marks; never a takeover. **Alert card** (P1): reassessment or post-dose reminder with Assessed / Acknowledge / Snooze 1 min; after two snoozes it becomes a banner.
+4. **Left (55%)**: the single most-urgent action — very large label, one big DONE / Assessed / Record dose / Started button. Selection order: pinned by the last decision → overdue → critical → in pathway order.
+5. **Right (45%)**: checklist with NOW / DUE and ONGOING open, COMPLETED and UP NEXT collapsed with counts. Rows show pending (box), ongoing (spinner), completed (✓ + time), "Due now" pill. Tapping a row opens its status sheet (Done, Ongoing, Undo); medication rows open the dose confirmation.
+6. **Tool bar** (bottom): Actions · Medications · Flowchart · Timeline · Team. On wide screens a tool replaces the checklist column; on phones it opens as a sheet. Actions returns to the checklist. Timeline holds reminders and events, plus Export. Team shows roles (live) or the SIM Master console (simulation).
+
+Under 600 px the panels stack: most-urgent card first, checklist below. Switching branches never erases completed or ongoing work.
+
+**Shoulder dystocia** uses the same dashboard with the clock on the left (time since head delivered, next maneuver, Baby delivered) and the maneuver log on the right (First line · Additional · Adjunct · Advanced rescue; tap to log, ×n for repeats, Undo).
+
+**Medication confirmation** is a sheet, not a takeover: choose when it was given (Now / 1 / 2 / 5 / 10 min ago), confirm. Given time and recorded time are both kept; reminders run from the given time; dose limits block with a reason.
+
+**Simulation** is the same cockpit with a teal SIMULATION badge and the Sim time controls. A jump that passes more than one event shows one summary instead of a burst of alerts. A live session cannot be paused or advanced (`clock.js` throws); "Advance time…" in a live session explains and offers Sim Master in a new tab.
 
 ## Time labels
 
@@ -28,29 +41,28 @@ Never show a bare time next to the elapsed clock without one of these labels.
 
 ## Type and touch sizes
 
-| Element | Size |
-| --- | --- |
-| Main action text | 20–22 px, bold |
-| Supporting text | ≥ 16 px |
-| Section / group labels | 13–15 px |
-| Buttons | 15–17 px text, ≥ 44 px tall; task completion buttons ≥ 48 px |
-| Card padding | 10–14 px |
-| Gap between cards | 6–8 px |
-| Elapsed clock | 30–34 px |
+| Element | Phone | Wide |
+| --- | --- | --- |
+| Decision question | 40–56 px | 56–88 px |
+| YES / NO buttons | ≥ 96 px tall, 36–48 px text | up to 180 px tall, 48–64 px text |
+| Most-urgent label | 30–36 px, 900 weight | 40–60 px |
+| Most-urgent button | ≥ 72 px tall | ≥ 80 px tall |
+| Shoulder dystocia clock | 72–100 px | 100–140 px |
+| Checklist row | 18–20 px, ≥ 56 px tall | 20–22 px |
+| Header clock | 26–30 px | 36–40 px |
+| Any touch target | ≥ 44 px (≥ 48 px for actions) | same |
+
+Word budgets: question ≤ 5 words, checklist name ≤ 3 words (tested), action ≤ 4–6 words. Meaning wins over brevity; detail moves into the row's sheet.
 
 ## Adaptive width
 
-- **Under 760 px** (Fold outer screen, phones): single column.
-- **680 px and up** (Fold unfolded, tablets): actions use the full width. The Flowchart tab opens a sticky right-hand panel (flowchart + recent events) and closes it again. Same type sizes — extra width shows more context, not smaller text.
-- **Flowchart is closed by default** on every width. On narrow screens the tab opens it in a sheet over the cockpit.
+- **Under 600 px** (Fold outer screen, phones): stacked — most-urgent card, then checklist.
+- **600 px and up** (Fold unfolded, tablets, laptops): 55 / 45 split. Same type sizes — extra width shows more context, not smaller text.
+- **Tools are closed by default** on every width.
 
 ## Home dashboard
 
 Six emergencies maximum. Phones: one column (scrolling is fine). From 600 px wide: two columns × three rows, all six visible without scrolling at common tablet, Fold-unfolded and laptop sizes.
-
-## Cockpit tools column
-
-Flowchart · Meds · Timers · Timeline are toggles for one tools panel. Wide screens: the right-hand column (tap the active button to close). Phones: the same panel as a sheet over the cockpit. None of them leaves the session. Meds lists the pathway's drugs first; a drug opens its card, where a dose can be recorded.
 
 ## Flowcharts
 
@@ -69,5 +81,6 @@ Every Education topic is a built-in slide deck (`edu-decks.js`): one idea per sl
 ## Alerts
 
 - Overdue items are visible without a tap (on the card or in the alert strip).
-- Toasts in the cockpit: one at a time, short, never a second copy of something already on screen.
+- Toasts in the cockpit: one at a time, short, at the top, never a second copy of something already on screen (milestones show as banners, not toasts).
+- Levels: P0 question takeover · P1 alert card · P2 banner · P3 status count · P4 timeline only (`alerts.js`).
 - Acknowledging a reminder never marks a task complete.

@@ -3,6 +3,16 @@ import {createLocalSessionStore} from "./local-session-store.js";
 import {PATHWAYS} from "./pathways.js";
 import {EDU_DECKS} from "./edu-decks.js";
 import {renderOverview,renderGuided,renderChart,mountChart,nodeStatus,TYPE_LABEL} from "./flowchart.js";
+import {DECISIONS,GATED,CHECK_LABELS,DYSTOCIA,LEFT_PANEL} from "./cockpit-config.js";
+import {buildChecklist,displayState} from "./task-engine.js";
+import * as D from "./decisions.js";
+import {createSessionClock,crossed} from "./clock.js";
+import {activeAlerts,snooze as snoozeAlert,card as alertCard,banners as alertBanners} from "./alerts.js";
+import {recordDose,canGive,GIVEN_AGO_MIN} from "./medications.js";
+import {appendEvent,timeline as sortedTimeline,exportText} from "./history.js";
+import {logManeuver,suggestNext,markDelivered,attempts} from "./dystocia.js";
+import {decisionModeHTML,urgentHTML,checklistHTML,dystociaLeftHTML,maneuverLogHTML,alertCardHTML} from "./cockpit.js";
+import {SCENARIOS} from "./scenarios.js";
 
 const $ = (s,root=document)=>root.querySelector(s);
 const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
@@ -176,41 +186,127 @@ function newSession(emergencyId,mode){
 }
 
 function startSession(id,mode){
-  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render(); toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
+  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render();
 }
 
-// Active session = clinical cockpit. Global rule (see DESIGN-RULES.md):
-// nonclinical chrome is minimized, clinical text is never shrunk to fit.
+// ---------- Active session: two-state cockpit (see DESIGN-RULES.md) ----------
+// State A: full-screen Decision Mode when a clinically reviewed question is due.
+// State B: Split Action Dashboard — most urgent action left (55%), checklist right (45%).
+const sectionOpen={}; // per session: {completed,next} collapse state (UI only)
+function openState(){const k=session.id;sectionOpen[k]=sectionOpen[k]||{completed:false,next:false};return sectionOpen[k];}
+function storedStatus(id){return session.tasks[id]?.status;}
+function checkLabel(t){return CHECK_LABELS[t.id]||taskLabel(t);}
+function cockpitCtx(){
+  const nowMs=currentElapsed(),nowMin=nowMs/60000;
+  return {esc,fmt,nowMs,emergencyId:session.emergencyId,label:t=>taskLabel(t).replace(/\.$/,""),check:checkLabel,sub:t=>TASK_SUBTITLES[t.id],stored:storedStatus,
+    overdue:id=>!!overdueTimerFor(id),
+    statusHTML:t=>taskStatusHTML(t,taskState(t.id)),
+    rowState:(t,kind)=>{
+      const od=overdueTimerFor(t.id);
+      if(od&&kind!=="completed")return `<span class="due-pill">Due now</span>`;
+      if(kind==="completed")return `<span class="ck-time">${fmt(taskState(t.id).completedAt||0)}</span>`;
+      if(kind==="ongoing"){const nx=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);return nx?`<span class="ck-time">in <span class="live-countdown" data-due-at="${nx.dueAt}">${formatCountdown(nx)}</span></span>`:"";}
+      return "";
+    }};
+}
+function checklistModel(){
+  const e=EMERGENCIES[session.emergencyId];
+  D.ensureDecisionState(session);
+  const overdue=new Set(getDueTimers().filter(t=>t.taskId).map(t=>t.taskId));
+  return buildChecklist({tasks:e.tasks,states:session.tasks,overdue,activated:new Set(session.branch.activated),gated:new Set(GATED[e.id]||[]),pinned:session.branch.pinned});
+}
+const TOOL_TABS=[["actions","Actions","list"],["meds","Medications","pill","Meds"],["flow","Flowchart","tree"],["timeline","Timeline","clock"],["team","Team","team"]];
+const TOOL_ICONS={list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',pill:'<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>',tree:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',team:'<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15.5 14.3c2.5-.2 4.4 1.4 5 4.7"/>'};
+
 function renderActiveSession(){
   const e=EMERGENCIES[session.emergencyId];
   const sim=session.mode==="simulation";
-  const timerCount=session.timers.filter(t=>!t.cancelled&&!t.ack).length;
+  const ctx=cockpitCtx();
+  const take=D.takeover(session),waitingList=D.waiting(session);
+  const c=checklistModel();
+  const pendingCount=c.now.length+(c.mostUrgent?1:0);
+  if(take){
+    const d=(DECISIONS[e.id]||[]).find(x=>x.id===take.id);
+    if(d){
+      if(!$("#infoSheet").hidden&&$("#infoSheet").classList.contains("open"))closeSheet(); // the question takes the whole screen
+      main.innerHTML=decisionModeHTML({e,d,ctx,pendingCount,waitingCount:waitingList.length});
+      document.body.classList.add("decision-open");
+      requestAnimationFrame(()=>$("#decisionQ")?.focus({preventScroll:true}));
+      return;
+    }
+  }
+  document.body.classList.remove("decision-open");
+  const alerts=activeAlerts(session.timers,sessionMinute());
+  const p1=alertCard(alerts);
+  const dyst=LEFT_PANEL[e.id]==="clock";
+  let left,right;
+  if(dyst){
+    left=dystociaLeftHTML({ctx,nextId:suggestNext(session,DYSTOCIA),delivered:session.deliveredAt??null});
+    const setup=DYSTOCIA.setup.map(id=>{const t=e.tasks.find(x=>x.id===id);const s=displayState(storedStatus(id));return {task:t,kind:s==="completed"?"completed":s==="ongoing"?"ongoing":"now"};});
+    right=maneuverLogHTML({config:DYSTOCIA,ctx,attempts:id=>attempts(session,id),setup});
+  }else{
+    const pinned=c.mostUrgent&&c.mostUrgent.id===session.branch.pinned;
+    const lastNo=pinned?[...session.decisions.answers].reverse().find(a=>a.value==="no"):null;
+    const q=lastNo?(DECISIONS[e.id]||[]).find(d=>d.id===lastNo.id):null;
+    left=urgentHTML({t:c.mostUrgent,ctx,pinnedNote:q?`${q.q.replace(/\?$/,"")}: NO`:"",icon:emergencyIcon(e.id,72)});
+    right=checklistHTML({c,ctx,open:openState()});
+  }
+  const tool=sidePanel&&sidePanel!=="actions";
   main.innerHTML=`
     <section class="cockpit-head ${session.mode} ${e.accent}" aria-label="Session status">
       <div class="cockpit-row">
-        <div class="cockpit-id"><span class="mode-tag">${sim?"SIMULATION":"CLINICAL"}</span><strong>${esc(e.short)}</strong></div>
-        <div class="cockpit-clock" aria-live="off"><strong id="elapsedClock">${fmt(currentElapsed())}</strong><small>elapsed${sim&&!session.running?" · paused":""}</small></div>
-        <button class="cockpit-icon ${session.sound?"on":""}" data-action="toggle-sound" aria-label="${session.sound?"Sound on — tap to mute":"Sound off — tap to unmute"}">${session.sound?"🔊":"🔇"}</button>
-        <button class="cockpit-end" data-action="end-session">End</button>
+        <button class="ch-back" data-action="session-menu" aria-label="Session menu: sound, end session"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <h1 class="ch-title">${emergencyIcon(e.id,40)}<span class="ch-txt">${esc(e.id==="pph"?"PPH":e.short)}<span class="ch-mode"> · ${dyst?"Maneuvers":"Action Dashboard"}</span></span></h1>
+        <strong id="elapsedClock" class="ch-clock" aria-label="Elapsed time">${fmt(currentElapsed())}</strong>
+        <span class="ch-badge ${sim?(session.running?"sim":"sim paused"):"live"}">${sim?(session.running?"SIMULATION":"PAUSED"):"LIVE"}</span>
+        <button class="ch-menu" data-action="session-menu" aria-label="Session menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
       </div>
-      <div class="cockpit-status-row"><div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>${sim?`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time" aria-label="Simulation time controls">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`:""}</div>
+      ${statusStripHTML2(waitingList,alerts,sim)}
     </section>
-    ${renderAlertStrip()}
-    <nav class="cockpit-tabs" aria-label="Session tools">
-      ${[["flow","Flowchart"],["meds","Meds"],["timers","Timers"],["timeline","Timeline"]].map(([k,l])=>`<button class="${sidePanel===k?"active":""}" data-side="${k}" aria-pressed="${sidePanel===k}">${l}${k==="timers"&&timerCount?` <span>${timerCount}</span>`:""}</button>`).join("")}
-    </nav>
-    <div class="cockpit-body${sidePanel&&WIDE.matches?" flow-open":""}">
-      <section class="task-workspace">
-        ${renderDueGroup(e)}
-        ${renderTaskGroups(e)}
-        <section class="completed-panel">
-          <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} ›</span></button>
-          <div id="completedList" hidden>${renderCompleted(e)}</div>
-        </section>
-      </section>
-      <aside class="cockpit-side acc-${e.accent}" aria-label="Session tools panel" data-pathway="${e.id}">${sidePanel&&WIDE.matches?sidePanelHTML(sidePanel):""}</aside>
-    </div>`;
+    ${renderBanners(alerts)}
+    ${p1?alertCardHTML(p1,ctx):""}
+    <div class="dash${dyst?" dystocia":""}">
+      <div class="dash-left">${left}</div>
+      <aside class="dash-right" aria-label="${tool?SIDE_TITLES[sidePanel]:"Checklist"}" data-pathway="${e.id}">
+        ${tool&&WIDE.matches?`<div class="tool-panel acc-${e.accent}">${sidePanelHTML(sidePanel)}</div>`:right}
+      </aside>
+    </div>
+    <nav class="tool-bar" aria-label="Session tools">
+      ${TOOL_TABS.map(([k,l,ic,short])=>{const on=(k==="actions"&&!tool)||sidePanel===k;return `<button class="${on?"active":""}" data-side="${k}" aria-pressed="${on}" aria-label="${l}"><svg viewBox="0 0 24 24" aria-hidden="true">${TOOL_ICONS[ic]}</svg>${short?`<span class="tl-long">${l}</span><span class="tl-short" aria-hidden="true">${short}</span>`:`<span>${l}</span>`}</button>`;}).join("")}
+    </nav>`;
   requestAnimationFrame(updateClockDom);
+}
+
+function statusStripHTML2(waitingList,alerts,sim){
+  const parts=[];
+  const wq=waitingList.filter(x=>x.deferred);
+  if(wq.length){const d=(DECISIONS[session.emergencyId]||[]).find(x=>x.id===wq[0].id);parts.push(`<button class="ss-decision" data-action="open-decision" data-decision="${wq[0].id}">? ${esc(d?.q||"Decision")}${wq.length>1?` +${wq.length-1}`:""}</button>`);}
+  const od=getDueTimers().length;
+  if(od)parts.push(`<b class="overdue-count">${od} overdue</b>`);
+  const next=getFutureEvents()[0];
+  if(next)parts.push(`<span class="next-up">Next: ${esc(next.label)} in <span class="live-countdown" data-due-at="${next.at}">${fmt((next.at-sessionMinute())*60000)}</span></span>`);
+  if(sim)parts.push(`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`);
+  return parts.length?`<div class="cockpit-status-row">${parts.join("")}</div>`:"";
+}
+
+// P2 banners (milestones, minute marks, P1 snoozed twice): visible without a tap, never a takeover.
+function renderBanners(alerts){
+  const list=alertBanners(alerts);
+  if(!list.length)return "";
+  const first=list[0].timer;
+  return `<section class="alert-strip" role="status">
+    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${first.message&&first.kind==="milestone"?esc(first.message):overdueSpan(first)}</span></button>
+    ${list.length>1?`<button class="alert-more" data-side="timeline">+${list.length-1}</button>`:`<button class="alert-more" data-action="ack-timer" data-timer-id="${first.id}" aria-label="Acknowledge">✓</button>`}
+  </section>`;
+}
+
+function showSessionMenu(){
+  const sim=session.mode==="simulation";
+  openSheet({eyebrow:"SESSION",title:EMERGENCIES[session.emergencyId].name,html:`<div class="session-menu">
+    <button class="button secondary full" data-action="toggle-sound">${session.sound?"🔊 Sound on — mute":"🔇 Sound off — unmute"}</button>
+    <button class="button secondary full" data-action="toggle-text">Larger text: ${settings.largeText?"on":"off"}</button>
+    ${sim?`<button class="button secondary full" data-action="sim-time">Simulation clock</button>`:`<button class="button secondary full" data-action="live-advance">Advance time…</button>`}
+    <button class="button danger full" data-action="end-session">End session</button></div>`});
 }
 
 // Simulation mirrors the clinical cockpit exactly; time controls live in a
@@ -228,19 +324,6 @@ function showSimTime(){
     <p class="microcopy">Advancing time fires any timers and team milestones it passes, exactly as they would in real time.</p>`});
 }
 
-// Overdue items are never hidden behind a tap. Task-linked reminders show on
-// their own card (DUE NOW group); unlinked reminders (milestones, post-dose
-// reassessment) show here, most overdue first.
-function renderAlertStrip(){
-  const due=getDueTimers().filter(t=>!t.taskId).sort((a,b)=>a.dueAt-b.dueAt);
-  if(!due.length)return "";
-  const first=due[0];
-  return `<section class="alert-strip" role="alert">
-    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${overdueSpan(first)}</span></button>
-    ${due.length>1?`<button class="alert-more" data-action="show-timers">+${due.length-1}</button>`:""}
-  </section>`;
-}
-
 function statusLineHTML(){
   const due=getDueTimers().length;
   const next=getFutureEvents()[0];
@@ -250,30 +333,6 @@ function statusLineHTML(){
 
 function taskState(id){return session.tasks[id]||{status:"todo"};}
 function overdueTimerFor(taskId){return getDueTimers().find(x=>x.taskId===taskId);}
-function renderDueGroup(e){
-  const items=e.tasks.filter(t=>taskState(t.id).status!=="done"&&overdueTimerFor(t.id));
-  if(!items.length)return "";
-  return `<div class="task-group due-group">${items.map(renderTaskCard).join("")}</div>`;
-}
-// Full cards: overdue tasks (DUE NOW) and the first open pathway group.
-// Everything below is a one-line row; tapping a row expands it (one at a time).
-function renderTaskGroups(e){
-  const groups=[...new Set(e.tasks.map(t=>t.group))];
-  let primaryShown=false;
-  return groups.map(group=>{
-    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
-    if(!items.length)return "";
-    const primary=!primaryShown;primaryShown=true;
-    return `<div class="task-group${primary?" primary-group":" compact-group"}">${primary?"":`<h2>${esc(group)}</h2>`}${items.map(t=>primary?renderTaskCard(t):expandedTask===t.id?renderTaskCard(t,true):renderTaskRow(t)).join("")}</div>`;
-  }).join("");
-}
-
-function renderTaskRow(t){
-  const st=taskState(t.id);
-  const sub=TASK_SUBTITLES[t.id];
-  return `<button class="task-row ${t.priority} ${st.status}" data-action="expand-task" data-task-id="${t.id}" aria-expanded="false"><span class="row-icon" aria-hidden="true">${taskIcon(t)}</span><span class="row-copy">${taskStatusHTML(t,st)}<strong>${esc(taskLabel(t))}</strong>${sub?`<span class="row-sub">${esc(sub)}</span>`:""}</span><span class="row-chev" aria-hidden="true">›</span></button>`;
-}
-
 function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
 function taskStatusHTML(t,st){
   const overdue=overdueTimerFor(t.id);
@@ -284,29 +343,6 @@ function taskStatusHTML(t,st){
   if(st.status==="ongoing")parts.push("Ongoing");
   if(next)parts.push(`Next in <span class="live-countdown" data-due-at="${next.dueAt}">${formatCountdown(next)}</span>`);
   return parts.length?`<span class="task-status">${parts.join(" · ")}</span>`:"";
-}
-
-function renderTaskCard(t,expandedRow=false){
-  const st=taskState(t.id);
-  const overdue=!!overdueTimerFor(t.id);
-  const sub=TASK_SUBTITLES[t.id];
-  // One primary action per card, right-aligned. "Mark started" is a quiet
-  // secondary link so the team can still see who is working on what.
-  const primaryAction=t.type==="ongoing"&&st.status==="todo"?"ongoing":"done";
-  const primaryLabel=primaryAction==="ongoing"?"Ongoing":t.type==="repeat"?"Assessed":t.type==="med"?"Record dose":"Done";
-  const canStart=st.status==="todo"&&t.type!=="ongoing";
-  const tag=overdue?"DUE NOW":expandedRow?"":esc(t.group);
-  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}${expandedRow?" expanded-row":""}" id="card-${t.id}">
-    <div class="card-top">
-      ${tag?`<span class="card-tag">${tag}</span>`:""}
-      <div class="card-tools"><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>${expandedRow?`<button class="collapse-btn" data-action="collapse-task" aria-label="Collapse">‹</button>`:""}</div>
-    </div>
-    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3>${sub?`<p class="card-sub">${esc(sub)}</p>`:""}</div>
-    <div class="task-actions">
-      ${canStart?`<button class="link-action" data-task-action="start" data-task-id="${t.id}">Mark started</button>`:"<span></span>"}
-      <button class="button primary card-primary" data-task-action="${primaryAction}" data-task-id="${t.id}"><span aria-hidden="true">✓</span> ${primaryLabel}</button>
-    </div>
-  </article>`;
 }
 
 // Second line under a task title: the specifics a clinician scans for.
@@ -401,24 +437,47 @@ function renderCompleted(e){
 function handleTask(taskId,action){
   const e=EMERGENCIES[session.emergencyId],t=e.tasks.find(x=>x.id===taskId); if(!t)return;
   const at=currentElapsed();
-  if(action==="start"){session.tasks[taskId]={status:"progress",startedAt:at};logEvent(`Started: ${t.title}`,"task");}
-  if(action==="ongoing"){session.tasks[taskId]={status:"ongoing",startedAt:at};logEvent(`Ongoing: ${t.title}`,"task");}
   if(action==="done"&&t.type==="med"){openMedicationChooser(t);return;}
+  const prev=taskState(taskId);
+  if(action==="start"||action==="ongoing"){session.tasks[taskId]={...prev,status:"ongoing",startedAt:at};logEvent(`Ongoing: ${t.title}`,"task");}
   if(action==="done"){
-    session.tasks[taskId]={...taskState(taskId),status:t.type==="ongoing"?"ongoing":"done",completedAt:at};
+    session.tasks[taskId]={...prev,status:"done",completedAt:at};
     logEvent(`${t.type==="repeat"?"Assessed":"Completed"}: ${t.title}`,"task");
     cancelTaskTimers(taskId);
     if(t.type==="repeat"&&t.repeatMin) addTimer({taskId,label:t.title,dueAt:sessionMinute()+t.repeatMin,kind:"repeat"});
+    if(session.branch?.pinned===taskId)session.branch.pinned=null;
   }
-  if(action==="reopen"){session.tasks[taskId]={status:"todo"};cancelTaskTimers(taskId);logEvent(`Reopened: ${t.title}`,"task");}
-  if(action==="done"||action==="reopen")expandedTask=null;
-  const type={start:"TASK_STARTED",ongoing:"TASK_MARKED_ONGOING",done:t.type==="repeat"?"ASSESSMENT_RECORDED":"TASK_COMPLETED",reopen:"TASK_REOPENED"}[action]||"TASK_UPDATED";
-  saveSession({type,taskId,status:session.tasks[taskId]?.status||null});render();
+  if(action==="reopen"||action==="pending"){session.tasks[taskId]={status:"todo"};cancelTaskTimers(taskId);logEvent(`Undone: ${t.title}`,"task");}
+  if(action==="done"||action==="ongoing"||action==="start")askDecisions(D.onTaskEvent(session,DECISIONS[e.id]||[],taskId,at));
+  const type={start:"TASK_STARTED",ongoing:"TASK_MARKED_ONGOING",done:t.type==="repeat"?"ASSESSMENT_RECORDED":"TASK_COMPLETED",reopen:"TASK_REOPENED",pending:"TASK_REOPENED"}[action]||"TASK_UPDATED";
+  saveSession({type,taskId,status:session.tasks[taskId]?.status||null});closeSheet();render();
 }
+
+// ---------- Decisions: triggers only ask; an answer is recorded only from a tap ----------
+function decisionDef(id){return (DECISIONS[session.emergencyId]||[]).find(d=>d.id===id);}
+function askDecisions(ids){
+  if(!ids?.length)return;
+  ids.forEach(id=>{const q=session.decisions.queue.find(x=>x.id===id);logEvent(`Question due: ${decisionDef(id)?.q||id}`,"decision",q?.dueAt??currentElapsed());});
+  playAlert();
+}
+function answerDecision(id,value){
+  const d=decisionDef(id);if(!d)return;
+  const fx=D.answer(session,DECISIONS[session.emergencyId],id,value,currentElapsed());
+  fx.reopen.forEach(tid=>{session.tasks[tid]={status:"todo"};cancelTaskTimers(tid);});
+  logEvent(`${d.q} → ${fx.label}`,"decision");
+  saveSession({type:"DECISION_ANSWERED",status:"completed",payload:{decisionId:id,value,branch:fx.branch}});
+  render();if(fx.note)toast(fx.note,value==="no"?"alert":"ok");
+}
+function deferDecision(id){
+  const d=decisionDef(id);D.defer(session,id);
+  logEvent(`Back to actions — question still open: ${d?.q||id}`,"decision");
+  saveSession({type:"DECISION_DEFERRED",status:"pending",payload:{decisionId:id}});render();
+}
+function reopenDecision(id){D.reopen(session,id);render();}
 
 function cancelTaskTimers(taskId){session.timers.forEach(t=>{if(t.taskId===taskId)t.cancelled=true;});}
 function addTimer(timer){session.timers.push({id:uid(),createdAt:sessionMinute(),createdAtWall:new Date().toISOString(),dueAtElapsedMs:timer.dueAt*60000,ack:false,cancelled:false,...timer});}
-function logEvent(text,type="note"){session.events.unshift({id:uid(),at:currentElapsed(),type,text});}
+function logEvent(text,type="note",at=currentElapsed()){appendEvent(session,{text,type,at});}
 function formatEventTime(ms){return fmt(ms,true);}
 function formatCountdown(t){return fmt(Math.max(0,(t.dueAt-sessionMinute())*60000));}
 // Every time shown in a session is on the elapsed-time clock. Labels say which
@@ -430,8 +489,10 @@ function getFutureEvents(){
   if(!session)return[];
   const e=EMERGENCIES[session.emergencyId];
   const timerEvents=session.timers.filter(t=>!t.cancelled&&!t.ack&&t.dueAt>sessionMinute()).map(t=>({at:t.dueAt,label:t.label}));
-  const milestones=e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
-  return [...timerEvents,...milestones].sort((a,b)=>a.at-b.at);
+  const milestones=session.deliveredAt!=null?[]:e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
+  const asked=new Set([...(session.decisions?.answers||[]).map(a=>a.id),...(session.decisions?.queue||[]).map(q=>q.id)]);
+  const questions=(DECISIONS[e.id]||[]).filter(d=>d.atMin!=null&&d.atMin>sessionMinute()&&!asked.has(d.id)).map(d=>({at:d.atMin,label:d.q}));
+  return [...timerEvents,...milestones,...questions].sort((a,b)=>a.at-b.at);
 }
 function nextDueLabel(){return statusLineHTML();}
 
@@ -454,32 +515,45 @@ function freezeClock(){
 function resumeClock(){if(session&&!session.running){session.running=true;session.lastTickAt=Date.now();saveSession({type:"SESSION_RESUMED",status:"active"});}}
 function advanceSimulation(min){
   if(session.mode!=="simulation")return;
-  if(session.running){session.elapsedBase=currentElapsed();session.lastTickAt=Date.now();}
-  session.elapsedBase+=min*60000;session.simulationTimeMs=session.elapsedBase;logEvent(`Simulation time advanced +${Number(min).toFixed(min%1?1:0)} min`,"simulation");saveSession({type:"SIMULATION_TIME_ADVANCED",status:"active",payload:{minutes:min,simulationTimeMs:session.simulationTimeMs}});checkMilestones();render();
+  const clock=createSessionClock(session),from=clock.now();
+  clock.advance(min*60000);session.simulationTimeMs=session.elapsedBase;
+  const to=clock.now(),e=EMERGENCIES[session.emergencyId];
+  const items=[...session.timers.filter(t=>!t.cancelled&&!t.ack).map(t=>({atMs:t.dueAt*60000,label:t.label,t})),
+    ...e.milestones.filter(m=>!session.firedMilestones.includes(m.min)).map(m=>({atMs:m.min*60000,label:m.label})),
+    ...(DECISIONS[e.id]||[]).filter(d=>d.atMin!=null).map(d=>({atMs:d.atMin*60000,label:`Question: ${d.q}`}))];
+  const passed=crossed(items,from,to);
+  if(passed.length>1)passed.forEach(x=>{if(x.t)x.t.summarized=true;});
+  logEvent(`Simulation time advanced +${Number(min).toFixed(min%1?1:0)} min`,"simulation");
+  saveSession({type:"SIMULATION_TIME_ADVANCED",status:"active",payload:{minutes:min,simulationTimeMs:session.simulationTimeMs}});
+  checkMilestones(passed.length>1);checkDueTransitions(true);render();
+  if(passed.length>1)openSheet({eyebrow:"WHILE TIME ADVANCED",title:`${passed.length} events passed`,html:`<div class="timeline-list">${passed.map(x=>`<article><time>${fmt(x.atMs)}</time><div><strong>${esc(x.label)}</strong></div></article>`).join("")}</div><p class="microcopy">Shown together instead of one alert each. Open items stay in the banner and checklist.</p><button class="button primary full" data-action="close-sheet">Back to actions</button>`});
 }
 function jumpNext(){
   const next=getFutureEvents()[0];
   if(!next){toast("No future timer or milestone");return;}
-  const delta=Math.max(0,next.at-sessionMinute());advanceSimulation(delta);
+  advanceSimulation(Math.max(0,next.at-sessionMinute()));
 }
-function checkMilestones(){
+function checkMilestones(quiet=false){
   if(!session)return; const e=EMERGENCIES[session.emergencyId],now=sessionMinute();
   let latest=null;
-  e.milestones.forEach(m=>{
+  if(session.deliveredAt==null)e.milestones.forEach(m=>{
     if(now>=m.min&&!session.firedMilestones.includes(m.min)){
-      session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message});logEvent(`${m.label}: ${m.message}`,"milestone");latest=m;
+      session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message,summarized:quiet});logEvent(`${m.label}: ${m.message}`,"milestone",m.min*60000);latest=m;
     }
   });
-  // The alert strip already shows the milestone; the toast only names it.
-  if(latest){playAlert();toast(`${latest.label} due`,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
+  const asked=D.onTick(session,DECISIONS[e.id]||[],currentElapsed());
+  if(asked.length)askDecisions(asked);
+  if(latest&&!quiet)playAlert(); // the banner shows it; no second copy as a toast
+  if(latest||asked.length){lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest?.min??null}});render();}
 }
 let lastDueCount=0;
-function checkDueTransitions(){
+function checkDueTransitions(quiet=false){
   const due=getDueTimers();let changed=false;
   due.forEach(t=>{
     if(t.kind==="repeat"&&t.taskId&&!t.reactivated){t.reactivated=true;session.tasks[t.taskId]={status:"todo",dueAt:currentElapsed()};logEvent(`Reassessment due: ${t.label}`,"timer");changed=true;}
+    if(t.kind==="medication"&&!t.asked){t.asked=true;const ids=D.onTimerDue(session,DECISIONS[session.emergencyId]||[],t.medId,currentElapsed());if(ids.length){askDecisions(ids);t.ack=true;}changed=true;}
   });
-  if(due.length>lastDueCount){playAlert();changed=true;}
+  if(due.length>lastDueCount){if(!quiet)playAlert();changed=true;}
   if(changed){saveSession({type:"TIMER_DUE",status:"pending",payload:{timerIds:due.map(t=>t.id)}});render();}
   lastDueCount=due.length;
 }
@@ -622,36 +696,52 @@ function openTaskInfo(emergencyId,taskId){
   const e=EMERGENCIES[emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
   openSheet({eyebrow:t.group,title:t.title,html:`<p class="lead">${esc(t.detail)}</p>${t.review?`<div class="warning-box"><strong>Requires local decision</strong><p>${esc(t.review)}</p></div>`:""}${t.meds?`<h3>Related medications</h3><div class="sheet-link-list">${t.meds.map(id=>{const m=getMedication(id);return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}</small></div><b>›</b></button>`;}).join("")}</div>`:""}<h3>Evidence basis</h3>${refTags(e.source)}`});
 }
+let givenAgo=0; // minutes before now the dose was actually given (chosen in the medication sheet)
 function openMedication(id,recordable=!!session){
-  const m=getMedication(id),r=getReference(m.source);if(!m)return;
+  const m=getMedication(id),r=getReference(m?.source);if(!m)return;
+  const live=recordable&&session?.status==="active";
+  const maxAgo=live?Math.floor(currentElapsed()/60000):0;
+  let rec="";
+  if(live){
+    const chk=canGive(session,m);
+    rec=chk.ok?`<div class="given-row" role="group" aria-label="When was it given?"><span>Given</span>${GIVEN_AGO_MIN.filter(n=>n<=Math.max(0,maxAgo)).map(n=>`<button class="chip${n===givenAgo?" on":""}" data-given-ago="${n}" data-med="${m.id}" aria-pressed="${n===givenAgo}">${n?`${n} min ago`:"Now"}</button>`).join("")}</div>
+      <button class="button primary full big-confirm" data-action="record-med" data-med-id="${m.id}">Confirm given ${givenAgo?`${givenAgo} min ago`:"now"}</button>
+      <p class="microcopy">Only after actual administration. The given time and the recording time are both kept; reminders run from the given time.</p>`
+      :`<div class="warning-box"><strong>Dose limit reached</strong><p>${esc(chk.reason)}</p></div>`;
+  }
   openSheet({eyebrow:m.context,title:m.name,html:`<div class="dose-callout ${m.accent}"><small>DOSE / SEQUENCE</small><strong>${esc(m.dose)}</strong></div>
-    <dl class="med-detail"><div><dt>Administration</dt><dd>${esc(m.administration)}</dd></div><div><dt>Repeat / reassessment</dt><dd>${esc(m.repeat)}</dd></div><div class="avoid"><dt>Avoid / use caution</dt><dd>${esc(m.avoid)}</dd></div><div><dt>Monitor</dt><dd>${esc(m.watch)}</dd></div></dl>
-    ${recordable&&session.status==="active"?`<button class="button primary full" data-action="record-med" data-med-id="${m.id}">Confirm medication given now</button><p class="microcopy">Only tap after actual administration. This records time and starts any applicable reassessment timer.</p>`:""}
+    ${rec}
+    <details class="med-more"${live?"":" open"}><summary>Administration, cautions, monitoring</summary><dl class="med-detail"><div><dt>Administration</dt><dd>${esc(m.administration)}</dd></div><div><dt>Repeat / reassessment</dt><dd>${esc(m.repeat)}</dd></div><div class="avoid"><dt>Avoid / use caution</dt><dd>${esc(m.avoid)}</dd></div><div><dt>Monitor</dt><dd>${esc(m.watch)}</dd></div></dl></details>
     <div class="source-note"><strong>${esc(r?.short||"")}</strong><span>${esc(r?.title||"")}</span></div>`});
 }
 function openMedicationChooser(task){
-  openSheet({eyebrow:"SELECT MEDICATION",title:"What was administered?",html:`<p class="lead">Open the medication card to verify dosing and precautions. Record only after actual administration.</p><div class="sheet-link-list">${task.meds.map(id=>{const m=getMedication(id);return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}</small></div><b>›</b></button>`;}).join("")}</div>`});
+  openSheet({eyebrow:"RECORD A DOSE",title:"Which medication?",html:`<div class="sheet-link-list">${task.meds.map(id=>{const m=getMedication(id),n=session?.doseCounts?.[id]||0;return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}${n?` · ${n} recorded`:""}</small></div><b>›</b></button>`;}).join("")}</div>`});
 }
 function recordMedication(id){
   const m=getMedication(id);if(!session||!m)return;
-  const prior=session.doseCounts[id]||0;
-  if(m.maxDoses&&prior>=m.maxDoses){toast(`${m.name}: pathway dose limit reached—escalate and verify orders`,"alert");return;}
-  session.doseCounts[id]=(session.doseCounts[id]||0)+1;
-  logEvent(`${m.name} administered · dose ${session.doseCounts[id]}`,"medication");
-  if(m.timer)addTimer({label:m.timerLabel||`Reassess after ${m.name}`,dueAt:sessionMinute()+m.timer,kind:"medication",medId:id});
-  const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
-  expandedTask=null;
-  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:session.doseCounts[id]}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${m.timer} min`:""}`);
+  const now=currentElapsed(),given=Math.max(0,now-givenAgo*60000);
+  let r;try{r=recordDose(session,m,{givenAtMs:given,recordedAtMs:now});}catch(err){toast(err.message,"alert");return;}
+  givenAgo=0;
+  logEvent(`${m.name} given · dose ${r.dose.n}${given<now?` · recorded at ${fmt(now)}`:""}`,"medication",given);
+  if(r.timer)addTimer(r.timer);
+  const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));
+  if(task){session.tasks[task.id]={status:"done",completedAt:now};if(session.branch?.pinned===task.id)session.branch.pinned=null;askDecisions(D.onTaskEvent(session,DECISIONS[e.id]||[],task.id,now));}
+  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:r.dose.n,givenAtMs:given,recordedAtMs:now}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${Math.max(0,Math.round(r.timer.dueAt-now/60000))} min`:""}`);
 }
 function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
 // ---------- Cockpit side panels: Flowchart · Meds · Timers · Timeline ----------
 // Wide screens: the right-hand column. Phones: the same content in a sheet. Never leaves the session.
-const SIDE_TITLES={flow:"Pathway",meds:"Medications",timers:"Timers and reminders",timeline:"Event timeline"};
+const SIDE_TITLES={flow:"Pathway",meds:"Medications",timeline:"Timeline",team:"Team",timers:"Timeline"};
 function sessionMeds(e){
   const ids=new Set();e.tasks.forEach(t=>(t.meds||[]).forEach(m=>ids.add(m)));
   Object.values(PATHWAYS[e.id]?.nodes||{}).forEach(n=>(n.medicationRefs||[]).forEach(m=>ids.add(m)));
   return [...ids].map(getMedication).filter(Boolean);
+}
+function timersHTML(){
+  const active=session.timers.filter(t=>!t.cancelled&&!t.ack).sort((a,b)=>a.dueAt-b.dueAt);
+  if(!active.length)return "";
+  return `<h3 class="side-h">Reminders</h3><div class="timer-list">${active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due?"due":""}"><div><strong>${esc(t.label)}</strong><small>${due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div><button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button></article>`;}).join("")}</div><p class="side-note">Acknowledging a reminder does not complete its task.</p>`;
 }
 function sidePanelHTML(k){
   const e=EMERGENCIES[session.emergencyId];
@@ -659,29 +749,42 @@ function sidePanelHTML(k){
   if(k==="flow")return head(`<button class="text-button" data-action="open-full-flow">Open full ›</button>`)+renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true});
   if(k==="meds"){
     const mine=sessionMeds(e),mineIds=new Set(mine.map(m=>m.id)),others=MEDICATIONS.filter(m=>!mineIds.has(m.id));
-    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
-    return head()+`<p class="side-note">Tap a drug for dosing, cautions and to record a dose.</p>
-      ${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
+    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts?.[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
+    return head()+`${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
       <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
   }
-  if(k==="timers"){
-    const active=session.timers.filter(t=>!t.cancelled).sort((a,b)=>(a.ack-b.ack)||(a.dueAt-b.dueAt));
-    return head()+`<p class="side-note">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · due at ${fmt(t.dueAt*60000)}`:due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`;}).join(""):`<p class="empty">No timers yet.</p>`}</div>`;
-  }
-  if(k==="timeline")return head(`<small class="side-sub">elapsed time</small>`)+`<div class="timeline-list">${session.events.map(ev=>`<article><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  if(k==="timeline"||k==="timers")return head(`<button class="text-button" data-action="export-debrief">Export</button>`)+timersHTML()+`<h3 class="side-h">Events · elapsed time</h3><div class="timeline-list">${sortedTimeline(session).map(ev=>`<article class="tl-${esc(ev.type)}"><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  if(k==="team")return head()+(session.mode==="simulation"?instructorHTML():teamHTML());
   return "";
+}
+function teamHTML(){
+  const c=checklistModel(),roles=EDUCATION.find(x=>x.id==="roles");
+  return `<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+    ${roles?`<h3 class="side-h">Roles</h3><div class="role-list">${roles.sections.map(r=>`<article><strong>${esc(r.h)}</strong><span>${esc(r.p||"")}</span></article>`).join("")}</div>`:""}`;
 }
 function toggleSide(k){
   if(!session||session.status!=="active")return;
+  if(k==="actions"){sidePanel=null;closeSheet();render();return;}
   if(WIDE.matches){sidePanel=sidePanel===k?null:k;render();return;}
   // Phone: open as a sheet; the tab shows as active while the sheet is open.
   sidePanel=k;render();
   openSheet({eyebrow:"SESSION · "+EMERGENCIES[session.emergencyId].short.toUpperCase(),title:SIDE_TITLES[k],wide:true,html:`<div class="sheet-side" data-pathway="${session.emergencyId}">${sidePanelHTML(k).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">')}</div>`});
 }
 function refreshSideSheet(){
-  // Keep an open phone sheet current when timers fire or a dose is recorded.
   const host=$("#sheetBody .sheet-side");if(!host||!sidePanel||WIDE.matches)return;
+  if(host.contains(document.activeElement)&&document.activeElement.matches("input,textarea,select"))return;
   host.innerHTML=sidePanelHTML(sidePanel).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">');
+}
+// Checklist row → status sheet. Medication tasks go through the dose confirmation.
+function openCheckSheet(taskId){
+  const e=EMERGENCIES[session.emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
+  const st=displayState(storedStatus(taskId)),at=taskState(taskId);
+  const b=(act,label,cls="secondary")=>`<button class="button ${cls} full" data-task-action="${act}" data-task-id="${t.id}">${label}</button>`;
+  let actions="";
+  if(st==="pending")actions=(t.type==="med"?b("done","Record dose…","primary"):b("done",t.type==="repeat"?"Assessed ✓":"Done ✓","primary"))+(t.type!=="med"?b("ongoing","Mark ongoing"):"");
+  if(st==="ongoing")actions=b("done",t.type==="repeat"?"Assessed ✓":"Completed ✓","primary")+b("pending","Back to pending");
+  if(st==="completed")actions=`<p class="lead">Completed at ${fmt(at.completedAt||0)} elapsed.</p>`+(t.type==="med"?b("done","Record another dose…"):"")+b("pending","Undo — back to pending");
+  openSheet({eyebrow:checkLabel(t).toUpperCase(),title:taskLabel(t),html:`<div class="check-actions">${actions}</div><details class="med-more"><summary>Details</summary><p>${esc(t.detail)}</p></details>`});
 }
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
@@ -696,6 +799,82 @@ function showDue(id){
 }
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
+
+// ---------- SIM Master console, attached to a simulation session (Team tab) ----------
+// Same device only: it drives the simulation running here. Trainee phones run their own sessions.
+const OBSERVATIONS=["Roles named","Closed-loop orders","Early escalation","Shared mental model","Communication gap","Delayed action"];
+const instrOpen={A:true,B:false,C:false,D:false,E:false};
+function presetsFor(id){return SCENARIOS.filter(x=>x.emergency===id);}
+function instructorHTML(){
+  const e=EMERGENCIES[session.emergencyId],pre=SCENARIOS.find(x=>x.id===session.preset),c=checklistModel();
+  const sec=(k,title,body)=>`<details class="instr" data-instr="${k}"${instrOpen[k]?" open":""}><summary><b>${k}</b> ${title}</summary><div class="instr-body">${body}</div></details>`;
+  const vit=session.patient||{};
+  const nowMin=sessionMinute();
+  const presetVitals=pre?Object.assign({},pre.start,...pre.events.filter(ev=>ev.at<=nowMin&&ev.vitals).map(ev=>ev.vitals)):{};
+  const shown={...presetVitals,...vit};
+  const fired=new Set(session.firedTriggers||[]);
+  const triggers=pre?[...pre.events,...(pre.conditional||[])]:[];
+  const missed=session.timers.filter(t=>t.kind==="milestone"&&!t.ack);
+  return `<div class="instr-wrap">
+    <label class="instr-preset">Scenario preset <select data-action="set-preset"><option value="">None</option>${presetsFor(e.id).map(x=>`<option value="${x.id}"${x.id===session.preset?" selected":""}>${esc(x.title)}</option>`).join("")}</select></label>
+    ${sec("A","Time",`<div class="sim-sheet-grid"><button class="button ${session.running?"secondary":"primary"}" data-sim="pause">${session.running?"Pause":"Resume"}</button><button class="button secondary" data-sim="1">+1 min</button><button class="button secondary" data-sim="5">+5 min</button><button class="button primary" data-sim="next">Next event</button></div>`)}
+    ${sec("B","Patient status",`<div class="vitals-grid">${["BP","HR","SpO2","QBL","Fundus","Other"].map(k=>`<label><span>${k==="SpO2"?"SpO₂":k}</span><input data-vital="${k}" value="${esc(shown[k]||"")}" autocomplete="off"></label>`).join("")}</div><button class="button secondary full" data-action="push-vitals">Announce status to the team</button><p class="side-note">Simulated values only. No patient information.</p>`)}
+    ${sec("C","Trigger events",triggers.length?`<div class="trigger-list">${triggers.map(ev=>`<article class="${fired.has(ev.id)?"fired":""}"><div><strong>${esc(ev.title)}</strong><small>${ev.at!=null?`scheduled ${fmt(ev.at*60000)}`:`if not done by ${fmt((ev.by||0)*60000)}`}</small><p>${esc(ev.say||"")}</p></div><button class="button ${fired.has(ev.id)?"ghost":"secondary"}" data-trigger="${ev.id}">${fired.has(ev.id)?"Fired ✓":"Fire"}</button></article>`).join("")}</div>`:`<p class="side-note">Choose a scenario preset for scripted events, or announce status changes in B.</p>`)}
+    ${sec("D","Team performance",`<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+      <div class="obs-grid">${OBSERVATIONS.map(o=>`<button class="chip" data-observe="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+      <div class="note-row"><input id="instrNote" placeholder="Observation (no patient identifiers)" autocomplete="off"><button class="button secondary" data-action="add-note">Add</button></div>
+      ${(session.notes||[]).length?`<div class="timeline-list">${[...session.notes].reverse().map(n=>`<article><time>${fmt(n.at)}</time><div><strong>${esc(n.text)}</strong></div></article>`).join("")}</div>`:""}`)}
+    ${sec("E","Debrief and export",`<p class="side-note">${(session.decisions?.answers||[]).length} decisions · ${(session.doses||[]).length} doses · ${missed.length} milestones not acknowledged</p>${pre?`<h3 class="side-h">Debrief objectives</h3><ul class="obj-list">${pre.objectives.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>`:""}<div class="sim-sheet-grid"><button class="button primary" data-action="export-debrief">Download summary</button><button class="button secondary" data-action="print-debrief">Print</button></div>`)}
+  </div>`;
+}
+function addNote(text){if(!text)return;session.notes=session.notes||[];session.notes.push({at:currentElapsed(),text});logEvent(`Instructor: ${text}`,"instructor");saveSession({type:"INSTRUCTOR_NOTE",payload:{text}});rerenderTeam();}
+function rerenderTeam(){render();}
+function fireTrigger(id){
+  const pre=SCENARIOS.find(x=>x.id===session.preset);if(!pre)return;
+  const ev=[...pre.events,...(pre.conditional||[])].find(x=>x.id===id);if(!ev)return;
+  session.firedTriggers=[...new Set([...(session.firedTriggers||[]),id])];
+  if(ev.vitals)session.patient={...(session.patient||{}),...ev.vitals};
+  addTimer({label:ev.title,dueAt:sessionMinute(),kind:"milestone",message:[ev.show,ev.vitals&&Object.entries(ev.vitals).map(([k,v])=>`${k} ${v}`).join(" · ")].filter(Boolean).join(" · ")||ev.say||""});
+  logEvent(`Instructor event: ${ev.title}`,"instructor");
+  saveSession({type:"SIM_TRIGGER",payload:{triggerId:id}});render();
+}
+function pushVitals(){
+  const vals={};$$("[data-vital]").forEach(i=>{if(i.value.trim())vals[i.dataset.vital]=i.value.trim();});
+  session.patient={...(session.patient||{}),...vals};
+  const msg=Object.entries(vals).map(([k,v])=>`${k==="SpO2"?"SpO₂":k} ${v}`).join(" · ");
+  if(!msg)return;
+  addTimer({label:"Patient status",dueAt:sessionMinute(),kind:"milestone",message:msg});
+  logEvent(`Patient status: ${msg}`,"instructor");saveSession({type:"SIM_TRIGGER",payload:{vitals:vals}});render();
+}
+function exportDebrief(print=false){
+  const e=EMERGENCIES[session.emergencyId];
+  const text=exportText(session,{title:`OB Emergency Assist · ${e.name}`,fmt:ms=>fmt(ms,true)});
+  if(print){const w=window.open("","_blank");if(w){w.document.write(`<pre style="font:15px/1.5 system-ui;white-space:pre-wrap">${esc(text)}</pre>`);w.document.close();w.print();}return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=`ob-emergency-${session.mode}-${e.id}.txt`;document.body.appendChild(a);a.click();a.remove();
+}
+function logManeuverAttempt(id){
+  const e=EMERGENCIES.shoulder,t=e.tasks.find(x=>x.id===id);if(!t)return;
+  const at=currentElapsed(),entry=logManeuver(session,id,at);
+  session.tasks[id]={status:"done",completedAt:at};
+  logEvent(`${CHECK_LABELS[id]||t.title}${entry.n>1?` (attempt ${entry.n})`:""}`,"maneuver");
+  saveSession({type:"MANEUVER_LOGGED",taskId:id,payload:{n:entry.n}});render();
+}
+function undoManeuver(){
+  const last=(session.maneuvers||[]).pop();if(!last){toast("Nothing to undo");return;}
+  if(!attempts(session,last.id).length)session.tasks[last.id]={status:"todo"};
+  logEvent(`Undone: ${CHECK_LABELS[last.id]||last.id} log entry`,"maneuver");saveSession({type:"MANEUVER_UNDONE",taskId:last.id});render();
+}
+function deliveredNow(){
+  const at=markDelivered(session,currentElapsed());
+  logEvent(`Delivered · head-to-body ${fmt(at)}`,"maneuver");
+  session.branch=session.branch||{activated:[],pinned:null};session.branch.activated=[...new Set([...(session.branch.activated||[]),"sd-after"])];
+  session.timers.forEach(t=>{if(t.kind==="milestone"&&t.dueAt*60000>at)t.cancelled=true;});
+  saveSession({type:"DELIVERED",payload:{atMs:at}});render();
+}
+function liveAdvanceWarning(){
+  openSheet({eyebrow:"LIVE SESSION",title:"Time can’t be changed",html:`<p class="lead">This clock is real time. Advancing or pausing it would make the record wrong.</p><p>To practice with time controls, run a separate simulation on Sim Master. This live session keeps running.</p><a class="button primary full" href="sim-master.html" target="_blank" rel="noopener">Open Sim Master in a new tab</a><button class="button secondary full" data-action="close-sheet">Back to actions</button>`});
+}
+
 function showAbout(){
   openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
@@ -706,7 +885,7 @@ function openSheet({eyebrow="",title,html,wide=false}){sheetGen++;
 }
 function closeSheet(){
   // Phone: a side-panel sheet closing also clears the active tool tab.
-  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".cockpit-tabs [data-side]").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false");});}
+  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".tool-bar [data-side]").forEach(b=>{const on=b.dataset.side==="actions";b.classList.toggle("active",on);b.setAttribute("aria-pressed",String(on));});}
   $("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");const gen=++sheetGen;setTimeout(()=>{if(gen!==sheetGen)return;$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
   // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
@@ -742,14 +921,20 @@ document.addEventListener("click",e=>{
     $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
   }
-  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden)showSimTime();}
+  if(b.dataset.answer)answerDecision(b.dataset.decision,b.dataset.answer);
+  if(b.dataset.check&&session?.status==="active")openCheckSheet(b.dataset.check);
+  if(b.dataset.maneuver)logManeuverAttempt(b.dataset.maneuver);
+  if(b.dataset.givenAgo!=null){givenAgo=Number(b.dataset.givenAgo);openMedication(b.dataset.med);}
+  if(b.dataset.trigger)fireTrigger(b.dataset.trigger);
+  if(b.dataset.observe)addNote(b.dataset.observe);
+  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden&&!D.takeover(session)&&$("#sheetTitle").textContent.startsWith("Elapsed"))showSimTime();}
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
   if(a==="back-home"){selectedEmergency=null;render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
-  if(a==="sim-time")showSimTime();
+  if(a==="sim-time"){closeSheet();setTimeout(showSimTime,200);}
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
   // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
   if(b.dataset.side)toggleSide(b.dataset.side);
@@ -757,8 +942,19 @@ document.addEventListener("click",e=>{
   if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
-  if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
-  if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();render();}
+  if(a==="toggle-section"){const o=openState();const k=b.dataset.section;o[k]=!(o[k]??(k==="now"||k==="ongoing"));render();}
+  if(a==="defer-decision")deferDecision(b.dataset.decision);
+  if(a==="open-decision")reopenDecision(b.dataset.decision);
+  if(a==="snooze-timer"){const t=session.timers.find(x=>x.id===b.dataset.timerId);if(t&&snoozeAlert(t,sessionMinute())){logEvent(`Snoozed 1 min: ${t.label}`,"timer");saveSession({type:"TIMER_SNOOZED",payload:{timerId:t.id}});render();}}
+  if(a==="session-menu")showSessionMenu();
+  if(a==="live-advance")liveAdvanceWarning();
+  if(a==="mark-delivered")confirmAction("Baby delivered?","Records the head-to-body interval now.",deliveredNow);
+  if(a==="undo-maneuver")undoManeuver();
+  if(a==="export-debrief")exportDebrief(false);
+  if(a==="print-debrief")exportDebrief(true);
+  if(a==="push-vitals")pushVitals();
+  if(a==="add-note"){const i=$("#instrNote");addNote(i?.value.trim());}
+  if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();closeSheet();render();}
   if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
   if(a==="open-due")showDue(b.dataset.timerId);
@@ -770,6 +966,19 @@ document.addEventListener("click",e=>{
 });
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
+document.addEventListener("change",e=>{if(e.target.dataset.action==="set-preset"&&session){session.preset=e.target.value||null;session.firedTriggers=[];logEvent(e.target.value?`Scenario preset: ${SCENARIOS.find(x=>x.id===e.target.value)?.title}`:"Scenario preset cleared","instructor");saveSession({type:"SIM_PRESET",payload:{preset:session.preset}});render();}});
+document.addEventListener("toggle",e=>{const d=e.target.closest?.("details[data-instr]");if(d)instrOpen[d.dataset.instr]=d.open;},true);
+// Cockpit keyboard: Y / N answer, Esc = Back to actions, D = done on the most-urgent card.
+document.addEventListener("keydown",e=>{
+  if(session?.status!=="active"||route!=="emergency"||e.target.matches?.("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;
+  const dm=$(".decision-mode");
+  if(dm){const k=e.key.toLowerCase();
+    if(k==="y")dm.querySelector('[data-answer="yes"]')?.click();
+    else if(k==="n")dm.querySelector('[data-answer="no"]')?.click();
+    else if(e.key==="Escape")dm.querySelector(".dm-back")?.click();
+    return;}
+  if(e.key.toLowerCase()==="d"&&$("#infoSheet").hidden){$(".du-done")?.click();}
+});
 $("#sheetBackdrop").addEventListener("click",closeSheet);
 // ---------- Header controls ----------
 let deferredInstall=null;

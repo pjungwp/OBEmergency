@@ -515,6 +515,177 @@ body.deck-open{overflow:hidden}
 .fc-strip .overdue-count{white-space:nowrap;flex:none}
 .fc-strip button{flex:none;white-space:nowrap;padding:0 12px}
 @media(max-width:420px){.fc-strip .mode-tag{font-size:11px;padding:3px 6px}.fc-strip strong{font-size:20px}.fc-strip .overdue-count{font-size:13px;padding:2px 6px}.fc-strip button{font-size:15px;padding:0 10px}}
+
+/* ===== Two-state cockpit (v2.1): Split Action Dashboard + Decision Mode ===== */
+body.in-cockpit{background:#eaf1f8}
+body.in-cockpit .app-shell{padding-bottom:calc(92px + var(--safe-bottom))}
+body.in-cockpit .toast-region{bottom:calc(96px + var(--safe-bottom))}
+.cockpit-head{border-top:0;background:rgba(246,249,252,.96);backdrop-filter:blur(8px);padding:8px 14px;box-shadow:0 1px 0 var(--line)}
+.cockpit-head.simulation{border-top:0;box-shadow:inset 0 3px 0 var(--teal),0 1px 0 var(--line)}
+.cockpit-row{display:flex;align-items:center;gap:10px;min-height:52px}
+.ch-back,.ch-menu{width:44px;height:44px;border:0;background:none;color:var(--navy);display:grid;place-items:center;border-radius:12px;flex:none}
+.ch-back svg,.ch-menu svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.ch-menu svg circle{fill:currentColor;stroke:none}
+.ch-title{flex:1;min-width:0;margin:0;display:flex;align-items:center;gap:10px;font-size:clamp(19px,2.6vw,28px);font-weight:850;color:var(--navy);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch-title .em-icon{flex:none}.ch-title .em-icon img{width:40px;height:40px;border-radius:50%}
+.ch-title .ch-txt{overflow:hidden;text-overflow:ellipsis}
+.ch-clock{flex:none;background:#0f2a4c;color:#fff;font-variant-numeric:tabular-nums;font-size:clamp(28px,3.6vw,40px);font-weight:850;line-height:1;padding:8px 16px;border-radius:14px;letter-spacing:.01em}
+.ch-badge{flex:none;font-weight:850;letter-spacing:.06em;font-size:clamp(13px,1.6vw,17px);padding:7px 14px;border-radius:999px;border:2px solid var(--teal);color:var(--teal);background:#e9f8f6}
+.ch-badge.live{border-color:var(--crimson);color:var(--crimson);background:#fff0f2}
+.ch-badge.paused{border-style:dashed}
+.cockpit-status-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:4px 0 2px;font-size:15px;color:#46566e}
+.ss-decision{border:2px solid var(--navy);background:#fff;color:var(--navy);font-weight:850;font-size:15px;border-radius:999px;padding:7px 14px;min-height:40px}
+.cockpit-status-row .overdue-count{color:#fff;background:#b4192f}
+.cockpit-status-row .sim-time-btn{margin-left:auto}
+
+.dash{display:grid;grid-template-columns:1fr;gap:12px;padding:12px 12px 0}
+@media (min-width:600px){
+  .dash{grid-template-columns:minmax(0,55fr) minmax(0,45fr);gap:16px;padding:16px 16px 0;min-height:calc(100dvh - 190px)}
+  .dash-left{position:sticky;top:96px;align-self:start}
+  .dash-left .dash-urgent{min-height:calc(100dvh - 200px)}
+}
+.dash-urgent{background:linear-gradient(180deg,#fff3f5,#fde7eb);border:3px solid #e27d8c;border-radius:24px;padding:18px 20px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;box-shadow:0 10px 30px rgba(188,46,71,.10)}
+.dash-urgent.high{background:linear-gradient(180deg,#fff,#f2f6fb);border-color:#b9c8dc;box-shadow:0 10px 30px rgba(11,33,73,.08)}
+.dash-urgent.is-overdue{border-color:#c72f48;box-shadow:0 0 0 4px rgba(199,47,72,.15)}
+.du-top{align-self:stretch;display:flex;justify-content:space-between;align-items:flex-start}
+.du-label{display:inline-block;background:#d63a52;color:#fff;font-weight:850;letter-spacing:.04em;font-size:clamp(14px,1.8vw,19px);padding:7px 14px;border-radius:12px}
+.dash-urgent.high .du-label{background:var(--navy)}
+.du-icon .em-icon img{width:clamp(64px,9vw,104px);height:auto}
+.dash-urgent h2{margin:0;font-size:clamp(30px,5vw,60px);line-height:1.05;font-weight:900;color:#0f2140;letter-spacing:-.02em;max-width:14ch;text-wrap:balance}
+.du-sub{margin:0;font-size:clamp(16px,1.8vw,20px);color:#46566e;max-width:30ch}
+.dash-urgent .task-status{font-size:16px;font-weight:800;color:#b4192f}
+.du-done{margin-top:auto;align-self:stretch;min-height:clamp(72px,10vh,96px);border:0;border-radius:18px;background:#b8283f;color:#fff;font-size:clamp(26px,3.6vw,42px);font-weight:900;letter-spacing:.02em;box-shadow:0 8px 20px rgba(184,40,63,.28)}
+.dash-urgent.high .du-done{background:#0f2a4c;box-shadow:0 8px 20px rgba(15,42,76,.25)}
+.du-done:active{transform:translateY(1px)}
+.du-second{border:2px solid #c8d3e2;background:#fff;color:var(--navy);font-weight:800;font-size:17px;border-radius:14px;min-height:48px;padding:8px 16px}
+.dash-urgent.empty{background:#fff;border-color:#b9c8dc}
+.dash-urgent.empty .du-label{background:var(--teal)}
+
+.dash-right{background:#fff;border:1px solid #d6e1ee;border-radius:24px;padding:14px;box-shadow:0 10px 30px rgba(11,33,73,.07);align-self:start}
+.ck-top{display:flex;justify-content:space-between;align-items:baseline;padding:2px 6px 10px;font-weight:900;color:#0f2140;font-size:clamp(20px,2.4vw,28px)}
+.ck-top b{color:#0f2140}
+.ck-sec{border:1px solid #d6e1ee;border-radius:16px;margin-bottom:10px;overflow:hidden;background:#fff}
+.ck-head{width:100%;display:flex;align-items:center;gap:12px;background:#e3edf8;border:0;padding:12px 14px;font-size:clamp(15px,1.7vw,19px);font-weight:850;letter-spacing:.03em;color:#0f2140;text-align:left;min-height:52px}
+.ck-head span{flex:1}
+.ck-head b{font-size:20px}.ck-head b.ok{color:#178a50}
+.chev{width:12px;height:12px;border-right:3px solid #0f2140;border-bottom:3px solid #0f2140;transform:rotate(-45deg);margin:0 4px 0 2px;flex:none}
+.chev.open{transform:rotate(45deg);margin-top:-4px}
+.ck-list{display:flex;flex-direction:column}
+.ck-row{display:flex;align-items:center;gap:14px;width:100%;border:0;border-top:1px solid #e6edf5;background:#fff;padding:10px 14px;min-height:56px;text-align:left;font-size:clamp(18px,2vw,22px);font-weight:750;color:#0f2140}
+.ck-row:first-child{border-top:0}
+.ck-name{flex:1;min-width:0}
+.ck-box{width:30px;height:30px;border:3px solid #24426b;border-radius:8px;flex:none;display:grid;place-items:center;font-size:18px;font-weight:900;color:#fff}
+.ck-box.ongoing{border-radius:50%;border-color:#c9dcf3;border-top-color:#1f6fd1;border-right-color:#1f6fd1}
+.ck-box.completed{background:#178a50;border-color:#178a50;border-radius:50%}
+.ck-box.overdue{border-color:#c72f48}
+.ck-row.completed .ck-name{color:#5d6b80}
+.due-pill{display:inline-flex;align-items:center;gap:6px;background:#fde0e5;color:#a3162d;font-size:16px;font-weight:850;padding:6px 12px;border-radius:999px;white-space:nowrap}
+.due-pill::before{content:"⏱"}
+.ck-time{font-size:15px;color:#5d6b80;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ck-empty{margin:0;padding:12px 14px;color:#5d6b80;font-size:16px}
+.undo-man{margin:4px 6px 0}
+
+.tool-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px 12px calc(10px + var(--safe-bottom));background:rgba(234,241,248,.96);backdrop-filter:blur(8px);border-top:1px solid #d6e1ee}
+.tool-bar button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;border:1px solid #d0dbe8;background:#fff;color:#0f2140;border-radius:16px;font-weight:800;font-size:clamp(13px,1.8vw,20px);padding:6px}
+.tool-bar button svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tool-bar button.active{background:#0f2a4c;color:#fff;border-color:#0f2a4c}
+@media (max-width:599px){.tool-bar button{flex-direction:column;gap:2px;font-size:12px;min-height:58px}.tool-bar button svg{width:24px;height:24px}}
+@media (max-width:380px){.tool-bar{gap:4px;padding-left:6px;padding-right:6px}.tool-bar button{font-size:11px}}
+
+.tool-panel{max-height:calc(100dvh - 220px);overflow:auto}
+.side-h{font-size:14px;letter-spacing:.08em;color:#4a5a72;margin:14px 2px 6px;text-transform:uppercase}
+
+.alert-card{margin:12px 12px 0;padding:14px 16px;border-radius:18px;background:#fff7e6;border:3px solid #e0a11b;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.alert-card>div:first-child{display:flex;flex-direction:column;gap:2px}
+.ac-label{font-weight:900;letter-spacing:.08em;font-size:14px;color:#8a5a00}
+.alert-card strong{font-size:clamp(19px,2.2vw,24px);color:#0f2140}
+.ac-time{font-weight:800;color:#a3162d;font-size:16px}
+.ac-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ac-actions .button{min-height:52px;font-size:17px}
+@media (min-width:600px){.alert-card,.alert-strip{margin-left:16px;margin-right:16px}}
+
+/* Shoulder dystocia: clock left */
+.clock-left{background:linear-gradient(180deg,#f6f2ff,#ece5ff);border-color:#a993e6}
+.clock-left .du-label{background:var(--violet)}
+.big-clock{font-size:clamp(72px,14vw,140px);font-weight:900;line-height:1;font-variant-numeric:tabular-nums;color:#24135e;letter-spacing:-.02em;margin:auto 0}
+.next-man{font-size:clamp(18px,2.2vw,22px)}
+.clock-left .du-done{background:#4b2fa3}
+.clock-left.delivered{background:linear-gradient(180deg,#f2fbf6,#e3f6ec);border-color:#7cc59b}
+.clock-left.delivered .du-label{background:#178a50}.clock-left.delivered .big-clock{color:#0d5a33}
+.clock-left.delivered .du-done{background:#178a50}
+
+/* State A: Decision Mode */
+body.decision-open .app-header,body.decision-open .bottom-nav{display:none}
+.decision-mode{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:#f4f8fc;padding:max(12px,env(safe-area-inset-top)) 16px calc(16px + var(--safe-bottom))}
+.decision-mode.crimson{background:linear-gradient(180deg,#fff,#fdeff2)}.decision-mode.amber{background:linear-gradient(180deg,#fff,#fff5e3)}.decision-mode.violet{background:linear-gradient(180deg,#fff,#f3efff)}
+.dm-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dm-tag{font-weight:900;letter-spacing:.08em;color:#0f2140;font-size:clamp(15px,2vw,22px)}
+.dm-clock{background:#0f2a4c;color:#fff;font-size:clamp(28px,4vw,44px);font-weight:900;padding:8px 16px;border-radius:14px;font-variant-numeric:tabular-nums}
+.decision-mode h1{flex:1;display:flex;align-items:center;justify-content:center;text-align:center;margin:0;font-size:clamp(40px,8vw,88px);line-height:1.04;font-weight:900;color:#0f2140;letter-spacing:-.02em;text-wrap:balance;outline:none}
+.dm-answers{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.dm-answers button{min-height:clamp(96px,20vh,180px);border:0;border-radius:24px;font-size:clamp(36px,6vw,64px);font-weight:900;letter-spacing:.04em;color:#fff}
+.dm-yes{background:#178a50;box-shadow:0 10px 24px rgba(23,138,80,.28)}
+.dm-no{background:#b8283f;box-shadow:0 10px 24px rgba(184,40,63,.28)}
+.dm-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px;font-size:clamp(16px,1.8vw,20px);color:#46566e;font-weight:700}
+.dm-back{min-height:56px;padding:10px 20px;border-radius:16px;border:2px solid #0f2a4c;background:#fff;color:#0f2a4c;font-size:clamp(18px,2vw,22px);font-weight:850}
+@media (max-height:520px){.decision-mode h1{font-size:clamp(32px,6vw,56px)}.dm-answers button{min-height:84px}}
+
+/* Medication sheet: given time */
+.given-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 10px}
+.given-row>span{font-weight:850;color:#0f2140;margin-right:4px}
+.chip{border:2px solid #c8d3e2;background:#fff;color:#0f2140;font-weight:800;font-size:16px;border-radius:999px;padding:8px 14px;min-height:44px}
+.chip.on{background:#0f2a4c;border-color:#0f2a4c;color:#fff}
+.big-confirm{min-height:60px;font-size:19px}
+.med-more{margin:12px 0}.med-more summary{font-weight:800;cursor:pointer;min-height:44px;display:flex;align-items:center}
+.check-actions{display:grid;gap:10px}.check-actions .button{min-height:58px;font-size:19px}
+.session-menu{display:grid;gap:10px}.session-menu .button{min-height:56px;font-size:18px}
+.button.danger{background:#b8283f;color:#fff;border-color:#b8283f}
+
+/* Team / instructor console */
+.team-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 10px}
+.team-stats div{background:#f2f6fb;border-radius:12px;padding:10px 6px;text-align:center}
+.team-stats b{display:block;font-size:26px;color:#0f2140}.team-stats span{font-size:13px;color:#5d6b80;font-weight:700}
+.role-list{display:grid;gap:8px}.role-list article{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.role-list strong{display:block;font-size:16px}.role-list span{font-size:15px;color:#46566e}
+.instr-preset{display:flex;flex-direction:column;gap:4px;font-weight:800;margin:0 0 10px}
+.instr-preset select,.vitals-grid input,.note-row input{min-height:44px;border:1px solid #c8d3e2;border-radius:10px;padding:6px 10px;font-size:16px;background:#fff}
+.instr{border:1px solid #d6e1ee;border-radius:14px;margin-bottom:8px;background:#fff;overflow:hidden}
+.instr summary{display:flex;align-items:center;gap:10px;min-height:50px;padding:0 14px;font-weight:850;font-size:17px;background:#eef3f9;cursor:pointer}
+.instr summary b{display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--teal);color:#fff;font-size:14px}
+.instr-body{padding:12px 14px}
+.vitals-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.vitals-grid label{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:800;color:#46566e}
+.trigger-list{display:grid;gap:8px}
+.trigger-list article{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;border:1px solid var(--line);border-radius:12px;padding:10px}
+.trigger-list article.fired{opacity:.6}
+.trigger-list strong{display:block}.trigger-list small{color:#5d6b80}.trigger-list p{margin:4px 0 0;font-size:15px}
+.obs-grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.note-row{display:flex;gap:8px;margin:8px 0}.note-row input{flex:1;min-width:0}
+.obj-list{margin:0 0 10px;padding-left:20px}.obj-list li{margin:4px 0}
+
+/* Larger text and very narrow phones */
+@media (max-width:420px){.ch-title{font-size:18px}.ch-title .em-icon img{width:32px;height:32px}.ch-clock{font-size:26px;padding:6px 10px}.ch-badge{font-size:12px;padding:5px 9px}.ch-back,.ch-menu{width:40px}}
+@media (max-width:359px){.ch-title .em-icon{display:none}}
+@media (max-width:520px){.ch-mode{display:none}.ch-badge.sim{font-size:0;padding:5px 9px}.ch-badge.sim::after{content:"SIM";font-size:12px}}
+body.in-cockpit .app-shell{width:100%;max-width:1600px;background:transparent;box-shadow:none}
+.du-icon .em-icon{width:auto;height:auto;border-radius:22px;overflow:hidden}
+.du-icon .em-icon img{width:clamp(60px,8vw,96px);height:clamp(60px,8vw,96px);border-radius:22px}
+.ch-title .em-icon{width:40px;height:40px;border-radius:50%;overflow:hidden}
+@media (max-width:420px){.ch-title .em-icon{width:32px;height:32px}}
+@media (min-width:600px){.dash-left .dash-urgent{min-height:min(calc(100dvh - 300px),640px)}}
+body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:auto}
+.cockpit-status-row .sim-time-btn{min-height:36px;padding:4px 12px;font-size:14px}
+@media (max-width:599px){
+  .alert-strip .alert-main span{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .alert-card{margin:10px 12px 0;padding:12px}
+  .dash-urgent{padding:14px 14px 16px}
+}
+.vitals-grid input{width:100%;min-width:0;box-sizing:border-box}
+.instr-preset select{width:100%}
+.tl-short{display:none}
+@media (max-width:420px){.tl-long{display:none}.tl-short{display:inline}}
+@media (max-width:359px){.ch-back{display:none}.ch-clock{font-size:24px}}
+.tool-bar button{min-width:0;overflow:hidden}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -587,7 +758,7 @@ body.deck-open{overflow:hidden}
     </div>
   </template>
   <script>
-const APP_VERSION = "0.15.1-prototype";
+const APP_VERSION = "0.16.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -1660,6 +1831,652 @@ function createWorkspaceSessionStore({key="ob-emergency-assist.session.v1",pollM
   };
 }
 
+// Two-state cockpit configuration — DRAFT clinical content, pending review
+// (see CLINICAL-REVIEW.md › "Two-state cockpit"). Nothing here changes a dose,
+// threshold or protocol: it decides WHEN a pathway question is asked, what the
+// checklist calls each task, and which task a branch brings forward.
+//
+// Decision fields
+//   id, node        pathway decision node (pathways.js) this question belongs to
+//   q               the question, ≤ 5 words
+//   on              task ids whose completion / "Assessed" / "Ongoing" asks the question
+//   onTimer         medication ids whose reassessment reminder asks the question
+//   atMin           elapsed minute at which the question is asked (asked once)
+//   requires        task ids that must be completed (or ongoing) before it can be asked
+//   repeat          ask again on the next trigger after an answer that is not terminal
+//   answers         [{value,label,branch,activate,reopen,pin,terminal,note}]
+// The app never answers a question by itself: triggers only ASK.
+
+const DECISIONS = {
+  pph:[
+    {id:"pph-controlled",node:"reassess",q:"Bleeding controlled?",on:["pph-assess"],requires:["pph-oxytocin"],repeat:true,
+      answers:[
+        {value:"yes",label:"YES",branch:"controlled",note:"Keep reassessing"},
+        {value:"no",label:"NO",branch:"escalate",activate:["pph-escalate","pph-txa"],pin:"pph-escalate",terminal:true,note:"Escalate now"}
+      ]}
+  ],
+  htn:[
+    {id:"htn-persistent",node:"confirm",q:"Severe BP persistent?",on:["htn-bp"],repeat:true,
+      answers:[
+        {value:"yes",label:"YES",branch:"g-treat",activate:["htn-treat","htn-mag"],pin:"htn-treat",terminal:true,note:"Treat now"},
+        {value:"no",label:"NO",branch:"notpersist",note:"Keep monitoring BP"}
+      ]},
+    {id:"htn-still-severe",node:"reassess",q:"Still severe after dose?",onTimer:["labetalol","hydralazine","nifedipine"],repeat:true,
+      answers:[
+        {value:"yes",label:"YES",branch:"nextdose",reopen:["htn-treat"],activate:["htn-escalate"],pin:"htn-treat",note:"Next dose in sequence"},
+        {value:"no",label:"NO",branch:"target",note:"Keep monitoring BP"}
+      ]}
+  ],
+  eclampsia:[
+    {id:"ec-recurrent",node:"recur",q:"Seizure recurred?",on:["ec-vitals"],requires:["ec-mag"],repeat:true,
+      answers:[
+        {value:"yes",label:"YES",branch:"recurrent",activate:["ec-recur"],reopen:["ec-recur"],pin:"ec-recur",note:"Treat recurrent seizure"},
+        {value:"no",label:"NO",note:"Continue magnesium"}
+      ]}
+  ],
+  arrest:[
+    {id:"arrest-rosc",node:"rosc",q:"ROSC at 4 minutes?",atMin:4,
+      answers:[
+        {value:"yes",label:"YES",branch:"post",terminal:true,note:"Post-arrest care"},
+        {value:"no",label:"NO",branch:"deliver",activate:["arrest-delivery"],pin:"arrest-delivery",terminal:true,note:"Deliver now"}
+      ]}
+  ],
+  trauma:[
+    {id:"tr-stable",node:"stable",q:"Mother and fetus stable?",on:["tr-fetal"],requires:["tr-primary"],
+      answers:[
+        {value:"yes",label:"YES",branch:"monitor",terminal:true,note:"Monitor ≥ 4 hours"},
+        {value:"no",label:"NO",branch:"deliver",activate:["tr-deliver"],pin:"tr-deliver",terminal:true,note:"Expedite delivery"}
+      ]}
+  ],
+  shoulder:[]
+};
+
+// Tasks kept out of NOW/DUE until a branch brings them forward (they stay visible in UP NEXT).
+const GATED = {
+  pph:["pph-escalate"],
+  htn:["htn-escalate"],
+  eclampsia:["ec-recur"],
+  arrest:[],
+  trauma:["tr-deliver"],
+  shoulder:["sd-lastresort","sd-after"]
+};
+
+// Checklist names, ≤ 3 words.
+const CHECK_LABELS = {
+  "pph-help":"Call team","pph-assess":"Bleeding · tone · vitals","pph-massage":"Fundal massage","pph-access":"IV · labs · blood","pph-oxytocin":"Uterotonics","pph-cause":"4 Ts","pph-txa":"TXA","pph-escalate":"Escalate",
+  "htn-help":"Call OB","htn-bp":"Repeat BP","htn-symptoms":"Severe symptoms","htn-labs":"Preeclampsia labs","htn-treat":"BP medication","htn-mag":"Magnesium","htn-monitor":"BP after dose","htn-escalate":"Escalate",
+  "ec-help":"Call for help","ec-safety":"Protect · airway","ec-mag":"Magnesium","ec-vitals":"BP · O₂ · neuro","ec-recur":"Recurrent seizure","ec-tox":"Mag toxicity watch","ec-neuro":"Neuro exam","ec-delivery":"Delivery plan",
+  "arrest-help":"Call arrest team","arrest-cpr":"CPR · rhythm","arrest-lud":"Uterine displacement","arrest-airway":"Early airway","arrest-iv":"IV above diaphragm","arrest-mag":"Stop Mg · calcium","arrest-monitors":"Remove fetal monitors","arrest-delivery":"Resuscitative delivery","arrest-cause":"Causes A–H","arrest-afe":"AFE · transfusion",
+  "tr-help":"Call OB · trauma","tr-primary":"Primary survey","tr-lud":"Uterine displacement","tr-iv":"IVs · labs · KB","tr-imaging":"Needed imaging","tr-fetal":"Fetal monitoring","tr-noexam":"No cervical exam","tr-abruption":"Abruption signs","tr-rh":"Rh status","tr-deliver":"Expedite delivery",
+  "sd-help":"Call for help","sd-avoid":"No fundal pressure","sd-mcroberts":"McRoberts","sd-suprapubic":"Suprapubic pressure","sd-posterior":"Posterior arm","sd-rotate":"Rubin II / Woods","sd-allfours":"All-fours","sd-episiotomy":"Episiotomy","sd-lastresort":"Last resort","sd-after":"After delivery"
+};
+
+// Shoulder dystocia: the left panel is the clock; the checklist is the maneuver log.
+const DYSTOCIA = {
+  sections:[
+    {title:"First line",ids:["sd-mcroberts","sd-suprapubic"]},
+    {title:"Additional",ids:["sd-posterior","sd-rotate","sd-allfours"]},
+    {title:"Adjunct",ids:["sd-episiotomy"]},
+    {title:"Advanced rescue",ids:["sd-lastresort"]}
+  ],
+  setup:["sd-help","sd-avoid"],
+  after:"sd-after"
+};
+
+// Display rule per emergency: "action" (most-urgent action left) or "clock" (clock left).
+const LEFT_PANEL = {pph:"action",htn:"action",eclampsia:"action",arrest:"action",trauma:"action",shoulder:"clock"};
+
+// Task engine: task states, checklist sections and the single most-urgent action.
+// No DOM. Run under node --test.
+//
+// Stored states (kept for old sessions): todo | progress | ongoing | done
+// Displayed states: pending | ongoing | completed
+
+const RANK = {critical:0,high:1,routine:2};
+
+function displayState(stored){
+  if(stored==="done")return "completed";
+  if(stored==="ongoing"||stored==="progress")return "ongoing";
+  return "pending";
+}
+
+// tasks: ordered task list for the emergency
+// states: {taskId:{status}}           overdue: Set of task ids with a due reminder
+// activated: Set of task ids brought forward by a decision answer
+// gated: Set of task ids held back until activated         pinned: task id or null
+function buildChecklist({tasks,states={},overdue=new Set(),activated=new Set(),gated=new Set(),pinned=null}){
+  const st=id=>displayState(states[id]?.status);
+  const order=new Map(tasks.map((t,i)=>[t.id,i]));
+  const completed=[],ongoing=[],pending=[];
+  for(const t of tasks){
+    const s=st(t.id);
+    if(s==="completed")completed.push(t);
+    else if(s==="ongoing"&&!overdue.has(t.id))ongoing.push(t);
+    else pending.push(t);
+  }
+  // NOW/DUE = overdue ∪ activated ∪ pending tasks in the first two open groups (gated tasks excluded).
+  const openGroups=[];
+  for(const t of pending){
+    if(gated.has(t.id)&&!activated.has(t.id))continue;
+    if(!openGroups.includes(t.group))openGroups.push(t.group);
+  }
+  const nowGroups=new Set(openGroups.slice(0,2));
+  const isNow=t=>overdue.has(t.id)||activated.has(t.id)||(nowGroups.has(t.group)&&!(gated.has(t.id)&&!activated.has(t.id)));
+  const now=pending.filter(isNow),next=pending.filter(t=>!isNow(t));
+  const rank=t=>[
+    t.id===pinned?0:1,
+    overdue.has(t.id)?0:1,
+    RANK[t.priority]??2,
+    order.get(t.id)
+  ];
+  const cmp=(a,b)=>{const x=rank(a),y=rank(b);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return x[i]-y[i];return 0;};
+  now.sort(cmp);
+  const mostUrgent=now[0]||next.find(t=>!gated.has(t.id))||null;
+  return {
+    mostUrgent,
+    now:now.filter(t=>t!==mostUrgent),
+    ongoing,
+    completed,
+    next:next.filter(t=>t!==mostUrgent),
+    total:tasks.length,
+    done:completed.length
+  };
+}
+
+// Decision queue. Triggers only ASK a question; an answer is recorded only from a tap.
+// No DOM. Session fields used: session.decisions = {queue:[], answers:[], closed:[]}
+//                              session.branch    = {activated:[], pinned:null, reopen:[]}
+
+function ensureDecisionState(session){
+  session.decisions=session.decisions||{queue:[],answers:[],closed:[]};
+  session.branch=session.branch||{activated:[],pinned:null};
+  return session;
+}
+
+function done(session,id){const s=session.tasks?.[id]?.status;return s==="done"||s==="ongoing"||s==="progress";}
+function canAsk(session,d){
+  const q=session.decisions;
+  if(q.closed.includes(d.id))return false;
+  if(q.queue.some(x=>x.id===d.id))return false;
+  if(!d.repeat&&q.answers.some(a=>a.id===d.id))return false;
+  return (d.requires||[]).every(id=>done(session,id));
+}
+function enqueue(session,d,atMs,trigger){session.decisions.queue.push({id:d.id,dueAt:atMs,trigger,deferred:false});return d.id;}
+
+// A task was completed, assessed or marked ongoing.
+function onTaskEvent(session,decisions,taskId,atMs){
+  ensureDecisionState(session);
+  return decisions.filter(d=>(d.on||[]).includes(taskId)&&canAsk(session,d)).map(d=>enqueue(session,d,atMs,`task:${taskId}`));
+}
+// A medication reassessment reminder came due.
+function onTimerDue(session,decisions,medId,atMs){
+  ensureDecisionState(session);
+  return decisions.filter(d=>(d.onTimer||[]).includes(medId)&&canAsk(session,d)).map(d=>enqueue(session,d,atMs,`timer:${medId}`));
+}
+// Clock tick: minute-based questions are asked once.
+function onTick(session,decisions,nowMs){
+  ensureDecisionState(session);
+  return decisions.filter(d=>d.atMin!=null&&nowMs>=d.atMin*60000&&canAsk(session,d)&&!session.decisions.answers.some(a=>a.id===d.id)).map(d=>enqueue(session,d,d.atMin*60000,`minute:${d.atMin}`));
+}
+
+// Back to actions: no answer is recorded; the question stays queued.
+function defer(session,id){
+  ensureDecisionState(session);
+  const item=session.decisions.queue.find(x=>x.id===id);
+  if(item){item.deferred=true;item.deferrals=(item.deferrals||0)+1;}
+  return item||null;
+}
+function reopen(session,id){
+  const item=session.decisions?.queue.find(x=>x.id===id);if(item)item.deferred=false;return item||null;
+}
+
+// Record an answer. Returns the effects for the caller to apply to task state.
+function answer(session,decisions,id,value,atMs){
+  ensureDecisionState(session);
+  const d=decisions.find(x=>x.id===id);if(!d)throw new Error(`Unknown decision ${id}`);
+  const a=d.answers.find(x=>x.value===value);if(!a)throw new Error(`Unknown answer ${value}`);
+  session.decisions.queue=session.decisions.queue.filter(x=>x.id!==id);
+  session.decisions.answers.push({id,value,at:atMs,branch:a.branch||null});
+  if(a.terminal)session.decisions.closed.push(id);
+  const act=new Set(session.branch.activated);(a.activate||[]).forEach(t=>act.add(t));
+  session.branch.activated=[...act];
+  if(a.pin)session.branch.pinned=a.pin;
+  return {activate:a.activate||[],reopen:a.reopen||[],pin:a.pin||null,note:a.note||"",branch:a.branch||null,label:a.label};
+}
+
+// The question to show full screen now (first one not deferred), or null.
+function takeover(session){return session.decisions?.queue.find(x=>!x.deferred)||null;}
+function waiting(session){return session.decisions?.queue||[];}
+
+// SessionClock: one interface over the real-time and simulation clocks.
+// The live clock is wall time since start; its write methods throw.
+// Session fields used: mode, elapsedBase, running, lastTickAt.
+
+class LiveClockError extends Error{}
+
+function createSessionClock(session,wall=()=>Date.now()){
+  const simulated=session.mode==="simulation";
+  const guard=()=>{if(!simulated)throw new LiveClockError("The live clock cannot be paused or advanced. Start a separate simulation.");};
+  const clock={
+    isSimulated:simulated,
+    now(){return session.elapsedBase+(session.running?wall()-session.lastTickAt:0);},
+    pause(){guard();if(session.running){session.elapsedBase=clock.now();session.running=false;session.lastTickAt=wall();}},
+    resume(){guard();if(!session.running){session.running=true;session.lastTickAt=wall();}},
+    advance(ms){guard();if(!(ms>=0))throw new RangeError("Advance must be zero or more");session.elapsedBase=clock.now()+ms;session.lastTickAt=wall();},
+    stop(){session.elapsedBase=clock.now();session.running=false;session.lastTickAt=wall();}
+  };
+  return clock;
+}
+
+// Events the simulation clock passed when it jumped from `fromMs` to `toMs`.
+function crossed(items,fromMs,toMs){return items.filter(x=>x.atMs>fromMs&&x.atMs<=toMs).sort((a,b)=>a.atMs-b.atMs);}
+
+// Alert levels. No DOM.
+//   P0  decision takeover (full screen)               — decisions.js
+//   P1  reassessment / post-dose reminder: alert card over the dashboard, snooze 1 min
+//       snoozed twice → P1 banner (stays until acknowledged); crossed during a sim jump → banner
+//   P2  milestone or minute mark: banner only, never a takeover
+//   P3  status-strip count     P4  timeline entry only
+// Acknowledging an alert never completes a task.
+
+const SNOOZE_MIN=1;
+const MAX_SNOOZES=2;
+
+function level(timer){
+  if(timer.kind==="milestone")return "P2";
+  if(timer.kind==="repeat"||timer.kind==="medication")return "P1";
+  return "P3";
+}
+
+// timers: session.timers (dueAt and snoozedUntil in minutes)
+function activeAlerts(timers,nowMin){
+  return timers.filter(t=>!t.cancelled&&!t.ack&&t.dueAt<=nowMin).map(t=>{
+    const lv=level(t),snoozed=(t.snoozedUntil||0)>nowMin,snoozes=t.snoozes||0;
+    const form=lv==="P1"&&snoozes<MAX_SNOOZES&&!snoozed&&!t.summarized?"card":lv==="P3"?"count":"banner";
+    return {id:t.id,level:lv,form,snoozes,timer:t,overdueMin:nowMin-t.dueAt};
+  }).sort((a,b)=>a.level.localeCompare(b.level)||a.timer.dueAt-b.timer.dueAt);
+}
+
+function snooze(timer,nowMin){
+  if(level(timer)!=="P1")return false;
+  if((timer.snoozes||0)>=MAX_SNOOZES)return false;
+  timer.snoozes=(timer.snoozes||0)+1;timer.snoozedUntil=nowMin+SNOOZE_MIN;return true;
+}
+function card(alerts){return alerts.find(a=>a.form==="card")||null;}
+function banners(alerts){return alerts.filter(a=>a.form==="banner");}
+
+// Medication administration. No DOM.
+// Every dose keeps two times: givenAt (when it went in, chosen by the user) and
+// recordedAt (when it was entered). Reassessment timers run from givenAt.
+
+const GIVEN_AGO_MIN=[0,1,2,5,10];
+
+function doseCount(session,medId){return (session.doses||[]).filter(d=>d.medId===medId).length||session.doseCounts?.[medId]||0;}
+
+function canGive(session,med){
+  const n=doseCount(session,med.id);
+  if(med.maxDoses&&n>=med.maxDoses)return {ok:false,reason:`${med.name}: pathway dose limit reached (${med.maxDoses}). Escalate and verify orders.`};
+  return {ok:true,reason:""};
+}
+
+// Returns {dose, timer} or throws when the limit blocks the dose.
+function recordDose(session,med,{givenAtMs,recordedAtMs}){
+  const check=canGive(session,med);if(!check.ok)throw new Error(check.reason);
+  if(givenAtMs>recordedAtMs)throw new RangeError("A dose cannot be given in the future");
+  session.doses=session.doses||[];session.doseCounts=session.doseCounts||{};
+  const n=doseCount(session,med.id)+1;
+  const dose={medId:med.id,n,givenAt:Math.max(0,givenAtMs),recordedAt:recordedAtMs};
+  session.doses.push(dose);session.doseCounts[med.id]=n;
+  session.doses.sort((a,b)=>a.givenAt-b.givenAt);
+  const timer=med.timer?{label:med.timerLabel||`Reassess after ${med.name}`,dueAt:dose.givenAt/60000+med.timer,kind:"medication",medId:med.id}:null;
+  return {dose,timer};
+}
+
+// Session timeline: append-only. Each entry carries seq, wallAt and at (elapsed ms on the
+// session clock). Undo appends a reversing entry; nothing is deleted. No DOM.
+
+function appendEvent(session,{text,type="note",at,data}){
+  session.events=session.events||[];
+  session.seq=(session.seq||session.events.length)+1;
+  const ev={id:`e${session.seq}`,seq:session.seq,wallAt:new Date().toISOString(),at,type,text,...(data?{data}:{})};
+  session.events.unshift(ev);
+  return ev;
+}
+// Newest first by clock time; ties by sequence (later entry first).
+function timeline(session){return [...(session.events||[])].sort((a,b)=>(b.at-a.at)||((b.seq||0)-(a.seq||0)));}
+
+// Debrief export: plain text, no identifiers.
+function exportText(session,{title,fmt}){
+  const lines=[`${title}`,`${session.mode==="simulation"?"Simulation":"Clinical"} session · started ${session.startedAt}`,""];
+  [...timeline(session)].reverse().forEach(e=>lines.push(`${fmt(e.at)}  ${e.text}`));
+  const ans=session.decisions?.answers||[];
+  if(ans.length){lines.push("","Decisions:");ans.forEach(a=>lines.push(`${fmt(a.at)}  ${a.id} → ${a.value.toUpperCase()}`));}
+  const doses=session.doses||[];
+  if(doses.length){lines.push("","Doses (given / recorded):");doses.forEach(d=>lines.push(`${fmt(d.givenAt)} / ${fmt(d.recordedAt)}  ${d.medId} #${d.n}`));}
+  if(session.notes?.length){lines.push("","Instructor notes:");session.notes.forEach(n=>lines.push(`${fmt(n.at)}  ${n.text}`));}
+  return lines.join("\n");
+}
+
+// Shoulder dystocia: clock since head delivery, maneuver log, delivery time. No DOM.
+
+function logManeuver(session,id,atMs){
+  session.maneuvers=session.maneuvers||[];
+  const entry={id,at:atMs,n:session.maneuvers.filter(m=>m.id===id).length+1};
+  session.maneuvers.push(entry);return entry;
+}
+function attempts(session,id){return (session.maneuvers||[]).filter(m=>m.id===id);}
+// First maneuver in the configured order not yet tried.
+function suggestNext(session,config){
+  for(const s of config.sections)for(const id of s.ids)if(!attempts(session,id).length)return id;
+  return null;
+}
+function markDelivered(session,atMs){if(session.deliveredAt==null)session.deliveredAt=atMs;return session.deliveredAt;}
+// Head-to-body interval in ms (null until delivered).
+function headToBody(session){return session.deliveredAt==null?null:session.deliveredAt;}
+
+// Two-state cockpit rendering: Decision Mode and the Split Action Dashboard.
+// Pure HTML builders; app.js owns state and events. See DESIGN-RULES.md.
+
+const SECTION_TITLES={now:"NOW / DUE",ongoing:"ONGOING",completed:"COMPLETED",next:"UP NEXT"};
+
+// ---- State A: full-screen decision ----
+function decisionModeHTML({e,d,ctx,pendingCount,waitingCount}){
+  const [a,b]=d.answers;
+  return `<section class="decision-mode ${e.accent}" role="dialog" aria-modal="true" aria-labelledby="decisionQ">
+    <header class="dm-head"><span class="dm-tag">${ctx.esc((e.id==="pph"?"PPH":e.short).toUpperCase())} · DECISION</span><strong class="live-elapsed dm-clock">${ctx.fmt(ctx.nowMs)}</strong></header>
+    <h1 id="decisionQ" tabindex="-1">${ctx.esc(d.q)}</h1>
+    <div class="dm-answers">
+      <button class="dm-yes" data-answer="${a.value}" data-decision="${d.id}" aria-keyshortcuts="Y">${ctx.esc(a.label)}</button>
+      ${b?`<button class="dm-no" data-answer="${b.value}" data-decision="${d.id}" aria-keyshortcuts="N">${ctx.esc(b.label)}</button>`:""}
+    </div>
+    <footer class="dm-foot"><button class="dm-back" data-action="defer-decision" data-decision="${d.id}" aria-keyshortcuts="Escape">‹ Back to actions</button><span>${pendingCount} action${pendingCount===1?"":"s"} pending${waitingCount>1?` · ${waitingCount-1} more question${waitingCount>2?"s":""}`:""}</span></footer>
+  </section>`;
+}
+
+// ---- State B: split action dashboard ----
+function primaryAction(t,stored){
+  if(t.type==="med")return {action:"done",label:"Record dose"};
+  if(t.type==="repeat")return {action:"done",label:"Assessed ✓"};
+  if(t.type==="ongoing"&&stored!=="ongoing"&&stored!=="progress")return {action:"ongoing",label:"Started ✓"};
+  return {action:"done",label:"DONE ✓"};
+}
+
+function urgentHTML({t,ctx,pinnedNote,icon=""}){
+  if(!t)return `<section class="dash-urgent empty" aria-label="Most urgent"><span class="du-label">MOST URGENT</span><h2>All listed actions recorded</h2><p class="du-sub">Keep reassessing. Questions appear when due.</p></section>`;
+  const st=ctx.stored(t.id),pa=primaryAction(t,st);
+  return `<section class="dash-urgent ${t.priority}${ctx.overdue(t.id)?" is-overdue":""}" id="card-${t.id}" aria-label="Most urgent action">
+    <div class="du-top"><span class="du-label">${pinnedNote?ctx.esc(pinnedNote):"MOST URGENT"}</span><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${ctx.emergencyId}" aria-label="Details">i</button></div>
+    ${icon?`<div class="du-icon" aria-hidden="true">${icon}</div>`:""}
+    ${ctx.statusHTML(t)}
+    <h2>${ctx.esc(ctx.label(t))}</h2>
+    ${ctx.sub(t)?`<p class="du-sub">${ctx.esc(ctx.sub(t))}</p>`:""}
+    <button class="du-done" data-task-action="${pa.action}" data-task-id="${t.id}" aria-keyshortcuts="D">${pa.label}</button>
+    ${pa.action==="done"&&t.type!=="med"&&t.type!=="repeat"&&st!=="ongoing"&&st!=="progress"?`<button class="du-second" data-task-action="ongoing" data-task-id="${t.id}">Mark ongoing</button>`:""}
+  </section>`;
+}
+
+const ICON={pending:"",ongoing:"",completed:"✓",overdue:""};
+function rowHTML(t,kind,ctx){
+  const over=ctx.overdue(t.id),k=over&&kind!=="completed"?"overdue":kind;
+  return `<button class="ck-row ${k} ${t.priority}" data-check="${t.id}"><span class="ck-box ${k==="now"||k==="next"?"pending":k}" aria-hidden="true">${ICON[k==="now"||k==="next"?"pending":k]}</span><span class="ck-name">${ctx.esc(ctx.check(t))}</span><span class="ck-state">${ctx.rowState(t,kind)}</span></button>`;
+}
+
+function checklistHTML({c,ctx,open}){
+  const sec=(key,list,collapsible)=>{
+    if(!list.length&&key!=="now")return "";
+    const isOpen=open[key]??!collapsible;
+    const body=list.length?list.map(t=>rowHTML(t,key,ctx)).join(""):`<p class="ck-empty">Nothing else due now.</p>`;
+    return `<section class="ck-sec ck-${key}">
+      <button class="ck-head" data-action="toggle-section" data-section="${key}" aria-expanded="${isOpen}"><i class="chev${isOpen?" open":""}" aria-hidden="true"></i><span>${SECTION_TITLES[key]} (${list.length})</span>${!isOpen&&list.length?`<b class="${key==="completed"?"ok":""}">${key==="completed"?"✓ ":""}${list.length}</b>`:""}</button>
+      ${isOpen?`<div class="ck-list">${body}</div>`:""}
+    </section>`;
+  };
+  return `<div class="ck-top"><span>CHECKLIST</span><b>${c.done}/${c.total}</b></div>
+    ${sec("now",c.now,false)}${sec("ongoing",c.ongoing,false)}${sec("completed",c.completed,true)}${sec("next",c.next,true)}`;
+}
+
+// ---- Shoulder dystocia: clock left, maneuver log right ----
+function dystociaLeftHTML({ctx,nextId,delivered}){
+  if(delivered!=null)return `<section class="dash-urgent clock-left delivered" aria-label="Head-to-body interval">
+    <span class="du-label">HEAD-TO-BODY</span><strong class="big-clock">${ctx.fmt(delivered)}</strong>
+    <p class="du-sub">Delivered. Neonatal team · PPH watch · document.</p>
+    <button class="du-done" data-check="sd-after">After delivery ›</button></section>`;
+  return `<section class="dash-urgent clock-left" aria-label="Time since head delivered">
+    <span class="du-label">SINCE HEAD DELIVERED</span>
+    <strong class="big-clock live-elapsed" aria-live="off">${ctx.fmt(ctx.nowMs)}</strong>
+    ${nextId?`<button class="du-second next-man" data-maneuver="${nextId}">Next: <b>${ctx.esc(ctx.check({id:nextId}))}</b> · log</button>`:""}
+    <button class="du-done delivered-btn" data-action="mark-delivered">Baby delivered</button>
+  </section>`;
+}
+function maneuverLogHTML({config,ctx,attempts,setup}){
+  const row=id=>{const a=attempts(id),last=a[a.length-1];
+    return `<button class="ck-row man ${a.length?"completed":"pending"}" data-maneuver="${id}"><span class="ck-box ${a.length?"completed":"pending"}" aria-hidden="true">${a.length?"✓":""}</span><span class="ck-name">${ctx.esc(ctx.check({id}))}</span><span class="ck-state">${a.length?`${a.length>1?`×${a.length} · `:""}${ctx.fmt(last.at)}`:"tap to log"}</span></button>`;};
+  return `<div class="ck-top"><span>MANEUVER LOG</span><b>${config.sections.reduce((n,s)=>n+s.ids.filter(id=>attempts(id).length).length,0)}</b></div>
+    <section class="ck-sec ck-now"><h3 class="ck-head"><span>SET UP</span></h3><div class="ck-list">${setup.map(t=>rowHTML(t.task,t.kind,ctx)).join("")}</div></section>
+    ${config.sections.map(s=>`<section class="ck-sec"><h3 class="ck-head"><span>${ctx.esc(s.title.toUpperCase())}</span></h3><div class="ck-list">${s.ids.map(row).join("")}</div></section>`).join("")}
+    <button class="text-button undo-man" data-action="undo-maneuver">Undo last log entry</button>`;
+}
+
+// ---- P1 alert card (over the dashboard) ----
+function alertCardHTML(a,ctx){
+  const t=a.timer;
+  return `<section class="alert-card" role="alert">
+    <div><span class="ac-label">REASSESS</span><strong>${ctx.esc(t.label)}</strong><span class="ac-time live-overdue" data-due-at="${t.dueAt}">overdue ${ctx.fmt((ctx.nowMs/60000-t.dueAt)*60000)}</span></div>
+    <div class="ac-actions">
+      ${t.taskId?`<button class="button primary" data-task-action="done" data-task-id="${t.taskId}">Assessed ✓</button>`:""}
+      <button class="button secondary" data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>
+      <button class="button ghost" data-action="snooze-timer" data-timer-id="${t.id}">Snooze 1 min</button>
+    </div>
+  </section>`;
+}
+
+// Sim Master scenario library — facilitator-only content.
+// DRAFT: vitals, timings and expected-action targets are teaching defaults that
+// require facilitator / clinical review before use (see CLINICAL-REVIEW.md).
+//
+// Shape:
+//   events       fire automatically at `at` minutes of elapsed sim time
+//   conditional  fire at `by` minutes only if action `ifNot` has not been checked
+//   actions      expected team actions; `target` = minutes by which it is expected
+//   hints        what to answer if the team asks
+//   vitals keys  HR, BP, SpO2, RR, QBL (mL), Fundus, Other
+
+const SCENARIO_REVIEW_STATUS = "Draft — requires facilitator and clinical review";
+
+const FOCUS_AREAS = ["Recognition","Team communication","Medication safety","Diagnostic reasoning","Escalation"];
+
+const SCENARIOS = [
+  {
+    id:"pph-atony",
+    emergency:"pph",
+    title:"Atony after vaginal birth",
+    level:"Core",
+    duration:15,
+    audience:"Mixed team",
+    focus:["Recognition","Team communication","Escalation"],
+    summary:"Classic uterine atony 20 minutes after an uncomplicated vaginal birth. Builds the first-10-minutes response.",
+    trap:"Hemodynamic changes lag blood loss. A normal BP at the start is not reassurance.",
+    objectives:[
+      "Recognize hemorrhage early using quantified blood loss and trend, not BP alone",
+      "Call the hemorrhage response and assign leader and recorder roles",
+      "Start fundal massage and first-line uterotonic within minutes",
+      "Use closed-loop communication for every medication order"
+    ],
+    patient:{
+      oneLiner:"32-year-old G3P3, spontaneous vaginal birth 20 minutes ago, term, 3.9 kg infant.",
+      history:["Labor 14 hours with oxytocin augmentation","No hypertension, no asthma","Placenta delivered complete per delivering clinician","Oxytocin infusion running at postpartum rate"],
+      setting:"L&D room, one nurse present at start"
+    },
+    start:{HR:"104",BP:"112/70",SpO2:"98%",RR:"18",QBL:"800 mL",Fundus:"Boggy, above umbilicus"},
+    roles:["Team leader","Recorder / timekeeper","Primary nurse","Second nurse / medications","Anesthesia","Runner / blood bank"],
+    prebrief:[
+      "This is a simulation. Treat the mannequin as a patient; ask out loud for anything you need.",
+      "Vitals are given verbally or on screen when you check them.",
+      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
+    ],
+    equipment:["Hemorrhage cart","Uterotonics (simulated)","Two large-bore IV kits","QBL scale / drapes","Mannequin with fundus model"],
+    events:[
+      {id:"e0",at:0,title:"Nurse calls for help",say:"\"She just passed a big clot and she's still bleeding — the pad is soaked.\""},
+      {id:"e1",at:2,title:"Bleeding continues",say:"Steady bright-red bleeding. Patient: \"I feel dizzy.\"",vitals:{HR:"116",BP:"108/66",QBL:"1100 mL"}},
+      {id:"e2",at:6,title:"Partial response",say:"Fundus firms with massage but relaxes when massage stops.",vitals:{HR:"118",BP:"104/62",QBL:"1300 mL"}},
+      {id:"e3",at:9,title:"Labs back",say:"Hgb 9.1 g/dL, platelets 210k, fibrinogen 310 mg/dL.",show:"Labs: Hgb 9.1 · Plt 210k · Fibrinogen 310"},
+      {id:"e4",at:12,title:"Bleeding slowing",say:"Fundus firm. Bleeding slowed to a trickle.",vitals:{HR:"106",BP:"110/68",QBL:"1450 mL",Fundus:"Firm, at umbilicus"}}
+    ],
+    conditional:[
+      {id:"c1",ifNot:"a-uterotonic",by:4,title:"Deterioration — no uterotonic yet",say:"Patient becomes pale and anxious. \"I don't feel right.\"",vitals:{HR:"132",BP:"88/52",QBL:"1500 mL"}},
+      {id:"c2",ifNot:"a-help",by:3,title:"Prompt — still working alone",say:"Nurse: \"Should I call someone?\""}
+    ],
+    actions:[
+      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
+      {id:"a-roles",label:"Names leader and recorder",target:2},
+      {id:"a-qbl",label:"Quantifies blood loss and checks vitals",target:2,critical:true},
+      {id:"a-massage",label:"Fundal massage / bimanual compression",target:2,critical:true},
+      {id:"a-uterotonic",label:"Gives first-line uterotonic (oxytocin)",target:3,critical:true},
+      {id:"a-iv",label:"Second IV access, labs, type & crossmatch",target:5},
+      {id:"a-second",label:"Adds second-line uterotonic for ongoing atony",target:8},
+      {id:"a-txa",label:"Considers TXA",target:10},
+      {id:"a-closedloop",label:"Closed-loop communication on medication orders",target:null}
+    ],
+    hints:[
+      {q:"Has she had any blood pressure problems or asthma?",a:"No hypertension, no asthma, no cardiac history."},
+      {q:"Is the placenta complete?",a:"Delivering clinician documented it as complete."},
+      {q:"What is the oxytocin running at?",a:"Postpartum maintenance rate per unit protocol."},
+      {q:"Allergies?",a:"No known drug allergies."}
+    ],
+    debrief:[
+      "When did the team first say the word 'hemorrhage' out loud — and what triggered it?",
+      "How did the leader know what had already been given?",
+      "BP was near-normal at 6 minutes. What told you she was still in trouble?",
+      "Was TXA considered? What would make it indicated here?"
+    ]
+  },
+  {
+    id:"pph-preeclampsia",
+    emergency:"pph",
+    title:"Hemorrhage with severe preeclampsia",
+    level:"Intermediate",
+    duration:15,
+    audience:"Mixed team",
+    focus:["Medication safety","Team communication"],
+    summary:"Atony in a patient with preeclampsia with severe features on magnesium. Tests uterotonic selection under pressure.",
+    trap:"Methylergonovine is contraindicated with hypertension. A team member will suggest it.",
+    objectives:[
+      "Choose uterotonics using contraindications (hypertension → avoid methylergonovine)",
+      "Speak up and use check-back when an unsafe order is proposed",
+      "Continue magnesium and recognize its contribution to atony risk",
+      "Keep BP management on the radar during hemorrhage"
+    ],
+    patient:{
+      oneLiner:"27-year-old G1P1, cesarean for arrest of dilation 40 minutes ago, preeclampsia with severe features.",
+      history:["Magnesium sulfate infusion running","BP 150s–160s/100s before delivery; labetalol IV ×1 in labor","No asthma","Platelets 142k pre-op"],
+      setting:"Recovery / postpartum room"
+    },
+    start:{HR:"108",BP:"158/102",SpO2:"98%",RR:"16",QBL:"1000 mL (incl. OR)",Fundus:"Boggy",Other:"Magnesium infusing"},
+    roles:["Team leader","Recorder / timekeeper","Primary nurse","Medication nurse","Anesthesia","Runner / blood bank"],
+    prebrief:[
+      "This is a simulation. Ask out loud for anything you need.",
+      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
+    ],
+    equipment:["Hemorrhage cart","Simulated uterotonics incl. methylergonovine vial","Magnesium pump (running)"],
+    events:[
+      {id:"e0",at:0,title:"Nurse calls for help",say:"\"Her fundus is boggy and she's bleeding through the pad.\""},
+      {id:"e1",at:2,title:"The unsafe suggestion",say:"Medication nurse (confederate): \"I have Methergine in my hand — want me to give it?\"",confederate:true},
+      {id:"e2",at:5,title:"Ongoing bleeding",say:"Bleeding continues despite oxytocin.",vitals:{HR:"120",BP:"146/94",QBL:"1350 mL"}},
+      {id:"e3",at:8,title:"Labs back",say:"Hgb 9.4, platelets 118k, fibrinogen 280, AST 64.",show:"Labs: Hgb 9.4 · Plt 118k · Fibrinogen 280 · AST 64"},
+      {id:"e4",at:12,title:"Response",say:"Fundus firm after second-line agent.",vitals:{HR:"110",BP:"150/96",QBL:"1500 mL",Fundus:"Firm"}}
+    ],
+    conditional:[
+      {id:"c1",ifNot:"a-avoid-methergine",by:3,title:"Methylergonovine given (if accepted)",say:"If the team accepted: \"Methergine is in.\" BP rises.",vitals:{BP:"178/112"}},
+      {id:"c2",ifNot:"a-uterotonic",by:4,title:"Deterioration — no uterotonic",say:"Patient pale, HR climbing.",vitals:{HR:"130",BP:"128/80",QBL:"1500 mL"}}
+    ],
+    actions:[
+      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
+      {id:"a-massage",label:"Fundal massage",target:2,critical:true},
+      {id:"a-uterotonic",label:"Gives / increases oxytocin",target:3,critical:true},
+      {id:"a-avoid-methergine",label:"Declines methylergonovine — names hypertension",target:3,critical:true},
+      {id:"a-second",label:"Chooses an appropriate second-line agent (carboprost or misoprostol)",target:7},
+      {id:"a-mag",label:"Continues magnesium; monitors toxicity",target:null},
+      {id:"a-bp",label:"Keeps BP monitoring / treatment in plan",target:null},
+      {id:"a-checkback",label:"Uses check-back / speaks up on the unsafe order",target:null}
+    ],
+    hints:[
+      {q:"Does she have asthma?",a:"No asthma."},
+      {q:"What's her BP trend?",a:"150s–160s over 100s since delivery."},
+      {q:"Magnesium dose and reflexes?",a:"Maintenance infusion; reflexes 2+, RR 16, urine output adequate."}
+    ],
+    debrief:[
+      "Who noticed the methylergonovine problem, and how did they say it?",
+      "Did the person holding the vial feel able to hold off? What made that easier or harder?",
+      "How did the team balance hemorrhage and blood-pressure priorities?",
+      "Magnesium raises atony risk. Was that discussed?"
+    ]
+  },
+  {
+    id:"pph-trauma",
+    emergency:"pph",
+    title:"Firm uterus, still bleeding",
+    level:"Advanced",
+    duration:15,
+    audience:"Mixed team",
+    focus:["Diagnostic reasoning","Escalation"],
+    summary:"Bleeding continues with a firm uterus after a vacuum-assisted birth. Tests the 4 Ts and avoiding fixation on tone.",
+    trap:"Uterotonics will not fix trauma. Teams often keep escalating drugs for a firm uterus.",
+    objectives:[
+      "Recognize that a firm uterus with ongoing bleeding points away from atony",
+      "Work through Tone, Trauma, Tissue, Thrombin out loud",
+      "Arrange exposure, lighting and analgesia for a genital-tract exam",
+      "Escalate to repair in the OR when exposure or bleeding control is inadequate"
+    ],
+    patient:{
+      oneLiner:"30-year-old G1P1, vacuum-assisted vaginal birth 15 minutes ago, second-degree laceration repaired.",
+      history:["Prolonged second stage","Epidural in place","Placenta complete","No hypertension, no asthma"],
+      setting:"L&D room"
+    },
+    start:{HR:"110",BP:"116/72",SpO2:"99%",RR:"18",QBL:"700 mL",Fundus:"Firm, below umbilicus"},
+    roles:["Team leader","Recorder / timekeeper","Primary nurse","Second nurse","Anesthesia","Runner"],
+    prebrief:[
+      "This is a simulation. Ask out loud for anything you need.",
+      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
+    ],
+    equipment:["Hemorrhage cart","Good light source / retractors (simulated)","Laceration repair tray"],
+    events:[
+      {id:"e0",at:0,title:"Nurse calls for help",say:"\"She's still bleeding — steady trickle, bright red.\""},
+      {id:"e1",at:3,title:"Fundus check",say:"Fundus remains firm. Bleeding continues, bright red, steady.",vitals:{HR:"118",BP:"110/68",QBL:"950 mL",Fundus:"Firm"}},
+      {id:"e2",at:6,title:"If examined",say:"On exam with exposure: actively bleeding high vaginal sidewall laceration.",show:"Exam finding (reveal only if the team examines): high vaginal sidewall laceration"},
+      {id:"e3",at:9,title:"Ongoing",say:"Bleeding continues until controlled.",vitals:{HR:"126",BP:"100/60",QBL:"1250 mL"}}
+    ],
+    conditional:[
+      {id:"c1",ifNot:"a-exam",by:7,title:"Fixation — no exam yet",say:"Nurse (confederate): \"Should I get another dose of something?\"",confederate:true},
+      {id:"c2",ifNot:"a-escalate",by:11,title:"Deterioration",say:"Patient pale, diaphoretic.",vitals:{HR:"138",BP:"86/50",QBL:"1500 mL"}}
+    ],
+    actions:[
+      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
+      {id:"a-tone",label:"Checks tone; recognizes firm uterus",target:2,critical:true},
+      {id:"a-4ts",label:"Names the 4 Ts out loud",target:4},
+      {id:"a-exam",label:"Examines genital tract with exposure, light, analgesia",target:5,critical:true},
+      {id:"a-iv",label:"IV access, labs, type & crossmatch",target:5},
+      {id:"a-escalate",label:"Escalates for repair (OR if exposure inadequate)",target:10,critical:true},
+      {id:"a-nofixation",label:"Avoids repeated uterotonics for a firm uterus",target:null}
+    ],
+    hints:[
+      {q:"Was the placenta complete?",a:"Yes, inspected and complete."},
+      {q:"Is the epidural still working?",a:"Yes, she has adequate block."},
+      {q:"Any bleeding history?",a:"No personal or family bleeding history."}
+    ],
+    debrief:[
+      "At what point did the team say the uterus was firm — and what did that change?",
+      "Who called out the 4 Ts? Did the whole team hear it?",
+      "What would have made the exam happen sooner?",
+      "When is the bedside the wrong place to repair?"
+    ]
+  }
+];
+
+const D={ensureDecisionState,onTaskEvent,onTimerDue,onTick,defer,reopen,answer,takeover,waiting};
+const snoozeAlert=snooze;
+const alertCard=card;
+const alertBanners=banners;
+const sortedTimeline=timeline;
 
 const $ = (s,root=document)=>root.querySelector(s);
 const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
@@ -1833,41 +2650,127 @@ function newSession(emergencyId,mode){
 }
 
 function startSession(id,mode){
-  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render(); toast(`${mode==="simulation"?"Simulation":"Clinical"} clock started`);
+  ensureAudio(); session=store.createSession(newSession(id,mode)); selectedEmergency=id; startClock(); render();
 }
 
-// Active session = clinical cockpit. Global rule (see DESIGN-RULES.md):
-// nonclinical chrome is minimized, clinical text is never shrunk to fit.
+// ---------- Active session: two-state cockpit (see DESIGN-RULES.md) ----------
+// State A: full-screen Decision Mode when a clinically reviewed question is due.
+// State B: Split Action Dashboard — most urgent action left (55%), checklist right (45%).
+const sectionOpen={}; // per session: {completed,next} collapse state (UI only)
+function openState(){const k=session.id;sectionOpen[k]=sectionOpen[k]||{completed:false,next:false};return sectionOpen[k];}
+function storedStatus(id){return session.tasks[id]?.status;}
+function checkLabel(t){return CHECK_LABELS[t.id]||taskLabel(t);}
+function cockpitCtx(){
+  const nowMs=currentElapsed(),nowMin=nowMs/60000;
+  return {esc,fmt,nowMs,emergencyId:session.emergencyId,label:t=>taskLabel(t).replace(/\.$/,""),check:checkLabel,sub:t=>TASK_SUBTITLES[t.id],stored:storedStatus,
+    overdue:id=>!!overdueTimerFor(id),
+    statusHTML:t=>taskStatusHTML(t,taskState(t.id)),
+    rowState:(t,kind)=>{
+      const od=overdueTimerFor(t.id);
+      if(od&&kind!=="completed")return `<span class="due-pill">Due now</span>`;
+      if(kind==="completed")return `<span class="ck-time">${fmt(taskState(t.id).completedAt||0)}</span>`;
+      if(kind==="ongoing"){const nx=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);return nx?`<span class="ck-time">in <span class="live-countdown" data-due-at="${nx.dueAt}">${formatCountdown(nx)}</span></span>`:"";}
+      return "";
+    }};
+}
+function checklistModel(){
+  const e=EMERGENCIES[session.emergencyId];
+  D.ensureDecisionState(session);
+  const overdue=new Set(getDueTimers().filter(t=>t.taskId).map(t=>t.taskId));
+  return buildChecklist({tasks:e.tasks,states:session.tasks,overdue,activated:new Set(session.branch.activated),gated:new Set(GATED[e.id]||[]),pinned:session.branch.pinned});
+}
+const TOOL_TABS=[["actions","Actions","list"],["meds","Medications","pill","Meds"],["flow","Flowchart","tree"],["timeline","Timeline","clock"],["team","Team","team"]];
+const TOOL_ICONS={list:'<path d="M9 6h11M9 12h11M9 18h11"/><path d="M3.5 6l1.2 1.2L7 5M3.5 12l1.2 1.2L7 11M3.5 18l1.2 1.2L7 17"/>',pill:'<rect x="3" y="8.5" width="18" height="7" rx="3.5" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/>',tree:'<rect x="9" y="3" width="6" height="5" rx="1"/><rect x="3" y="16" width="6" height="5" rx="1"/><rect x="15" y="16" width="6" height="5" rx="1"/><path d="M12 8v4M6 16v-4h12v4"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',team:'<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><circle cx="16.5" cy="9.5" r="2.6"/><path d="M15.5 14.3c2.5-.2 4.4 1.4 5 4.7"/>'};
+
 function renderActiveSession(){
   const e=EMERGENCIES[session.emergencyId];
   const sim=session.mode==="simulation";
-  const timerCount=session.timers.filter(t=>!t.cancelled&&!t.ack).length;
+  const ctx=cockpitCtx();
+  const take=D.takeover(session),waitingList=D.waiting(session);
+  const c=checklistModel();
+  const pendingCount=c.now.length+(c.mostUrgent?1:0);
+  if(take){
+    const d=(DECISIONS[e.id]||[]).find(x=>x.id===take.id);
+    if(d){
+      if(!$("#infoSheet").hidden&&$("#infoSheet").classList.contains("open"))closeSheet(); // the question takes the whole screen
+      main.innerHTML=decisionModeHTML({e,d,ctx,pendingCount,waitingCount:waitingList.length});
+      document.body.classList.add("decision-open");
+      requestAnimationFrame(()=>$("#decisionQ")?.focus({preventScroll:true}));
+      return;
+    }
+  }
+  document.body.classList.remove("decision-open");
+  const alerts=activeAlerts(session.timers,sessionMinute());
+  const p1=alertCard(alerts);
+  const dyst=LEFT_PANEL[e.id]==="clock";
+  let left,right;
+  if(dyst){
+    left=dystociaLeftHTML({ctx,nextId:suggestNext(session,DYSTOCIA),delivered:session.deliveredAt??null});
+    const setup=DYSTOCIA.setup.map(id=>{const t=e.tasks.find(x=>x.id===id);const s=displayState(storedStatus(id));return {task:t,kind:s==="completed"?"completed":s==="ongoing"?"ongoing":"now"};});
+    right=maneuverLogHTML({config:DYSTOCIA,ctx,attempts:id=>attempts(session,id),setup});
+  }else{
+    const pinned=c.mostUrgent&&c.mostUrgent.id===session.branch.pinned;
+    const lastNo=pinned?[...session.decisions.answers].reverse().find(a=>a.value==="no"):null;
+    const q=lastNo?(DECISIONS[e.id]||[]).find(d=>d.id===lastNo.id):null;
+    left=urgentHTML({t:c.mostUrgent,ctx,pinnedNote:q?`${q.q.replace(/\?$/,"")}: NO`:"",icon:emergencyIcon(e.id,72)});
+    right=checklistHTML({c,ctx,open:openState()});
+  }
+  const tool=sidePanel&&sidePanel!=="actions";
   main.innerHTML=`
     <section class="cockpit-head ${session.mode} ${e.accent}" aria-label="Session status">
       <div class="cockpit-row">
-        <div class="cockpit-id"><span class="mode-tag">${sim?"SIMULATION":"CLINICAL"}</span><strong>${esc(e.short)}</strong></div>
-        <div class="cockpit-clock" aria-live="off"><strong id="elapsedClock">${fmt(currentElapsed())}</strong><small>elapsed${sim&&!session.running?" · paused":""}</small></div>
-        <button class="cockpit-icon ${session.sound?"on":""}" data-action="toggle-sound" aria-label="${session.sound?"Sound on — tap to mute":"Sound off — tap to unmute"}">${session.sound?"🔊":"🔇"}</button>
-        <button class="cockpit-end" data-action="end-session">End</button>
+        <button class="ch-back" data-action="session-menu" aria-label="Session menu: sound, end session"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+        <h1 class="ch-title">${emergencyIcon(e.id,40)}<span class="ch-txt">${esc(e.id==="pph"?"PPH":e.short)}<span class="ch-mode"> · ${dyst?"Maneuvers":"Action Dashboard"}</span></span></h1>
+        <strong id="elapsedClock" class="ch-clock" aria-label="Elapsed time">${fmt(currentElapsed())}</strong>
+        <span class="ch-badge ${sim?(session.running?"sim":"sim paused"):"live"}">${sim?(session.running?"SIMULATION":"PAUSED"):"LIVE"}</span>
+        <button class="ch-menu" data-action="session-menu" aria-label="Session menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
       </div>
-      <div class="cockpit-status-row"><div id="nextDue" class="cockpit-status">${statusLineHTML()}</div>${sim?`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time" aria-label="Simulation time controls">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`:""}</div>
+      ${statusStripHTML2(waitingList,alerts,sim)}
     </section>
-    ${renderAlertStrip()}
-    <nav class="cockpit-tabs" aria-label="Session tools">
-      ${[["flow","Flowchart"],["meds","Meds"],["timers","Timers"],["timeline","Timeline"]].map(([k,l])=>`<button class="${sidePanel===k?"active":""}" data-side="${k}" aria-pressed="${sidePanel===k}">${l}${k==="timers"&&timerCount?` <span>${timerCount}</span>`:""}</button>`).join("")}
-    </nav>
-    <div class="cockpit-body${sidePanel&&WIDE.matches?" flow-open":""}">
-      <section class="task-workspace">
-        ${renderDueGroup(e)}
-        ${renderTaskGroups(e)}
-        <section class="completed-panel">
-          <button data-action="toggle-completed"><strong>Completed</strong><span>${completedCount(e)} ›</span></button>
-          <div id="completedList" hidden>${renderCompleted(e)}</div>
-        </section>
-      </section>
-      <aside class="cockpit-side acc-${e.accent}" aria-label="Session tools panel" data-pathway="${e.id}">${sidePanel&&WIDE.matches?sidePanelHTML(sidePanel):""}</aside>
-    </div>`;
+    ${renderBanners(alerts)}
+    ${p1?alertCardHTML(p1,ctx):""}
+    <div class="dash${dyst?" dystocia":""}">
+      <div class="dash-left">${left}</div>
+      <aside class="dash-right" aria-label="${tool?SIDE_TITLES[sidePanel]:"Checklist"}" data-pathway="${e.id}">
+        ${tool&&WIDE.matches?`<div class="tool-panel acc-${e.accent}">${sidePanelHTML(sidePanel)}</div>`:right}
+      </aside>
+    </div>
+    <nav class="tool-bar" aria-label="Session tools">
+      ${TOOL_TABS.map(([k,l,ic,short])=>{const on=(k==="actions"&&!tool)||sidePanel===k;return `<button class="${on?"active":""}" data-side="${k}" aria-pressed="${on}" aria-label="${l}"><svg viewBox="0 0 24 24" aria-hidden="true">${TOOL_ICONS[ic]}</svg>${short?`<span class="tl-long">${l}</span><span class="tl-short" aria-hidden="true">${short}</span>`:`<span>${l}</span>`}</button>`;}).join("")}
+    </nav>`;
   requestAnimationFrame(updateClockDom);
+}
+
+function statusStripHTML2(waitingList,alerts,sim){
+  const parts=[];
+  const wq=waitingList.filter(x=>x.deferred);
+  if(wq.length){const d=(DECISIONS[session.emergencyId]||[]).find(x=>x.id===wq[0].id);parts.push(`<button class="ss-decision" data-action="open-decision" data-decision="${wq[0].id}">? ${esc(d?.q||"Decision")}${wq.length>1?` +${wq.length-1}`:""}</button>`);}
+  const od=getDueTimers().length;
+  if(od)parts.push(`<b class="overdue-count">${od} overdue</b>`);
+  const next=getFutureEvents()[0];
+  if(next)parts.push(`<span class="next-up">Next: ${esc(next.label)} in <span class="live-countdown" data-due-at="${next.at}">${fmt((next.at-sessionMinute())*60000)}</span></span>`);
+  if(sim)parts.push(`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`);
+  return parts.length?`<div class="cockpit-status-row">${parts.join("")}</div>`:"";
+}
+
+// P2 banners (milestones, minute marks, P1 snoozed twice): visible without a tap, never a takeover.
+function renderBanners(alerts){
+  const list=alertBanners(alerts);
+  if(!list.length)return "";
+  const first=list[0].timer;
+  return `<section class="alert-strip" role="status">
+    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${first.message&&first.kind==="milestone"?esc(first.message):overdueSpan(first)}</span></button>
+    ${list.length>1?`<button class="alert-more" data-side="timeline">+${list.length-1}</button>`:`<button class="alert-more" data-action="ack-timer" data-timer-id="${first.id}" aria-label="Acknowledge">✓</button>`}
+  </section>`;
+}
+
+function showSessionMenu(){
+  const sim=session.mode==="simulation";
+  openSheet({eyebrow:"SESSION",title:EMERGENCIES[session.emergencyId].name,html:`<div class="session-menu">
+    <button class="button secondary full" data-action="toggle-sound">${session.sound?"🔊 Sound on — mute":"🔇 Sound off — unmute"}</button>
+    <button class="button secondary full" data-action="toggle-text">Larger text: ${settings.largeText?"on":"off"}</button>
+    ${sim?`<button class="button secondary full" data-action="sim-time">Simulation clock</button>`:`<button class="button secondary full" data-action="live-advance">Advance time…</button>`}
+    <button class="button danger full" data-action="end-session">End session</button></div>`});
 }
 
 // Simulation mirrors the clinical cockpit exactly; time controls live in a
@@ -1885,19 +2788,6 @@ function showSimTime(){
     <p class="microcopy">Advancing time fires any timers and team milestones it passes, exactly as they would in real time.</p>`});
 }
 
-// Overdue items are never hidden behind a tap. Task-linked reminders show on
-// their own card (DUE NOW group); unlinked reminders (milestones, post-dose
-// reassessment) show here, most overdue first.
-function renderAlertStrip(){
-  const due=getDueTimers().filter(t=>!t.taskId).sort((a,b)=>a.dueAt-b.dueAt);
-  if(!due.length)return "";
-  const first=due[0];
-  return `<section class="alert-strip" role="alert">
-    <button class="alert-main" data-action="open-due" data-timer-id="${first.id}"><strong>${esc(first.label)}</strong><span>${overdueSpan(first)}</span></button>
-    ${due.length>1?`<button class="alert-more" data-action="show-timers">+${due.length-1}</button>`:""}
-  </section>`;
-}
-
 function statusLineHTML(){
   const due=getDueTimers().length;
   const next=getFutureEvents()[0];
@@ -1907,30 +2797,6 @@ function statusLineHTML(){
 
 function taskState(id){return session.tasks[id]||{status:"todo"};}
 function overdueTimerFor(taskId){return getDueTimers().find(x=>x.taskId===taskId);}
-function renderDueGroup(e){
-  const items=e.tasks.filter(t=>taskState(t.id).status!=="done"&&overdueTimerFor(t.id));
-  if(!items.length)return "";
-  return `<div class="task-group due-group">${items.map(renderTaskCard).join("")}</div>`;
-}
-// Full cards: overdue tasks (DUE NOW) and the first open pathway group.
-// Everything below is a one-line row; tapping a row expands it (one at a time).
-function renderTaskGroups(e){
-  const groups=[...new Set(e.tasks.map(t=>t.group))];
-  let primaryShown=false;
-  return groups.map(group=>{
-    const items=e.tasks.filter(t=>t.group===group && taskState(t.id).status!=="done" && !overdueTimerFor(t.id));
-    if(!items.length)return "";
-    const primary=!primaryShown;primaryShown=true;
-    return `<div class="task-group${primary?" primary-group":" compact-group"}">${primary?"":`<h2>${esc(group)}</h2>`}${items.map(t=>primary?renderTaskCard(t):expandedTask===t.id?renderTaskCard(t,true):renderTaskRow(t)).join("")}</div>`;
-  }).join("");
-}
-
-function renderTaskRow(t){
-  const st=taskState(t.id);
-  const sub=TASK_SUBTITLES[t.id];
-  return `<button class="task-row ${t.priority} ${st.status}" data-action="expand-task" data-task-id="${t.id}" aria-expanded="false"><span class="row-icon" aria-hidden="true">${taskIcon(t)}</span><span class="row-copy">${taskStatusHTML(t,st)}<strong>${esc(taskLabel(t))}</strong>${sub?`<span class="row-sub">${esc(sub)}</span>`:""}</span><span class="row-chev" aria-hidden="true">›</span></button>`;
-}
-
 function overdueSpan(t){return `<span class="live-overdue" data-due-at="${t.dueAt}">overdue ${fmt((sessionMinute()-t.dueAt)*60000)}</span> · due at ${fmt(t.dueAt*60000)}`;}
 function taskStatusHTML(t,st){
   const overdue=overdueTimerFor(t.id);
@@ -1941,29 +2807,6 @@ function taskStatusHTML(t,st){
   if(st.status==="ongoing")parts.push("Ongoing");
   if(next)parts.push(`Next in <span class="live-countdown" data-due-at="${next.dueAt}">${formatCountdown(next)}</span>`);
   return parts.length?`<span class="task-status">${parts.join(" · ")}</span>`:"";
-}
-
-function renderTaskCard(t,expandedRow=false){
-  const st=taskState(t.id);
-  const overdue=!!overdueTimerFor(t.id);
-  const sub=TASK_SUBTITLES[t.id];
-  // One primary action per card, right-aligned. "Mark started" is a quiet
-  // secondary link so the team can still see who is working on what.
-  const primaryAction=t.type==="ongoing"&&st.status==="todo"?"ongoing":"done";
-  const primaryLabel=primaryAction==="ongoing"?"Ongoing":t.type==="repeat"?"Assessed":t.type==="med"?"Record dose":"Done";
-  const canStart=st.status==="todo"&&t.type!=="ongoing";
-  const tag=overdue?"DUE NOW":expandedRow?"":esc(t.group);
-  return `<article class="task-card ${t.priority} ${st.status}${overdue?" is-overdue":""}${expandedRow?" expanded-row":""}" id="card-${t.id}">
-    <div class="card-top">
-      ${tag?`<span class="card-tag">${tag}</span>`:""}
-      <div class="card-tools"><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${session.emergencyId}" aria-label="More information">i</button>${expandedRow?`<button class="collapse-btn" data-action="collapse-task" aria-label="Collapse">‹</button>`:""}</div>
-    </div>
-    <div class="task-copy">${taskStatusHTML(t,st)}<h3>${esc(taskLabel(t))}</h3>${sub?`<p class="card-sub">${esc(sub)}</p>`:""}</div>
-    <div class="task-actions">
-      ${canStart?`<button class="link-action" data-task-action="start" data-task-id="${t.id}">Mark started</button>`:"<span></span>"}
-      <button class="button primary card-primary" data-task-action="${primaryAction}" data-task-id="${t.id}"><span aria-hidden="true">✓</span> ${primaryLabel}</button>
-    </div>
-  </article>`;
 }
 
 // Second line under a task title: the specifics a clinician scans for.
@@ -2058,24 +2901,47 @@ function renderCompleted(e){
 function handleTask(taskId,action){
   const e=EMERGENCIES[session.emergencyId],t=e.tasks.find(x=>x.id===taskId); if(!t)return;
   const at=currentElapsed();
-  if(action==="start"){session.tasks[taskId]={status:"progress",startedAt:at};logEvent(`Started: ${t.title}`,"task");}
-  if(action==="ongoing"){session.tasks[taskId]={status:"ongoing",startedAt:at};logEvent(`Ongoing: ${t.title}`,"task");}
   if(action==="done"&&t.type==="med"){openMedicationChooser(t);return;}
+  const prev=taskState(taskId);
+  if(action==="start"||action==="ongoing"){session.tasks[taskId]={...prev,status:"ongoing",startedAt:at};logEvent(`Ongoing: ${t.title}`,"task");}
   if(action==="done"){
-    session.tasks[taskId]={...taskState(taskId),status:t.type==="ongoing"?"ongoing":"done",completedAt:at};
+    session.tasks[taskId]={...prev,status:"done",completedAt:at};
     logEvent(`${t.type==="repeat"?"Assessed":"Completed"}: ${t.title}`,"task");
     cancelTaskTimers(taskId);
     if(t.type==="repeat"&&t.repeatMin) addTimer({taskId,label:t.title,dueAt:sessionMinute()+t.repeatMin,kind:"repeat"});
+    if(session.branch?.pinned===taskId)session.branch.pinned=null;
   }
-  if(action==="reopen"){session.tasks[taskId]={status:"todo"};cancelTaskTimers(taskId);logEvent(`Reopened: ${t.title}`,"task");}
-  if(action==="done"||action==="reopen")expandedTask=null;
-  const type={start:"TASK_STARTED",ongoing:"TASK_MARKED_ONGOING",done:t.type==="repeat"?"ASSESSMENT_RECORDED":"TASK_COMPLETED",reopen:"TASK_REOPENED"}[action]||"TASK_UPDATED";
-  saveSession({type,taskId,status:session.tasks[taskId]?.status||null});render();
+  if(action==="reopen"||action==="pending"){session.tasks[taskId]={status:"todo"};cancelTaskTimers(taskId);logEvent(`Undone: ${t.title}`,"task");}
+  if(action==="done"||action==="ongoing"||action==="start")askDecisions(D.onTaskEvent(session,DECISIONS[e.id]||[],taskId,at));
+  const type={start:"TASK_STARTED",ongoing:"TASK_MARKED_ONGOING",done:t.type==="repeat"?"ASSESSMENT_RECORDED":"TASK_COMPLETED",reopen:"TASK_REOPENED",pending:"TASK_REOPENED"}[action]||"TASK_UPDATED";
+  saveSession({type,taskId,status:session.tasks[taskId]?.status||null});closeSheet();render();
 }
+
+// ---------- Decisions: triggers only ask; an answer is recorded only from a tap ----------
+function decisionDef(id){return (DECISIONS[session.emergencyId]||[]).find(d=>d.id===id);}
+function askDecisions(ids){
+  if(!ids?.length)return;
+  ids.forEach(id=>{const q=session.decisions.queue.find(x=>x.id===id);logEvent(`Question due: ${decisionDef(id)?.q||id}`,"decision",q?.dueAt??currentElapsed());});
+  playAlert();
+}
+function answerDecision(id,value){
+  const d=decisionDef(id);if(!d)return;
+  const fx=D.answer(session,DECISIONS[session.emergencyId],id,value,currentElapsed());
+  fx.reopen.forEach(tid=>{session.tasks[tid]={status:"todo"};cancelTaskTimers(tid);});
+  logEvent(`${d.q} → ${fx.label}`,"decision");
+  saveSession({type:"DECISION_ANSWERED",status:"completed",payload:{decisionId:id,value,branch:fx.branch}});
+  render();if(fx.note)toast(fx.note,value==="no"?"alert":"ok");
+}
+function deferDecision(id){
+  const d=decisionDef(id);D.defer(session,id);
+  logEvent(`Back to actions — question still open: ${d?.q||id}`,"decision");
+  saveSession({type:"DECISION_DEFERRED",status:"pending",payload:{decisionId:id}});render();
+}
+function reopenDecision(id){D.reopen(session,id);render();}
 
 function cancelTaskTimers(taskId){session.timers.forEach(t=>{if(t.taskId===taskId)t.cancelled=true;});}
 function addTimer(timer){session.timers.push({id:uid(),createdAt:sessionMinute(),createdAtWall:new Date().toISOString(),dueAtElapsedMs:timer.dueAt*60000,ack:false,cancelled:false,...timer});}
-function logEvent(text,type="note"){session.events.unshift({id:uid(),at:currentElapsed(),type,text});}
+function logEvent(text,type="note",at=currentElapsed()){appendEvent(session,{text,type,at});}
 function formatEventTime(ms){return fmt(ms,true);}
 function formatCountdown(t){return fmt(Math.max(0,(t.dueAt-sessionMinute())*60000));}
 // Every time shown in a session is on the elapsed-time clock. Labels say which
@@ -2087,8 +2953,10 @@ function getFutureEvents(){
   if(!session)return[];
   const e=EMERGENCIES[session.emergencyId];
   const timerEvents=session.timers.filter(t=>!t.cancelled&&!t.ack&&t.dueAt>sessionMinute()).map(t=>({at:t.dueAt,label:t.label}));
-  const milestones=e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
-  return [...timerEvents,...milestones].sort((a,b)=>a.at-b.at);
+  const milestones=session.deliveredAt!=null?[]:e.milestones.filter(m=>!session.firedMilestones.includes(m.min)&&m.min>sessionMinute()).map(m=>({at:m.min,label:m.label}));
+  const asked=new Set([...(session.decisions?.answers||[]).map(a=>a.id),...(session.decisions?.queue||[]).map(q=>q.id)]);
+  const questions=(DECISIONS[e.id]||[]).filter(d=>d.atMin!=null&&d.atMin>sessionMinute()&&!asked.has(d.id)).map(d=>({at:d.atMin,label:d.q}));
+  return [...timerEvents,...milestones,...questions].sort((a,b)=>a.at-b.at);
 }
 function nextDueLabel(){return statusLineHTML();}
 
@@ -2111,32 +2979,45 @@ function freezeClock(){
 function resumeClock(){if(session&&!session.running){session.running=true;session.lastTickAt=Date.now();saveSession({type:"SESSION_RESUMED",status:"active"});}}
 function advanceSimulation(min){
   if(session.mode!=="simulation")return;
-  if(session.running){session.elapsedBase=currentElapsed();session.lastTickAt=Date.now();}
-  session.elapsedBase+=min*60000;session.simulationTimeMs=session.elapsedBase;logEvent(`Simulation time advanced +${Number(min).toFixed(min%1?1:0)} min`,"simulation");saveSession({type:"SIMULATION_TIME_ADVANCED",status:"active",payload:{minutes:min,simulationTimeMs:session.simulationTimeMs}});checkMilestones();render();
+  const clock=createSessionClock(session),from=clock.now();
+  clock.advance(min*60000);session.simulationTimeMs=session.elapsedBase;
+  const to=clock.now(),e=EMERGENCIES[session.emergencyId];
+  const items=[...session.timers.filter(t=>!t.cancelled&&!t.ack).map(t=>({atMs:t.dueAt*60000,label:t.label,t})),
+    ...e.milestones.filter(m=>!session.firedMilestones.includes(m.min)).map(m=>({atMs:m.min*60000,label:m.label})),
+    ...(DECISIONS[e.id]||[]).filter(d=>d.atMin!=null).map(d=>({atMs:d.atMin*60000,label:`Question: ${d.q}`}))];
+  const passed=crossed(items,from,to);
+  if(passed.length>1)passed.forEach(x=>{if(x.t)x.t.summarized=true;});
+  logEvent(`Simulation time advanced +${Number(min).toFixed(min%1?1:0)} min`,"simulation");
+  saveSession({type:"SIMULATION_TIME_ADVANCED",status:"active",payload:{minutes:min,simulationTimeMs:session.simulationTimeMs}});
+  checkMilestones(passed.length>1);checkDueTransitions(true);render();
+  if(passed.length>1)openSheet({eyebrow:"WHILE TIME ADVANCED",title:`${passed.length} events passed`,html:`<div class="timeline-list">${passed.map(x=>`<article><time>${fmt(x.atMs)}</time><div><strong>${esc(x.label)}</strong></div></article>`).join("")}</div><p class="microcopy">Shown together instead of one alert each. Open items stay in the banner and checklist.</p><button class="button primary full" data-action="close-sheet">Back to actions</button>`});
 }
 function jumpNext(){
   const next=getFutureEvents()[0];
   if(!next){toast("No future timer or milestone");return;}
-  const delta=Math.max(0,next.at-sessionMinute());advanceSimulation(delta);
+  advanceSimulation(Math.max(0,next.at-sessionMinute()));
 }
-function checkMilestones(){
+function checkMilestones(quiet=false){
   if(!session)return; const e=EMERGENCIES[session.emergencyId],now=sessionMinute();
   let latest=null;
-  e.milestones.forEach(m=>{
+  if(session.deliveredAt==null)e.milestones.forEach(m=>{
     if(now>=m.min&&!session.firedMilestones.includes(m.min)){
-      session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message});logEvent(`${m.label}: ${m.message}`,"milestone");latest=m;
+      session.firedMilestones.push(m.min);addTimer({label:m.label,dueAt:m.min,kind:"milestone",message:m.message,summarized:quiet});logEvent(`${m.label}: ${m.message}`,"milestone",m.min*60000);latest=m;
     }
   });
-  // The alert strip already shows the milestone; the toast only names it.
-  if(latest){playAlert();toast(`${latest.label} due`,"alert");lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest.min,label:latest.label}});}
+  const asked=D.onTick(session,DECISIONS[e.id]||[],currentElapsed());
+  if(asked.length)askDecisions(asked);
+  if(latest&&!quiet)playAlert(); // the banner shows it; no second copy as a toast
+  if(latest||asked.length){lastDueCount=getDueTimers().length;saveSession({type:"MILESTONE_FIRED",status:"pending",payload:{minute:latest?.min??null}});render();}
 }
 let lastDueCount=0;
-function checkDueTransitions(){
+function checkDueTransitions(quiet=false){
   const due=getDueTimers();let changed=false;
   due.forEach(t=>{
     if(t.kind==="repeat"&&t.taskId&&!t.reactivated){t.reactivated=true;session.tasks[t.taskId]={status:"todo",dueAt:currentElapsed()};logEvent(`Reassessment due: ${t.label}`,"timer");changed=true;}
+    if(t.kind==="medication"&&!t.asked){t.asked=true;const ids=D.onTimerDue(session,DECISIONS[session.emergencyId]||[],t.medId,currentElapsed());if(ids.length){askDecisions(ids);t.ack=true;}changed=true;}
   });
-  if(due.length>lastDueCount){playAlert();changed=true;}
+  if(due.length>lastDueCount){if(!quiet)playAlert();changed=true;}
   if(changed){saveSession({type:"TIMER_DUE",status:"pending",payload:{timerIds:due.map(t=>t.id)}});render();}
   lastDueCount=due.length;
 }
@@ -2279,36 +3160,52 @@ function openTaskInfo(emergencyId,taskId){
   const e=EMERGENCIES[emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
   openSheet({eyebrow:t.group,title:t.title,html:`<p class="lead">${esc(t.detail)}</p>${t.review?`<div class="warning-box"><strong>Requires local decision</strong><p>${esc(t.review)}</p></div>`:""}${t.meds?`<h3>Related medications</h3><div class="sheet-link-list">${t.meds.map(id=>{const m=getMedication(id);return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}</small></div><b>›</b></button>`;}).join("")}</div>`:""}<h3>Evidence basis</h3>${refTags(e.source)}`});
 }
+let givenAgo=0; // minutes before now the dose was actually given (chosen in the medication sheet)
 function openMedication(id,recordable=!!session){
-  const m=getMedication(id),r=getReference(m.source);if(!m)return;
+  const m=getMedication(id),r=getReference(m?.source);if(!m)return;
+  const live=recordable&&session?.status==="active";
+  const maxAgo=live?Math.floor(currentElapsed()/60000):0;
+  let rec="";
+  if(live){
+    const chk=canGive(session,m);
+    rec=chk.ok?`<div class="given-row" role="group" aria-label="When was it given?"><span>Given</span>${GIVEN_AGO_MIN.filter(n=>n<=Math.max(0,maxAgo)).map(n=>`<button class="chip${n===givenAgo?" on":""}" data-given-ago="${n}" data-med="${m.id}" aria-pressed="${n===givenAgo}">${n?`${n} min ago`:"Now"}</button>`).join("")}</div>
+      <button class="button primary full big-confirm" data-action="record-med" data-med-id="${m.id}">Confirm given ${givenAgo?`${givenAgo} min ago`:"now"}</button>
+      <p class="microcopy">Only after actual administration. The given time and the recording time are both kept; reminders run from the given time.</p>`
+      :`<div class="warning-box"><strong>Dose limit reached</strong><p>${esc(chk.reason)}</p></div>`;
+  }
   openSheet({eyebrow:m.context,title:m.name,html:`<div class="dose-callout ${m.accent}"><small>DOSE / SEQUENCE</small><strong>${esc(m.dose)}</strong></div>
-    <dl class="med-detail"><div><dt>Administration</dt><dd>${esc(m.administration)}</dd></div><div><dt>Repeat / reassessment</dt><dd>${esc(m.repeat)}</dd></div><div class="avoid"><dt>Avoid / use caution</dt><dd>${esc(m.avoid)}</dd></div><div><dt>Monitor</dt><dd>${esc(m.watch)}</dd></div></dl>
-    ${recordable&&session.status==="active"?`<button class="button primary full" data-action="record-med" data-med-id="${m.id}">Confirm medication given now</button><p class="microcopy">Only tap after actual administration. This records time and starts any applicable reassessment timer.</p>`:""}
+    ${rec}
+    <details class="med-more"${live?"":" open"}><summary>Administration, cautions, monitoring</summary><dl class="med-detail"><div><dt>Administration</dt><dd>${esc(m.administration)}</dd></div><div><dt>Repeat / reassessment</dt><dd>${esc(m.repeat)}</dd></div><div class="avoid"><dt>Avoid / use caution</dt><dd>${esc(m.avoid)}</dd></div><div><dt>Monitor</dt><dd>${esc(m.watch)}</dd></div></dl></details>
     <div class="source-note"><strong>${esc(r?.short||"")}</strong><span>${esc(r?.title||"")}</span></div>`});
 }
 function openMedicationChooser(task){
-  openSheet({eyebrow:"SELECT MEDICATION",title:"What was administered?",html:`<p class="lead">Open the medication card to verify dosing and precautions. Record only after actual administration.</p><div class="sheet-link-list">${task.meds.map(id=>{const m=getMedication(id);return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}</small></div><b>›</b></button>`;}).join("")}</div>`});
+  openSheet({eyebrow:"RECORD A DOSE",title:"Which medication?",html:`<div class="sheet-link-list">${task.meds.map(id=>{const m=getMedication(id),n=session?.doseCounts?.[id]||0;return `<button data-med-id="${id}"><span>Rx</span><div><strong>${esc(m.name)}</strong><small>${esc(m.context)}${n?` · ${n} recorded`:""}</small></div><b>›</b></button>`;}).join("")}</div>`});
 }
 function recordMedication(id){
   const m=getMedication(id);if(!session||!m)return;
-  const prior=session.doseCounts[id]||0;
-  if(m.maxDoses&&prior>=m.maxDoses){toast(`${m.name}: pathway dose limit reached—escalate and verify orders`,"alert");return;}
-  session.doseCounts[id]=(session.doseCounts[id]||0)+1;
-  logEvent(`${m.name} administered · dose ${session.doseCounts[id]}`,"medication");
-  if(m.timer)addTimer({label:m.timerLabel||`Reassess after ${m.name}`,dueAt:sessionMinute()+m.timer,kind:"medication",medId:id});
-  const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));if(task)session.tasks[task.id]={status:"done",completedAt:currentElapsed()};
-  expandedTask=null;
-  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:session.doseCounts[id]}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${m.timer} min`:""}`);
+  const now=currentElapsed(),given=Math.max(0,now-givenAgo*60000);
+  let r;try{r=recordDose(session,m,{givenAtMs:given,recordedAtMs:now});}catch(err){toast(err.message,"alert");return;}
+  givenAgo=0;
+  logEvent(`${m.name} given · dose ${r.dose.n}${given<now?` · recorded at ${fmt(now)}`:""}`,"medication",given);
+  if(r.timer)addTimer(r.timer);
+  const e=EMERGENCIES[session.emergencyId],task=e.tasks.find(t=>t.meds?.includes(id));
+  if(task){session.tasks[task.id]={status:"done",completedAt:now};if(session.branch?.pinned===task.id)session.branch.pinned=null;askDecisions(D.onTaskEvent(session,DECISIONS[e.id]||[],task.id,now));}
+  saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:r.dose.n,givenAtMs:given,recordedAtMs:now}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${Math.max(0,Math.round(r.timer.dueAt-now/60000))} min`:""}`);
 }
 function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
 // ---------- Cockpit side panels: Flowchart · Meds · Timers · Timeline ----------
 // Wide screens: the right-hand column. Phones: the same content in a sheet. Never leaves the session.
-const SIDE_TITLES={flow:"Pathway",meds:"Medications",timers:"Timers and reminders",timeline:"Event timeline"};
+const SIDE_TITLES={flow:"Pathway",meds:"Medications",timeline:"Timeline",team:"Team",timers:"Timeline"};
 function sessionMeds(e){
   const ids=new Set();e.tasks.forEach(t=>(t.meds||[]).forEach(m=>ids.add(m)));
   Object.values(PATHWAYS[e.id]?.nodes||{}).forEach(n=>(n.medicationRefs||[]).forEach(m=>ids.add(m)));
   return [...ids].map(getMedication).filter(Boolean);
+}
+function timersHTML(){
+  const active=session.timers.filter(t=>!t.cancelled&&!t.ack).sort((a,b)=>a.dueAt-b.dueAt);
+  if(!active.length)return "";
+  return `<h3 class="side-h">Reminders</h3><div class="timer-list">${active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due?"due":""}"><div><strong>${esc(t.label)}</strong><small>${due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div><button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button></article>`;}).join("")}</div><p class="side-note">Acknowledging a reminder does not complete its task.</p>`;
 }
 function sidePanelHTML(k){
   const e=EMERGENCIES[session.emergencyId];
@@ -2316,29 +3213,42 @@ function sidePanelHTML(k){
   if(k==="flow")return head(`<button class="text-button" data-action="open-full-flow">Open full ›</button>`)+renderOverview(PATHWAYS[e.id],flowCtx(e.id),{compact:true});
   if(k==="meds"){
     const mine=sessionMeds(e),mineIds=new Set(mine.map(m=>m.id)),others=MEDICATIONS.filter(m=>!mineIds.has(m.id));
-    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
-    return head()+`<p class="side-note">Tap a drug for dosing, cautions and to record a dose.</p>
-      ${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
+    const card=m=>`<button class="side-med ${m.accent}" data-med-id="${m.id}"><strong>${esc(m.name)}</strong><span>${esc(m.dose)}</span>${session.doseCounts?.[m.id]?`<em>${session.doseCounts[m.id]} dose${session.doseCounts[m.id]>1?"s":""} recorded</em>`:""}</button>`;
+    return head()+`${mine.length?`<div class="side-meds">${mine.map(card).join("")}</div>`:`<p class="empty">No pathway-specific medications.</p>`}
       <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
   }
-  if(k==="timers"){
-    const active=session.timers.filter(t=>!t.cancelled).sort((a,b)=>(a.ack-b.ack)||(a.dueAt-b.dueAt));
-    return head()+`<p class="side-note">Silencing an alert does not complete its clinical task.</p><div class="timer-list">${active.length?active.map(t=>{const due=t.dueAt<=sessionMinute();return `<article class="${due&&!t.ack?"due":""}"><div><strong>${esc(t.label)}</strong><small>${t.ack?`Acknowledged · due at ${fmt(t.dueAt*60000)}`:due?overdueSpan(t):`Due at ${fmt(t.dueAt*60000)} · in <span class="live-countdown" data-due-at="${t.dueAt}">${formatCountdown(t)}</span>`}</small></div>${!t.ack?`<button data-action="ack-timer" data-timer-id="${t.id}">Acknowledge</button>`:""}</article>`;}).join(""):`<p class="empty">No timers yet.</p>`}</div>`;
-  }
-  if(k==="timeline")return head(`<small class="side-sub">elapsed time</small>`)+`<div class="timeline-list">${session.events.map(ev=>`<article><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  if(k==="timeline"||k==="timers")return head(`<button class="text-button" data-action="export-debrief">Export</button>`)+timersHTML()+`<h3 class="side-h">Events · elapsed time</h3><div class="timeline-list">${sortedTimeline(session).map(ev=>`<article class="tl-${esc(ev.type)}"><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
+  if(k==="team")return head()+(session.mode==="simulation"?instructorHTML():teamHTML());
   return "";
+}
+function teamHTML(){
+  const c=checklistModel(),roles=EDUCATION.find(x=>x.id==="roles");
+  return `<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+    ${roles?`<h3 class="side-h">Roles</h3><div class="role-list">${roles.sections.map(r=>`<article><strong>${esc(r.h)}</strong><span>${esc(r.p||"")}</span></article>`).join("")}</div>`:""}`;
 }
 function toggleSide(k){
   if(!session||session.status!=="active")return;
+  if(k==="actions"){sidePanel=null;closeSheet();render();return;}
   if(WIDE.matches){sidePanel=sidePanel===k?null:k;render();return;}
   // Phone: open as a sheet; the tab shows as active while the sheet is open.
   sidePanel=k;render();
   openSheet({eyebrow:"SESSION · "+EMERGENCIES[session.emergencyId].short.toUpperCase(),title:SIDE_TITLES[k],wide:true,html:`<div class="sheet-side" data-pathway="${session.emergencyId}">${sidePanelHTML(k).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">')}</div>`});
 }
 function refreshSideSheet(){
-  // Keep an open phone sheet current when timers fire or a dose is recorded.
   const host=$("#sheetBody .sheet-side");if(!host||!sidePanel||WIDE.matches)return;
+  if(host.contains(document.activeElement)&&document.activeElement.matches("input,textarea,select"))return;
   host.innerHTML=sidePanelHTML(sidePanel).replace(/<div class="side-flow-head"><h2>[^<]*<\/h2>/,'<div class="side-flow-head">');
+}
+// Checklist row → status sheet. Medication tasks go through the dose confirmation.
+function openCheckSheet(taskId){
+  const e=EMERGENCIES[session.emergencyId],t=e.tasks.find(x=>x.id===taskId);if(!t)return;
+  const st=displayState(storedStatus(taskId)),at=taskState(taskId);
+  const b=(act,label,cls="secondary")=>`<button class="button ${cls} full" data-task-action="${act}" data-task-id="${t.id}">${label}</button>`;
+  let actions="";
+  if(st==="pending")actions=(t.type==="med"?b("done","Record dose…","primary"):b("done",t.type==="repeat"?"Assessed ✓":"Done ✓","primary"))+(t.type!=="med"?b("ongoing","Mark ongoing"):"");
+  if(st==="ongoing")actions=b("done",t.type==="repeat"?"Assessed ✓":"Completed ✓","primary")+b("pending","Back to pending");
+  if(st==="completed")actions=`<p class="lead">Completed at ${fmt(at.completedAt||0)} elapsed.</p>`+(t.type==="med"?b("done","Record another dose…"):"")+b("pending","Undo — back to pending");
+  openSheet({eyebrow:checkLabel(t).toUpperCase(),title:taskLabel(t),html:`<div class="check-actions">${actions}</div><details class="med-more"><summary>Details</summary><p>${esc(t.detail)}</p></details>`});
 }
 function showTimers(){
   const active=session.timers.filter(t=>!t.cancelled);
@@ -2353,6 +3263,82 @@ function showDue(id){
 }
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
+
+// ---------- SIM Master console, attached to a simulation session (Team tab) ----------
+// Same device only: it drives the simulation running here. Trainee phones run their own sessions.
+const OBSERVATIONS=["Roles named","Closed-loop orders","Early escalation","Shared mental model","Communication gap","Delayed action"];
+const instrOpen={A:true,B:false,C:false,D:false,E:false};
+function presetsFor(id){return SCENARIOS.filter(x=>x.emergency===id);}
+function instructorHTML(){
+  const e=EMERGENCIES[session.emergencyId],pre=SCENARIOS.find(x=>x.id===session.preset),c=checklistModel();
+  const sec=(k,title,body)=>`<details class="instr" data-instr="${k}"${instrOpen[k]?" open":""}><summary><b>${k}</b> ${title}</summary><div class="instr-body">${body}</div></details>`;
+  const vit=session.patient||{};
+  const nowMin=sessionMinute();
+  const presetVitals=pre?Object.assign({},pre.start,...pre.events.filter(ev=>ev.at<=nowMin&&ev.vitals).map(ev=>ev.vitals)):{};
+  const shown={...presetVitals,...vit};
+  const fired=new Set(session.firedTriggers||[]);
+  const triggers=pre?[...pre.events,...(pre.conditional||[])]:[];
+  const missed=session.timers.filter(t=>t.kind==="milestone"&&!t.ack);
+  return `<div class="instr-wrap">
+    <label class="instr-preset">Scenario preset <select data-action="set-preset"><option value="">None</option>${presetsFor(e.id).map(x=>`<option value="${x.id}"${x.id===session.preset?" selected":""}>${esc(x.title)}</option>`).join("")}</select></label>
+    ${sec("A","Time",`<div class="sim-sheet-grid"><button class="button ${session.running?"secondary":"primary"}" data-sim="pause">${session.running?"Pause":"Resume"}</button><button class="button secondary" data-sim="1">+1 min</button><button class="button secondary" data-sim="5">+5 min</button><button class="button primary" data-sim="next">Next event</button></div>`)}
+    ${sec("B","Patient status",`<div class="vitals-grid">${["BP","HR","SpO2","QBL","Fundus","Other"].map(k=>`<label><span>${k==="SpO2"?"SpO₂":k}</span><input data-vital="${k}" value="${esc(shown[k]||"")}" autocomplete="off"></label>`).join("")}</div><button class="button secondary full" data-action="push-vitals">Announce status to the team</button><p class="side-note">Simulated values only. No patient information.</p>`)}
+    ${sec("C","Trigger events",triggers.length?`<div class="trigger-list">${triggers.map(ev=>`<article class="${fired.has(ev.id)?"fired":""}"><div><strong>${esc(ev.title)}</strong><small>${ev.at!=null?`scheduled ${fmt(ev.at*60000)}`:`if not done by ${fmt((ev.by||0)*60000)}`}</small><p>${esc(ev.say||"")}</p></div><button class="button ${fired.has(ev.id)?"ghost":"secondary"}" data-trigger="${ev.id}">${fired.has(ev.id)?"Fired ✓":"Fire"}</button></article>`).join("")}</div>`:`<p class="side-note">Choose a scenario preset for scripted events, or announce status changes in B.</p>`)}
+    ${sec("D","Team performance",`<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+      <div class="obs-grid">${OBSERVATIONS.map(o=>`<button class="chip" data-observe="${esc(o)}">${esc(o)}</button>`).join("")}</div>
+      <div class="note-row"><input id="instrNote" placeholder="Observation (no patient identifiers)" autocomplete="off"><button class="button secondary" data-action="add-note">Add</button></div>
+      ${(session.notes||[]).length?`<div class="timeline-list">${[...session.notes].reverse().map(n=>`<article><time>${fmt(n.at)}</time><div><strong>${esc(n.text)}</strong></div></article>`).join("")}</div>`:""}`)}
+    ${sec("E","Debrief and export",`<p class="side-note">${(session.decisions?.answers||[]).length} decisions · ${(session.doses||[]).length} doses · ${missed.length} milestones not acknowledged</p>${pre?`<h3 class="side-h">Debrief objectives</h3><ul class="obj-list">${pre.objectives.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>`:""}<div class="sim-sheet-grid"><button class="button primary" data-action="export-debrief">Download summary</button><button class="button secondary" data-action="print-debrief">Print</button></div>`)}
+  </div>`;
+}
+function addNote(text){if(!text)return;session.notes=session.notes||[];session.notes.push({at:currentElapsed(),text});logEvent(`Instructor: ${text}`,"instructor");saveSession({type:"INSTRUCTOR_NOTE",payload:{text}});rerenderTeam();}
+function rerenderTeam(){render();}
+function fireTrigger(id){
+  const pre=SCENARIOS.find(x=>x.id===session.preset);if(!pre)return;
+  const ev=[...pre.events,...(pre.conditional||[])].find(x=>x.id===id);if(!ev)return;
+  session.firedTriggers=[...new Set([...(session.firedTriggers||[]),id])];
+  if(ev.vitals)session.patient={...(session.patient||{}),...ev.vitals};
+  addTimer({label:ev.title,dueAt:sessionMinute(),kind:"milestone",message:[ev.show,ev.vitals&&Object.entries(ev.vitals).map(([k,v])=>`${k} ${v}`).join(" · ")].filter(Boolean).join(" · ")||ev.say||""});
+  logEvent(`Instructor event: ${ev.title}`,"instructor");
+  saveSession({type:"SIM_TRIGGER",payload:{triggerId:id}});render();
+}
+function pushVitals(){
+  const vals={};$$("[data-vital]").forEach(i=>{if(i.value.trim())vals[i.dataset.vital]=i.value.trim();});
+  session.patient={...(session.patient||{}),...vals};
+  const msg=Object.entries(vals).map(([k,v])=>`${k==="SpO2"?"SpO₂":k} ${v}`).join(" · ");
+  if(!msg)return;
+  addTimer({label:"Patient status",dueAt:sessionMinute(),kind:"milestone",message:msg});
+  logEvent(`Patient status: ${msg}`,"instructor");saveSession({type:"SIM_TRIGGER",payload:{vitals:vals}});render();
+}
+function exportDebrief(print=false){
+  const e=EMERGENCIES[session.emergencyId];
+  const text=exportText(session,{title:`OB Emergency Assist · ${e.name}`,fmt:ms=>fmt(ms,true)});
+  if(print){const w=window.open("","_blank");if(w){w.document.write(`<pre style="font:15px/1.5 system-ui;white-space:pre-wrap">${esc(text)}</pre>`);w.document.close();w.print();}return;}
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type:"text/plain"}));a.download=`ob-emergency-${session.mode}-${e.id}.txt`;document.body.appendChild(a);a.click();a.remove();
+}
+function logManeuverAttempt(id){
+  const e=EMERGENCIES.shoulder,t=e.tasks.find(x=>x.id===id);if(!t)return;
+  const at=currentElapsed(),entry=logManeuver(session,id,at);
+  session.tasks[id]={status:"done",completedAt:at};
+  logEvent(`${CHECK_LABELS[id]||t.title}${entry.n>1?` (attempt ${entry.n})`:""}`,"maneuver");
+  saveSession({type:"MANEUVER_LOGGED",taskId:id,payload:{n:entry.n}});render();
+}
+function undoManeuver(){
+  const last=(session.maneuvers||[]).pop();if(!last){toast("Nothing to undo");return;}
+  if(!attempts(session,last.id).length)session.tasks[last.id]={status:"todo"};
+  logEvent(`Undone: ${CHECK_LABELS[last.id]||last.id} log entry`,"maneuver");saveSession({type:"MANEUVER_UNDONE",taskId:last.id});render();
+}
+function deliveredNow(){
+  const at=markDelivered(session,currentElapsed());
+  logEvent(`Delivered · head-to-body ${fmt(at)}`,"maneuver");
+  session.branch=session.branch||{activated:[],pinned:null};session.branch.activated=[...new Set([...(session.branch.activated||[]),"sd-after"])];
+  session.timers.forEach(t=>{if(t.kind==="milestone"&&t.dueAt*60000>at)t.cancelled=true;});
+  saveSession({type:"DELIVERED",payload:{atMs:at}});render();
+}
+function liveAdvanceWarning(){
+  openSheet({eyebrow:"LIVE SESSION",title:"Time can’t be changed",html:`<p class="lead">This clock is real time. Advancing or pausing it would make the record wrong.</p><p>To practice with time controls, run a separate simulation on Sim Master. This live session keeps running.</p><a class="button primary full" href="sim-master.html" target="_blank" rel="noopener">Open Sim Master in a new tab</a><button class="button secondary full" data-action="close-sheet">Back to actions</button>`});
+}
+
 function showAbout(){
   openSheet({eyebrow:"ABOUT THIS BUILD",title:"OB Emergency Assist",html:`<div class="about-avatar"><img src="img/avatar.png" alt="" width="88" height="88"><div><strong>Dr. Weiping Lin</strong><span>Creator · OB/GYN</span></div></div><p class="lead">A phone-first clinical guidance and simulation prototype. It is not a medical record, does not replace clinical judgment and must be reviewed against current institutional protocols before clinical use.</p><div class="about-list"><div><strong>Version</strong><span>${APP_VERSION}</span></div><div><strong>Content review</strong><span>${CONTENT_REVIEW_DATE}</span></div><div><strong>Data</strong><span>Stored only in this browser</span></div><div><strong>Network</strong><span>Core content available offline after first successful load</span></div></div><h3>Planned Workspace transition</h3><p>The state engine uses event-style actions so a later Google Workspace adapter can synchronize session codes, task ownership, medication events and timelines across devices.</p>`});
 }
@@ -2363,7 +3349,7 @@ function openSheet({eyebrow="",title,html,wide=false}){sheetGen++;
 }
 function closeSheet(){
   // Phone: a side-panel sheet closing also clears the active tool tab.
-  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".cockpit-tabs [data-side]").forEach(b=>{b.classList.remove("active");b.setAttribute("aria-pressed","false");});}
+  if(sidePanel&&!WIDE.matches){sidePanel=null;$$(".tool-bar [data-side]").forEach(b=>{const on=b.dataset.side==="actions";b.classList.toggle("active",on);b.setAttribute("aria-pressed",String(on));});}
   $("#infoSheet").classList.remove("open");document.body.classList.remove("sheet-open");const gen=++sheetGen;setTimeout(()=>{if(gen!==sheetGen)return;$("#infoSheet").hidden=true;$("#sheetBackdrop").hidden=true;},180);}
 function toast(message,type="ok"){
   // In the cockpit, toasts never stack over action cards: one at a time, short-lived.
@@ -2399,14 +3385,20 @@ document.addEventListener("click",e=>{
     $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
   }
-  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden)showSimTime();}
+  if(b.dataset.answer)answerDecision(b.dataset.decision,b.dataset.answer);
+  if(b.dataset.check&&session?.status==="active")openCheckSheet(b.dataset.check);
+  if(b.dataset.maneuver)logManeuverAttempt(b.dataset.maneuver);
+  if(b.dataset.givenAgo!=null){givenAgo=Number(b.dataset.givenAgo);openMedication(b.dataset.med);}
+  if(b.dataset.trigger)fireTrigger(b.dataset.trigger);
+  if(b.dataset.observe)addNote(b.dataset.observe);
+  if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden&&!D.takeover(session)&&$("#sheetTitle").textContent.startsWith("Elapsed"))showSimTime();}
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
   if(a==="back-home"){selectedEmergency=null;render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();
-  if(a==="sim-time")showSimTime();
+  if(a==="sim-time"){closeSheet();setTimeout(showSimTime,200);}
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
   // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
   if(b.dataset.side)toggleSide(b.dataset.side);
@@ -2414,8 +3406,19 @@ document.addEventListener("click",e=>{
   if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
-  if(a==="toggle-completed"){const l=$("#completedList");l.hidden=!l.hidden;}
-  if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();render();}
+  if(a==="toggle-section"){const o=openState();const k=b.dataset.section;o[k]=!(o[k]??(k==="now"||k==="ongoing"));render();}
+  if(a==="defer-decision")deferDecision(b.dataset.decision);
+  if(a==="open-decision")reopenDecision(b.dataset.decision);
+  if(a==="snooze-timer"){const t=session.timers.find(x=>x.id===b.dataset.timerId);if(t&&snoozeAlert(t,sessionMinute())){logEvent(`Snoozed 1 min: ${t.label}`,"timer");saveSession({type:"TIMER_SNOOZED",payload:{timerId:t.id}});render();}}
+  if(a==="session-menu")showSessionMenu();
+  if(a==="live-advance")liveAdvanceWarning();
+  if(a==="mark-delivered")confirmAction("Baby delivered?","Records the head-to-body interval now.",deliveredNow);
+  if(a==="undo-maneuver")undoManeuver();
+  if(a==="export-debrief")exportDebrief(false);
+  if(a==="print-debrief")exportDebrief(true);
+  if(a==="push-vitals")pushVitals();
+  if(a==="add-note"){const i=$("#instrNote");addNote(i?.value.trim());}
+  if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();closeSheet();render();}
   if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
   if(a==="open-due")showDue(b.dataset.timerId);
@@ -2427,6 +3430,19 @@ document.addEventListener("click",e=>{
 });
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
+document.addEventListener("change",e=>{if(e.target.dataset.action==="set-preset"&&session){session.preset=e.target.value||null;session.firedTriggers=[];logEvent(e.target.value?`Scenario preset: ${SCENARIOS.find(x=>x.id===e.target.value)?.title}`:"Scenario preset cleared","instructor");saveSession({type:"SIM_PRESET",payload:{preset:session.preset}});render();}});
+document.addEventListener("toggle",e=>{const d=e.target.closest?.("details[data-instr]");if(d)instrOpen[d.dataset.instr]=d.open;},true);
+// Cockpit keyboard: Y / N answer, Esc = Back to actions, D = done on the most-urgent card.
+document.addEventListener("keydown",e=>{
+  if(session?.status!=="active"||route!=="emergency"||e.target.matches?.("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;
+  const dm=$(".decision-mode");
+  if(dm){const k=e.key.toLowerCase();
+    if(k==="y")dm.querySelector('[data-answer="yes"]')?.click();
+    else if(k==="n")dm.querySelector('[data-answer="no"]')?.click();
+    else if(e.key==="Escape")dm.querySelector(".dm-back")?.click();
+    return;}
+  if(e.key.toLowerCase()==="d"&&$("#infoSheet").hidden){$(".du-done")?.click();}
+});
 $("#sheetBackdrop").addEventListener("click",closeSheet);
 // ---------- Header controls ----------
 let deferredInstall=null;

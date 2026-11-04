@@ -81,6 +81,22 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 
 - [ ] Shoulder dystocia maneuvers · Third-trimester bleeding and trauma · Cardiac arrest in pregnancy
 
+## Two-state cockpit (`cockpit-config.js`) — new in 0.16, all draft
+
+- [ ] Which pathway questions take over the screen, and their wording (≤ 5 words)
+- [ ] Triggers: PPH "Bleeding controlled?" asked at each bleeding assessment after a uterotonic is recorded
+- [ ] HTN "Severe BP persistent?" asked at each repeat BP; "Still severe after dose?" asked when the drug's reassessment reminder falls due
+- [ ] Eclampsia "Seizure recurred?" asked at each vitals/neuro check after magnesium
+- [ ] Arrest "ROSC at 4 minutes?" asked at 4:00 elapsed
+- [ ] Trauma "Mother and fetus stable?" asked once fetal monitoring is started after the primary survey
+- [ ] Branch effects: which task is pinned / brought forward / reopened by each answer; which answers close the question
+- [ ] Tasks held back until a NO (escalation, recurrent seizure, expedite delivery, last-resort maneuvers)
+- [ ] Checklist names (≤ 3 words) for all 54 tasks
+- [ ] Alert levels: reassessment reminders as P1 cards (snooze 1 min, max 2); milestones and minute marks as P2 banners
+- [ ] Medication "given … min ago" choices (now, 1, 2, 5, 10) and reminders timed from the given time
+- [ ] Shoulder dystocia maneuver sections and order; "Baby delivered" stops the minute marks
+- [ ] SIM Master console observation list and debrief export content
+
 ## Flowchart pathways (`pathways.js`)
 
 Restructured from the existing flow, task and medication text. Nodes marked `reviewStatus:"draft"` add or infer content:
