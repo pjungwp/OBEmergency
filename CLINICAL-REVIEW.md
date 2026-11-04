@@ -95,7 +95,6 @@ Status legend: `[ ]` not reviewed · `[~]` under review · `[x]` approved
 - [ ] Alert levels: reassessment reminders as P1 cards (snooze 1 min, max 2); milestones and minute marks as P2 banners
 - [ ] Medication "given … min ago" choices (now, 1, 2, 5, 10) and reminders timed from the given time
 - [ ] Shoulder dystocia maneuver sections and order; "Baby delivered" stops the minute marks
-- [ ] SIM Master console observation list and debrief export content
 
 ## Flowchart pathways (`pathways.js`)
 
@@ -108,13 +107,19 @@ Restructured from the existing flow, task and medication text. Nodes marked `rev
 - [ ] Overview bullets and chart summaries (shortened from reviewed text)
 - [ ] Mockup items intentionally **not** added pending review: "IV ×2", "treat anemia", "UOP", "IR (UAE)"
 
-## Sim Master scenarios (`scenarios.js`)
+## Sim Master scenarios (`sim-scenarios.js`) — all draft, new in 0.17
 
-- [ ] PPH atony: vitals trajectory, event timings, expected-action targets
-- [ ] PPH with severe preeclampsia: methylergonovine trap, second-line agent choices, magnesium monitoring
-- [ ] PPH firm uterus / trauma: exam finding, escalation-to-OR criteria
-- [ ] Subtitle lines on cockpit task cards (`TASK_SUBTITLES` in `app.js`)
-- [ ] Debrief questions and confederate lines reviewed by simulation faculty
+Seven branching scenarios, each with Basic / Intermediate / Advanced levels: PPH atony · PPH with severe preeclampsia · PPH genital-tract trauma · severe hypertension → eclampsia · shoulder dystocia · maternal cardiac arrest · placental abruption after MVA.
+
+- [ ] Patient states: target vitals, bleeding rates (mL/min) and findings for each state
+- [ ] Vitals drift (60-second time constant) — plausible for teaching?
+- [ ] PPH stage rule shown to the instructor and on the monitor (draft: stage 3 if > 1,500 mL or SBP < 90 or HR ≥ 120; stage 2 if > 1,000 mL; stage 1 if > 500 mL) — confirm against CMQCC wording
+- [ ] Suggestion rules (e.g. "no uterotonic by 4 min → suggest worsen"; arrest "no ROSC at 4 min")
+- [ ] Critical actions, categories and target times per scenario and level
+- [ ] Injects (labs, confederate lines, complications) and their wording
+- [ ] Debrief questions per action, reviewed by simulation faculty
+- [ ] Prebrief scripts, roles and equipment lists
+- [ ] Data handling: debrief exports contain no names; retention per the simulation program
 
 ## TeamSTEPPS and simulation
 

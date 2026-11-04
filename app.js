@@ -12,7 +12,6 @@ import {recordDose,canGive,GIVEN_AGO_MIN} from "./medications.js";
 import {appendEvent,timeline as sortedTimeline,exportText} from "./history.js";
 import {logManeuver,suggestNext,markDelivered,attempts} from "./dystocia.js";
 import {decisionModeHTML,urgentHTML,checklistHTML,dystociaLeftHTML,maneuverLogHTML,alertCardHTML} from "./cockpit.js";
-import {SCENARIOS} from "./scenarios.js";
 
 const $ = (s,root=document)=>root.querySelector(s);
 const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
@@ -754,12 +753,12 @@ function sidePanelHTML(k){
       <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
   }
   if(k==="timeline"||k==="timers")return head(`<button class="text-button" data-action="export-debrief">Export</button>`)+timersHTML()+`<h3 class="side-h">Events · elapsed time</h3><div class="timeline-list">${sortedTimeline(session).map(ev=>`<article class="tl-${esc(ev.type)}"><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
-  if(k==="team")return head()+(session.mode==="simulation"?instructorHTML():teamHTML());
+  if(k==="team")return head()+teamHTML();
   return "";
 }
 function teamHTML(){
   const c=checklistModel(),roles=EDUCATION.find(x=>x.id==="roles");
-  return `<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+  return `${session.mode==="simulation"?`<div class="sim-note"><strong>Facilitating?</strong><span>Run the scenario from Sim Master on a separate device or window — patient states, injects, observations and the debrief live there.</span><a class="button secondary" href="sim-master.html" target="_blank" rel="noopener">Open Sim Master ↗</a></div>`:""}<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
     ${roles?`<h3 class="side-h">Roles</h3><div class="role-list">${roles.sections.map(r=>`<article><strong>${esc(r.h)}</strong><span>${esc(r.p||"")}</span></article>`).join("")}</div>`:""}`;
 }
 function toggleSide(k){
@@ -800,52 +799,6 @@ function showDue(id){
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
 
-// ---------- SIM Master console, attached to a simulation session (Team tab) ----------
-// Same device only: it drives the simulation running here. Trainee phones run their own sessions.
-const OBSERVATIONS=["Roles named","Closed-loop orders","Early escalation","Shared mental model","Communication gap","Delayed action"];
-const instrOpen={A:true,B:false,C:false,D:false,E:false};
-function presetsFor(id){return SCENARIOS.filter(x=>x.emergency===id);}
-function instructorHTML(){
-  const e=EMERGENCIES[session.emergencyId],pre=SCENARIOS.find(x=>x.id===session.preset),c=checklistModel();
-  const sec=(k,title,body)=>`<details class="instr" data-instr="${k}"${instrOpen[k]?" open":""}><summary><b>${k}</b> ${title}</summary><div class="instr-body">${body}</div></details>`;
-  const vit=session.patient||{};
-  const nowMin=sessionMinute();
-  const presetVitals=pre?Object.assign({},pre.start,...pre.events.filter(ev=>ev.at<=nowMin&&ev.vitals).map(ev=>ev.vitals)):{};
-  const shown={...presetVitals,...vit};
-  const fired=new Set(session.firedTriggers||[]);
-  const triggers=pre?[...pre.events,...(pre.conditional||[])]:[];
-  const missed=session.timers.filter(t=>t.kind==="milestone"&&!t.ack);
-  return `<div class="instr-wrap">
-    <label class="instr-preset">Scenario preset <select data-action="set-preset"><option value="">None</option>${presetsFor(e.id).map(x=>`<option value="${x.id}"${x.id===session.preset?" selected":""}>${esc(x.title)}</option>`).join("")}</select></label>
-    ${sec("A","Time",`<div class="sim-sheet-grid"><button class="button ${session.running?"secondary":"primary"}" data-sim="pause">${session.running?"Pause":"Resume"}</button><button class="button secondary" data-sim="1">+1 min</button><button class="button secondary" data-sim="5">+5 min</button><button class="button primary" data-sim="next">Next event</button></div>`)}
-    ${sec("B","Patient status",`<div class="vitals-grid">${["BP","HR","SpO2","QBL","Fundus","Other"].map(k=>`<label><span>${k==="SpO2"?"SpO₂":k}</span><input data-vital="${k}" value="${esc(shown[k]||"")}" autocomplete="off"></label>`).join("")}</div><button class="button secondary full" data-action="push-vitals">Announce status to the team</button><p class="side-note">Simulated values only. No patient information.</p>`)}
-    ${sec("C","Trigger events",triggers.length?`<div class="trigger-list">${triggers.map(ev=>`<article class="${fired.has(ev.id)?"fired":""}"><div><strong>${esc(ev.title)}</strong><small>${ev.at!=null?`scheduled ${fmt(ev.at*60000)}`:`if not done by ${fmt((ev.by||0)*60000)}`}</small><p>${esc(ev.say||"")}</p></div><button class="button ${fired.has(ev.id)?"ghost":"secondary"}" data-trigger="${ev.id}">${fired.has(ev.id)?"Fired ✓":"Fire"}</button></article>`).join("")}</div>`:`<p class="side-note">Choose a scenario preset for scripted events, or announce status changes in B.</p>`)}
-    ${sec("D","Team performance",`<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
-      <div class="obs-grid">${OBSERVATIONS.map(o=>`<button class="chip" data-observe="${esc(o)}">${esc(o)}</button>`).join("")}</div>
-      <div class="note-row"><input id="instrNote" placeholder="Observation (no patient identifiers)" autocomplete="off"><button class="button secondary" data-action="add-note">Add</button></div>
-      ${(session.notes||[]).length?`<div class="timeline-list">${[...session.notes].reverse().map(n=>`<article><time>${fmt(n.at)}</time><div><strong>${esc(n.text)}</strong></div></article>`).join("")}</div>`:""}`)}
-    ${sec("E","Debrief and export",`<p class="side-note">${(session.decisions?.answers||[]).length} decisions · ${(session.doses||[]).length} doses · ${missed.length} milestones not acknowledged</p>${pre?`<h3 class="side-h">Debrief objectives</h3><ul class="obj-list">${pre.objectives.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>`:""}<div class="sim-sheet-grid"><button class="button primary" data-action="export-debrief">Download summary</button><button class="button secondary" data-action="print-debrief">Print</button></div>`)}
-  </div>`;
-}
-function addNote(text){if(!text)return;session.notes=session.notes||[];session.notes.push({at:currentElapsed(),text});logEvent(`Instructor: ${text}`,"instructor");saveSession({type:"INSTRUCTOR_NOTE",payload:{text}});rerenderTeam();}
-function rerenderTeam(){render();}
-function fireTrigger(id){
-  const pre=SCENARIOS.find(x=>x.id===session.preset);if(!pre)return;
-  const ev=[...pre.events,...(pre.conditional||[])].find(x=>x.id===id);if(!ev)return;
-  session.firedTriggers=[...new Set([...(session.firedTriggers||[]),id])];
-  if(ev.vitals)session.patient={...(session.patient||{}),...ev.vitals};
-  addTimer({label:ev.title,dueAt:sessionMinute(),kind:"milestone",message:[ev.show,ev.vitals&&Object.entries(ev.vitals).map(([k,v])=>`${k} ${v}`).join(" · ")].filter(Boolean).join(" · ")||ev.say||""});
-  logEvent(`Instructor event: ${ev.title}`,"instructor");
-  saveSession({type:"SIM_TRIGGER",payload:{triggerId:id}});render();
-}
-function pushVitals(){
-  const vals={};$$("[data-vital]").forEach(i=>{if(i.value.trim())vals[i.dataset.vital]=i.value.trim();});
-  session.patient={...(session.patient||{}),...vals};
-  const msg=Object.entries(vals).map(([k,v])=>`${k==="SpO2"?"SpO₂":k} ${v}`).join(" · ");
-  if(!msg)return;
-  addTimer({label:"Patient status",dueAt:sessionMinute(),kind:"milestone",message:msg});
-  logEvent(`Patient status: ${msg}`,"instructor");saveSession({type:"SIM_TRIGGER",payload:{vitals:vals}});render();
-}
 function exportDebrief(print=false){
   const e=EMERGENCIES[session.emergencyId];
   const text=exportText(session,{title:`OB Emergency Assist · ${e.name}`,fmt:ms=>fmt(ms,true)});
@@ -925,8 +878,6 @@ document.addEventListener("click",e=>{
   if(b.dataset.check&&session?.status==="active")openCheckSheet(b.dataset.check);
   if(b.dataset.maneuver)logManeuverAttempt(b.dataset.maneuver);
   if(b.dataset.givenAgo!=null){givenAgo=Number(b.dataset.givenAgo);openMedication(b.dataset.med);}
-  if(b.dataset.trigger)fireTrigger(b.dataset.trigger);
-  if(b.dataset.observe)addNote(b.dataset.observe);
   if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden&&!D.takeover(session)&&$("#sheetTitle").textContent.startsWith("Elapsed"))showSimTime();}
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
@@ -952,8 +903,7 @@ document.addEventListener("click",e=>{
   if(a==="undo-maneuver")undoManeuver();
   if(a==="export-debrief")exportDebrief(false);
   if(a==="print-debrief")exportDebrief(true);
-  if(a==="push-vitals")pushVitals();
-  if(a==="add-note"){const i=$("#instrNote");addNote(i?.value.trim());}
+
   if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();closeSheet();render();}
   if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
@@ -966,8 +916,6 @@ document.addEventListener("click",e=>{
 });
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
-document.addEventListener("change",e=>{if(e.target.dataset.action==="set-preset"&&session){session.preset=e.target.value||null;session.firedTriggers=[];logEvent(e.target.value?`Scenario preset: ${SCENARIOS.find(x=>x.id===e.target.value)?.title}`:"Scenario preset cleared","instructor");saveSession({type:"SIM_PRESET",payload:{preset:session.preset}});render();}});
-document.addEventListener("toggle",e=>{const d=e.target.closest?.("details[data-instr]");if(d)instrOpen[d.dataset.instr]=d.open;},true);
 // Cockpit keyboard: Y / N answer, Esc = Back to actions, D = done on the most-urgent card.
 document.addEventListener("keydown",e=>{
   if(session?.status!=="active"||route!=="emergency"||e.target.matches?.("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;

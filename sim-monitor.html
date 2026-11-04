@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Simulated monitor · OB Emergency Assist</title>
+  <style>
+    :root{--bg:#050b14;--fg:#e8f0fa;--hr:#3ef08a;--bp:#ff6b7d;--spo2:#47c7ff;--rr:#ffd84a;--qbl:#ff9a5c;--fhr:#c79bff}
+    *{box-sizing:border-box}
+    html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+    body{display:flex;flex-direction:column;padding:16px 20px;gap:14px}
+    header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .tag{background:#0e8077;color:#fff;font-weight:900;letter-spacing:.12em;padding:6px 14px;border-radius:999px;font-size:clamp(12px,1.6vw,18px)}
+    .title{font-weight:700;opacity:.8;font-size:clamp(13px,1.6vw,18px);text-align:right}
+    .grid{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:14px;align-content:stretch}
+    .v{border:2px solid #1b2a40;border-radius:18px;padding:12px 18px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px}
+    .v small{font-weight:900;letter-spacing:.1em;font-size:clamp(14px,1.8vw,20px);opacity:.85}
+    .v strong{font-size:clamp(56px,9vw,128px);font-weight:900;font-variant-numeric:tabular-nums;line-height:1;text-align:right}
+    .v.rhythm strong{font-size:clamp(34px,5vw,64px)}
+    .HR{color:var(--hr)}.BP{color:var(--bp)}.SpO2{color:var(--spo2)}.RR{color:var(--rr)}.QBL{color:var(--qbl)}.FHR{color:var(--fhr)}.Rhythm{color:var(--hr)}
+    .shown{border:2px solid #2d4466;border-radius:18px;padding:12px 18px;font-size:clamp(18px,2.4vw,30px);font-weight:700}
+    .shown:empty{display:none}
+    .stage{font-weight:900;padding:4px 12px;border-radius:999px;background:#384a63;margin-left:8px}.stage.s2{background:#9a6200}.stage.s3{background:#b8283f}
+    .over{position:fixed;inset:0;display:none;place-items:center;text-align:center;background:rgba(5,11,20,.92);font-size:clamp(30px,6vw,72px);font-weight:900;padding:20px}
+    .over.on{display:grid}.over.stop{background:rgba(120,14,30,.95)}
+    .idle{opacity:.7;font-size:20px;text-align:center;margin:auto}
+  </style>
+</head>
+<body>
+  <header><span class="tag">SIMULATION</span><span class="title" id="title">Waiting for Sim Master…</span></header>
+  <section class="grid" id="grid"><p class="idle">Open Sim Master on this device and start a scenario.</p></section>
+  <section class="shown" id="shown"></section>
+  <div class="over" id="over"></div>
+  <script>
+    const LABEL={BP:"NIBP",HR:"HR",SpO2:"SpO₂",RR:"RR",QBL:"QBL mL",FHR:"FHR",Rhythm:"RHYTHM"};
+    const val=(k,v)=>({BP:v.sbp?`${v.sbp}/${v.dbp}`:"---",HR:v.hr||"---",SpO2:v.spo2?v.spo2:"---",RR:v.rr||"---",QBL:(v.qbl||0).toLocaleString(),FHR:v.fhr||"---",Rhythm:v.rhythm||"---"}[k]);
+    const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+    let last=0;
+    function show(p){
+      if(!p||p.type!=="state")return;last=Date.now();
+      const g=document.getElementById("grid"),o=document.getElementById("over");
+      if(p.idle){g.innerHTML='<p class="idle">Open Sim Master on this device and start a scenario.</p>';return;}
+      document.getElementById("title").innerHTML=`${esc(p.title)} · ${esc(p.level)}${p.stage?`<span class="stage s${p.stage}">Stage ${p.stage}</span>`:""}`;
+      g.innerHTML=p.monitor.map(k=>`<div class="v ${k}${k==="Rhythm"?" rhythm":""}"><small>${LABEL[k]}</small><strong>${esc(val(k,p.v))}</strong></div>`).join("");
+      document.getElementById("shown").innerHTML=(p.shown||[]).slice(-1).map(x=>esc(x.text)).join("");
+      o.className="over"+(p.stopped?" on stop":p.ended?" on":p.paused?" on":"");
+      o.textContent=p.stopped?"SIMULATION STOPPED":p.ended?"Scenario ended":p.paused?"Paused":"";
+    }
+    try{const bc=new BroadcastChannel("ob-sim-monitor");bc.onmessage=e=>show(e.data);bc.postMessage({type:"hello"});}catch{}
+    window.addEventListener("storage",e=>{if(e.key==="ob-sim-monitor.last")try{show(JSON.parse(e.newValue));}catch{}});
+    try{show(JSON.parse(localStorage.getItem("ob-sim-monitor.last")||"null"));}catch{}
+    document.addEventListener("click",()=>document.documentElement.requestFullscreen?.().catch(()=>{}));
+  </script>
+</body>
+</html>

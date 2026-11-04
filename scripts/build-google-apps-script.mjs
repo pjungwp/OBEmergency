@@ -7,7 +7,7 @@ const read=p=>fs.readFileSync(path.join(root,p),"utf8");
 let html=read("index.html"),css=read("styles.css"),data=read("data.js"),pathways=read("pathways.js"),edudecks=read("edu-decks.js"),flow=read("flowchart.js"),local=read("local-session-store.js"),workspace=read("google-apps-script/workspace-session-store.js"),app=read("app.js");
 data=data.replace(/^export /gm,"");pathways=pathways.replace(/^export /gm,"");edudecks=edudecks.replace(/^export /gm,"");flow=flow.replace(/^export \{[^}]*\};?\n?/gm,"").replace(/^export /gm,"");local=local.replace(/^export /gm,"");workspace=workspace.replace(/^export /gm,"");
 // Engine modules (ES modules in the PWA) become plain script blocks here.
-const ENGINE=["cockpit-config.js","task-engine.js","decisions.js","clock.js","alerts.js","medications.js","history.js","dystocia.js","cockpit.js","scenarios.js"];
+const ENGINE=["cockpit-config.js","task-engine.js","decisions.js","clock.js","alerts.js","medications.js","history.js","dystocia.js","cockpit.js"];
 const exportsOf={};
 const engine=ENGINE.map(f=>{const src=read(f);exportsOf[f]=[...src.matchAll(/^export (?:const|function|class) ([A-Za-z_$][\w$]*)/gm)].map(m=>m[1]);return src.replace(/^import .*;\n/gm,"").replace(/^export /gm,"");}).join("\n");
 // import * as X from "./f.js"  →  const X={...};   import {a as b} → const b=a;

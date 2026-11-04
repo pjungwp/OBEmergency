@@ -6,7 +6,7 @@ Purpose: check the two-state cockpit (Decision Mode + Split Action Dashboard) wi
 A mixed team per run: OB attending or senior resident, two nurses, anesthesia, one junior resident. Aim for 3–4 teams. Simulation faculty facilitate.
 
 ## Setup
-- Facilitator laptop: OB Emergency Assist → emergency → Start Simulation → **Team** tab (SIM Master console). Choose the scenario preset.
+- Facilitator laptop: **Sim Master** (Home → Open Sim Master) → choose scenario and level → Prebrief → open the monitor window on a projector or second screen → Start.
 - Team phones: each runs its own simulation session (no sync in this release).
 - Devices to cover across runs: Galaxy Z Fold (outer and inner), a small iPhone, an iPad, a laptop.
 
@@ -27,7 +27,7 @@ A mixed team per run: OB attending or senior resident, two nurses, anesthesia, o
 | Free comments | 10-minute debrief |
 
 ## Acceptance tests to confirm in practice (from the build plan)
-A1 dashboard in ≤ 2 taps · A2 question → NO → escalation with checklist intact · A3 Back to actions keeps the question queued · A4 dose given 3 min ago shows given and recorded times · A5 shoulder dystocia clock + log, minute marks as banners · A6 live session refuses time changes · A7 facilitator console without leaving the session · A8 reload / offline restores the session · A9 Larger text at 320 px.
+A1 dashboard in ≤ 2 taps · A2 question → NO → escalation with checklist intact · A3 Back to actions keeps the question queued · A4 dose given 3 min ago shows given and recorded times · A5 shoulder dystocia clock + log, minute marks as banners · A6 live session refuses time changes · A7 facilitator runs the whole case from Sim Master on one device · A8 reload / offline restores the session · A9 Larger text at 320 px.
 
 ## Decision rule
 If any acceptance test fails in practice, or SUS < 68, change the design before Phase 9 sign-off. Record findings and changes in CLINICAL-REVIEW.md.

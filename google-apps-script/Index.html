@@ -686,6 +686,8 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
 @media (max-width:420px){.tl-long{display:none}.tl-short{display:inline}}
 @media (max-width:359px){.ch-back{display:none}.ch-clock{font-size:24px}}
 .tool-bar button{min-width:0;overflow:hidden}
+.sim-note{display:grid;gap:8px;background:#e9f8f6;border:2px solid var(--teal);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+.sim-note strong{font-size:17px}.sim-note span{font-size:15px;color:#33465f}.sim-note .button{justify-self:start}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -758,7 +760,7 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
     </div>
   </template>
   <script>
-const APP_VERSION = "0.16.0-prototype";
+const APP_VERSION = "0.17.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -2270,208 +2272,6 @@ function alertCardHTML(a,ctx){
   </section>`;
 }
 
-// Sim Master scenario library — facilitator-only content.
-// DRAFT: vitals, timings and expected-action targets are teaching defaults that
-// require facilitator / clinical review before use (see CLINICAL-REVIEW.md).
-//
-// Shape:
-//   events       fire automatically at `at` minutes of elapsed sim time
-//   conditional  fire at `by` minutes only if action `ifNot` has not been checked
-//   actions      expected team actions; `target` = minutes by which it is expected
-//   hints        what to answer if the team asks
-//   vitals keys  HR, BP, SpO2, RR, QBL (mL), Fundus, Other
-
-const SCENARIO_REVIEW_STATUS = "Draft — requires facilitator and clinical review";
-
-const FOCUS_AREAS = ["Recognition","Team communication","Medication safety","Diagnostic reasoning","Escalation"];
-
-const SCENARIOS = [
-  {
-    id:"pph-atony",
-    emergency:"pph",
-    title:"Atony after vaginal birth",
-    level:"Core",
-    duration:15,
-    audience:"Mixed team",
-    focus:["Recognition","Team communication","Escalation"],
-    summary:"Classic uterine atony 20 minutes after an uncomplicated vaginal birth. Builds the first-10-minutes response.",
-    trap:"Hemodynamic changes lag blood loss. A normal BP at the start is not reassurance.",
-    objectives:[
-      "Recognize hemorrhage early using quantified blood loss and trend, not BP alone",
-      "Call the hemorrhage response and assign leader and recorder roles",
-      "Start fundal massage and first-line uterotonic within minutes",
-      "Use closed-loop communication for every medication order"
-    ],
-    patient:{
-      oneLiner:"32-year-old G3P3, spontaneous vaginal birth 20 minutes ago, term, 3.9 kg infant.",
-      history:["Labor 14 hours with oxytocin augmentation","No hypertension, no asthma","Placenta delivered complete per delivering clinician","Oxytocin infusion running at postpartum rate"],
-      setting:"L&D room, one nurse present at start"
-    },
-    start:{HR:"104",BP:"112/70",SpO2:"98%",RR:"18",QBL:"800 mL",Fundus:"Boggy, above umbilicus"},
-    roles:["Team leader","Recorder / timekeeper","Primary nurse","Second nurse / medications","Anesthesia","Runner / blood bank"],
-    prebrief:[
-      "This is a simulation. Treat the mannequin as a patient; ask out loud for anything you need.",
-      "Vitals are given verbally or on screen when you check them.",
-      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
-    ],
-    equipment:["Hemorrhage cart","Uterotonics (simulated)","Two large-bore IV kits","QBL scale / drapes","Mannequin with fundus model"],
-    events:[
-      {id:"e0",at:0,title:"Nurse calls for help",say:"\"She just passed a big clot and she's still bleeding — the pad is soaked.\""},
-      {id:"e1",at:2,title:"Bleeding continues",say:"Steady bright-red bleeding. Patient: \"I feel dizzy.\"",vitals:{HR:"116",BP:"108/66",QBL:"1100 mL"}},
-      {id:"e2",at:6,title:"Partial response",say:"Fundus firms with massage but relaxes when massage stops.",vitals:{HR:"118",BP:"104/62",QBL:"1300 mL"}},
-      {id:"e3",at:9,title:"Labs back",say:"Hgb 9.1 g/dL, platelets 210k, fibrinogen 310 mg/dL.",show:"Labs: Hgb 9.1 · Plt 210k · Fibrinogen 310"},
-      {id:"e4",at:12,title:"Bleeding slowing",say:"Fundus firm. Bleeding slowed to a trickle.",vitals:{HR:"106",BP:"110/68",QBL:"1450 mL",Fundus:"Firm, at umbilicus"}}
-    ],
-    conditional:[
-      {id:"c1",ifNot:"a-uterotonic",by:4,title:"Deterioration — no uterotonic yet",say:"Patient becomes pale and anxious. \"I don't feel right.\"",vitals:{HR:"132",BP:"88/52",QBL:"1500 mL"}},
-      {id:"c2",ifNot:"a-help",by:3,title:"Prompt — still working alone",say:"Nurse: \"Should I call someone?\""}
-    ],
-    actions:[
-      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
-      {id:"a-roles",label:"Names leader and recorder",target:2},
-      {id:"a-qbl",label:"Quantifies blood loss and checks vitals",target:2,critical:true},
-      {id:"a-massage",label:"Fundal massage / bimanual compression",target:2,critical:true},
-      {id:"a-uterotonic",label:"Gives first-line uterotonic (oxytocin)",target:3,critical:true},
-      {id:"a-iv",label:"Second IV access, labs, type & crossmatch",target:5},
-      {id:"a-second",label:"Adds second-line uterotonic for ongoing atony",target:8},
-      {id:"a-txa",label:"Considers TXA",target:10},
-      {id:"a-closedloop",label:"Closed-loop communication on medication orders",target:null}
-    ],
-    hints:[
-      {q:"Has she had any blood pressure problems or asthma?",a:"No hypertension, no asthma, no cardiac history."},
-      {q:"Is the placenta complete?",a:"Delivering clinician documented it as complete."},
-      {q:"What is the oxytocin running at?",a:"Postpartum maintenance rate per unit protocol."},
-      {q:"Allergies?",a:"No known drug allergies."}
-    ],
-    debrief:[
-      "When did the team first say the word 'hemorrhage' out loud — and what triggered it?",
-      "How did the leader know what had already been given?",
-      "BP was near-normal at 6 minutes. What told you she was still in trouble?",
-      "Was TXA considered? What would make it indicated here?"
-    ]
-  },
-  {
-    id:"pph-preeclampsia",
-    emergency:"pph",
-    title:"Hemorrhage with severe preeclampsia",
-    level:"Intermediate",
-    duration:15,
-    audience:"Mixed team",
-    focus:["Medication safety","Team communication"],
-    summary:"Atony in a patient with preeclampsia with severe features on magnesium. Tests uterotonic selection under pressure.",
-    trap:"Methylergonovine is contraindicated with hypertension. A team member will suggest it.",
-    objectives:[
-      "Choose uterotonics using contraindications (hypertension → avoid methylergonovine)",
-      "Speak up and use check-back when an unsafe order is proposed",
-      "Continue magnesium and recognize its contribution to atony risk",
-      "Keep BP management on the radar during hemorrhage"
-    ],
-    patient:{
-      oneLiner:"27-year-old G1P1, cesarean for arrest of dilation 40 minutes ago, preeclampsia with severe features.",
-      history:["Magnesium sulfate infusion running","BP 150s–160s/100s before delivery; labetalol IV ×1 in labor","No asthma","Platelets 142k pre-op"],
-      setting:"Recovery / postpartum room"
-    },
-    start:{HR:"108",BP:"158/102",SpO2:"98%",RR:"16",QBL:"1000 mL (incl. OR)",Fundus:"Boggy",Other:"Magnesium infusing"},
-    roles:["Team leader","Recorder / timekeeper","Primary nurse","Medication nurse","Anesthesia","Runner / blood bank"],
-    prebrief:[
-      "This is a simulation. Ask out loud for anything you need.",
-      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
-    ],
-    equipment:["Hemorrhage cart","Simulated uterotonics incl. methylergonovine vial","Magnesium pump (running)"],
-    events:[
-      {id:"e0",at:0,title:"Nurse calls for help",say:"\"Her fundus is boggy and she's bleeding through the pad.\""},
-      {id:"e1",at:2,title:"The unsafe suggestion",say:"Medication nurse (confederate): \"I have Methergine in my hand — want me to give it?\"",confederate:true},
-      {id:"e2",at:5,title:"Ongoing bleeding",say:"Bleeding continues despite oxytocin.",vitals:{HR:"120",BP:"146/94",QBL:"1350 mL"}},
-      {id:"e3",at:8,title:"Labs back",say:"Hgb 9.4, platelets 118k, fibrinogen 280, AST 64.",show:"Labs: Hgb 9.4 · Plt 118k · Fibrinogen 280 · AST 64"},
-      {id:"e4",at:12,title:"Response",say:"Fundus firm after second-line agent.",vitals:{HR:"110",BP:"150/96",QBL:"1500 mL",Fundus:"Firm"}}
-    ],
-    conditional:[
-      {id:"c1",ifNot:"a-avoid-methergine",by:3,title:"Methylergonovine given (if accepted)",say:"If the team accepted: \"Methergine is in.\" BP rises.",vitals:{BP:"178/112"}},
-      {id:"c2",ifNot:"a-uterotonic",by:4,title:"Deterioration — no uterotonic",say:"Patient pale, HR climbing.",vitals:{HR:"130",BP:"128/80",QBL:"1500 mL"}}
-    ],
-    actions:[
-      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
-      {id:"a-massage",label:"Fundal massage",target:2,critical:true},
-      {id:"a-uterotonic",label:"Gives / increases oxytocin",target:3,critical:true},
-      {id:"a-avoid-methergine",label:"Declines methylergonovine — names hypertension",target:3,critical:true},
-      {id:"a-second",label:"Chooses an appropriate second-line agent (carboprost or misoprostol)",target:7},
-      {id:"a-mag",label:"Continues magnesium; monitors toxicity",target:null},
-      {id:"a-bp",label:"Keeps BP monitoring / treatment in plan",target:null},
-      {id:"a-checkback",label:"Uses check-back / speaks up on the unsafe order",target:null}
-    ],
-    hints:[
-      {q:"Does she have asthma?",a:"No asthma."},
-      {q:"What's her BP trend?",a:"150s–160s over 100s since delivery."},
-      {q:"Magnesium dose and reflexes?",a:"Maintenance infusion; reflexes 2+, RR 16, urine output adequate."}
-    ],
-    debrief:[
-      "Who noticed the methylergonovine problem, and how did they say it?",
-      "Did the person holding the vial feel able to hold off? What made that easier or harder?",
-      "How did the team balance hemorrhage and blood-pressure priorities?",
-      "Magnesium raises atony risk. Was that discussed?"
-    ]
-  },
-  {
-    id:"pph-trauma",
-    emergency:"pph",
-    title:"Firm uterus, still bleeding",
-    level:"Advanced",
-    duration:15,
-    audience:"Mixed team",
-    focus:["Diagnostic reasoning","Escalation"],
-    summary:"Bleeding continues with a firm uterus after a vacuum-assisted birth. Tests the 4 Ts and avoiding fixation on tone.",
-    trap:"Uterotonics will not fix trauma. Teams often keep escalating drugs for a firm uterus.",
-    objectives:[
-      "Recognize that a firm uterus with ongoing bleeding points away from atony",
-      "Work through Tone, Trauma, Tissue, Thrombin out loud",
-      "Arrange exposure, lighting and analgesia for a genital-tract exam",
-      "Escalate to repair in the OR when exposure or bleeding control is inadequate"
-    ],
-    patient:{
-      oneLiner:"30-year-old G1P1, vacuum-assisted vaginal birth 15 minutes ago, second-degree laceration repaired.",
-      history:["Prolonged second stage","Epidural in place","Placenta complete","No hypertension, no asthma"],
-      setting:"L&D room"
-    },
-    start:{HR:"110",BP:"116/72",SpO2:"99%",RR:"18",QBL:"700 mL",Fundus:"Firm, below umbilicus"},
-    roles:["Team leader","Recorder / timekeeper","Primary nurse","Second nurse","Anesthesia","Runner"],
-    prebrief:[
-      "This is a simulation. Ask out loud for anything you need.",
-      "Phones: start OB Emergency Assist → Hemorrhage → Start Simulation when I say go."
-    ],
-    equipment:["Hemorrhage cart","Good light source / retractors (simulated)","Laceration repair tray"],
-    events:[
-      {id:"e0",at:0,title:"Nurse calls for help",say:"\"She's still bleeding — steady trickle, bright red.\""},
-      {id:"e1",at:3,title:"Fundus check",say:"Fundus remains firm. Bleeding continues, bright red, steady.",vitals:{HR:"118",BP:"110/68",QBL:"950 mL",Fundus:"Firm"}},
-      {id:"e2",at:6,title:"If examined",say:"On exam with exposure: actively bleeding high vaginal sidewall laceration.",show:"Exam finding (reveal only if the team examines): high vaginal sidewall laceration"},
-      {id:"e3",at:9,title:"Ongoing",say:"Bleeding continues until controlled.",vitals:{HR:"126",BP:"100/60",QBL:"1250 mL"}}
-    ],
-    conditional:[
-      {id:"c1",ifNot:"a-exam",by:7,title:"Fixation — no exam yet",say:"Nurse (confederate): \"Should I get another dose of something?\"",confederate:true},
-      {id:"c2",ifNot:"a-escalate",by:11,title:"Deterioration",say:"Patient pale, diaphoretic.",vitals:{HR:"138",BP:"86/50",QBL:"1500 mL"}}
-    ],
-    actions:[
-      {id:"a-help",label:"Calls hemorrhage response / help",target:1,critical:true},
-      {id:"a-tone",label:"Checks tone; recognizes firm uterus",target:2,critical:true},
-      {id:"a-4ts",label:"Names the 4 Ts out loud",target:4},
-      {id:"a-exam",label:"Examines genital tract with exposure, light, analgesia",target:5,critical:true},
-      {id:"a-iv",label:"IV access, labs, type & crossmatch",target:5},
-      {id:"a-escalate",label:"Escalates for repair (OR if exposure inadequate)",target:10,critical:true},
-      {id:"a-nofixation",label:"Avoids repeated uterotonics for a firm uterus",target:null}
-    ],
-    hints:[
-      {q:"Was the placenta complete?",a:"Yes, inspected and complete."},
-      {q:"Is the epidural still working?",a:"Yes, she has adequate block."},
-      {q:"Any bleeding history?",a:"No personal or family bleeding history."}
-    ],
-    debrief:[
-      "At what point did the team say the uterus was firm — and what did that change?",
-      "Who called out the 4 Ts? Did the whole team hear it?",
-      "What would have made the exam happen sooner?",
-      "When is the bedside the wrong place to repair?"
-    ]
-  }
-];
-
 const D={ensureDecisionState,onTaskEvent,onTimerDue,onTick,defer,reopen,answer,takeover,waiting};
 const snoozeAlert=snooze;
 const alertCard=card;
@@ -3218,12 +3018,12 @@ function sidePanelHTML(k){
       <details class="side-more"><summary>Other medications (${others.length})</summary><div class="side-meds">${others.map(card).join("")}</div></details>`;
   }
   if(k==="timeline"||k==="timers")return head(`<button class="text-button" data-action="export-debrief">Export</button>`)+timersHTML()+`<h3 class="side-h">Events · elapsed time</h3><div class="timeline-list">${sortedTimeline(session).map(ev=>`<article class="tl-${esc(ev.type)}"><time>${formatEventTime(ev.at)}</time><div><strong>${esc(ev.text)}</strong><small>${esc(ev.type)}</small></div></article>`).join("")}</div><p class="side-note">A local record on this device — not documentation in the medical record.</p>`;
-  if(k==="team")return head()+(session.mode==="simulation"?instructorHTML():teamHTML());
+  if(k==="team")return head()+teamHTML();
   return "";
 }
 function teamHTML(){
   const c=checklistModel(),roles=EDUCATION.find(x=>x.id==="roles");
-  return `<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
+  return `${session.mode==="simulation"?`<div class="sim-note"><strong>Facilitating?</strong><span>Run the scenario from Sim Master on a separate device or window — patient states, injects, observations and the debrief live there.</span><a class="button secondary" href="sim-master.html" target="_blank" rel="noopener">Open Sim Master ↗</a></div>`:""}<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
     ${roles?`<h3 class="side-h">Roles</h3><div class="role-list">${roles.sections.map(r=>`<article><strong>${esc(r.h)}</strong><span>${esc(r.p||"")}</span></article>`).join("")}</div>`:""}`;
 }
 function toggleSide(k){
@@ -3264,52 +3064,6 @@ function showDue(id){
 function acknowledgeTimer(id){const t=session.timers.find(x=>x.id===id);if(!t)return;t.ack=true;logEvent(`Reminder acknowledged: ${t.label}`,"timer");saveSession({type:"TIMER_ACKNOWLEDGED",status:"completed",payload:{timerId:id}});if(!$("#sheetBody .sheet-side"))closeSheet();render();}
 
 
-// ---------- SIM Master console, attached to a simulation session (Team tab) ----------
-// Same device only: it drives the simulation running here. Trainee phones run their own sessions.
-const OBSERVATIONS=["Roles named","Closed-loop orders","Early escalation","Shared mental model","Communication gap","Delayed action"];
-const instrOpen={A:true,B:false,C:false,D:false,E:false};
-function presetsFor(id){return SCENARIOS.filter(x=>x.emergency===id);}
-function instructorHTML(){
-  const e=EMERGENCIES[session.emergencyId],pre=SCENARIOS.find(x=>x.id===session.preset),c=checklistModel();
-  const sec=(k,title,body)=>`<details class="instr" data-instr="${k}"${instrOpen[k]?" open":""}><summary><b>${k}</b> ${title}</summary><div class="instr-body">${body}</div></details>`;
-  const vit=session.patient||{};
-  const nowMin=sessionMinute();
-  const presetVitals=pre?Object.assign({},pre.start,...pre.events.filter(ev=>ev.at<=nowMin&&ev.vitals).map(ev=>ev.vitals)):{};
-  const shown={...presetVitals,...vit};
-  const fired=new Set(session.firedTriggers||[]);
-  const triggers=pre?[...pre.events,...(pre.conditional||[])]:[];
-  const missed=session.timers.filter(t=>t.kind==="milestone"&&!t.ack);
-  return `<div class="instr-wrap">
-    <label class="instr-preset">Scenario preset <select data-action="set-preset"><option value="">None</option>${presetsFor(e.id).map(x=>`<option value="${x.id}"${x.id===session.preset?" selected":""}>${esc(x.title)}</option>`).join("")}</select></label>
-    ${sec("A","Time",`<div class="sim-sheet-grid"><button class="button ${session.running?"secondary":"primary"}" data-sim="pause">${session.running?"Pause":"Resume"}</button><button class="button secondary" data-sim="1">+1 min</button><button class="button secondary" data-sim="5">+5 min</button><button class="button primary" data-sim="next">Next event</button></div>`)}
-    ${sec("B","Patient status",`<div class="vitals-grid">${["BP","HR","SpO2","QBL","Fundus","Other"].map(k=>`<label><span>${k==="SpO2"?"SpO₂":k}</span><input data-vital="${k}" value="${esc(shown[k]||"")}" autocomplete="off"></label>`).join("")}</div><button class="button secondary full" data-action="push-vitals">Announce status to the team</button><p class="side-note">Simulated values only. No patient information.</p>`)}
-    ${sec("C","Trigger events",triggers.length?`<div class="trigger-list">${triggers.map(ev=>`<article class="${fired.has(ev.id)?"fired":""}"><div><strong>${esc(ev.title)}</strong><small>${ev.at!=null?`scheduled ${fmt(ev.at*60000)}`:`if not done by ${fmt((ev.by||0)*60000)}`}</small><p>${esc(ev.say||"")}</p></div><button class="button ${fired.has(ev.id)?"ghost":"secondary"}" data-trigger="${ev.id}">${fired.has(ev.id)?"Fired ✓":"Fire"}</button></article>`).join("")}</div>`:`<p class="side-note">Choose a scenario preset for scripted events, or announce status changes in B.</p>`)}
-    ${sec("D","Team performance",`<div class="team-stats"><div><b>${c.done}</b><span>done</span></div><div><b>${c.ongoing.length}</b><span>ongoing</span></div><div><b>${c.now.length+(c.mostUrgent?1:0)}</b><span>now</span></div><div><b>${getDueTimers().length}</b><span>overdue</span></div></div>
-      <div class="obs-grid">${OBSERVATIONS.map(o=>`<button class="chip" data-observe="${esc(o)}">${esc(o)}</button>`).join("")}</div>
-      <div class="note-row"><input id="instrNote" placeholder="Observation (no patient identifiers)" autocomplete="off"><button class="button secondary" data-action="add-note">Add</button></div>
-      ${(session.notes||[]).length?`<div class="timeline-list">${[...session.notes].reverse().map(n=>`<article><time>${fmt(n.at)}</time><div><strong>${esc(n.text)}</strong></div></article>`).join("")}</div>`:""}`)}
-    ${sec("E","Debrief and export",`<p class="side-note">${(session.decisions?.answers||[]).length} decisions · ${(session.doses||[]).length} doses · ${missed.length} milestones not acknowledged</p>${pre?`<h3 class="side-h">Debrief objectives</h3><ul class="obj-list">${pre.objectives.map(o=>`<li>${esc(o)}</li>`).join("")}</ul>`:""}<div class="sim-sheet-grid"><button class="button primary" data-action="export-debrief">Download summary</button><button class="button secondary" data-action="print-debrief">Print</button></div>`)}
-  </div>`;
-}
-function addNote(text){if(!text)return;session.notes=session.notes||[];session.notes.push({at:currentElapsed(),text});logEvent(`Instructor: ${text}`,"instructor");saveSession({type:"INSTRUCTOR_NOTE",payload:{text}});rerenderTeam();}
-function rerenderTeam(){render();}
-function fireTrigger(id){
-  const pre=SCENARIOS.find(x=>x.id===session.preset);if(!pre)return;
-  const ev=[...pre.events,...(pre.conditional||[])].find(x=>x.id===id);if(!ev)return;
-  session.firedTriggers=[...new Set([...(session.firedTriggers||[]),id])];
-  if(ev.vitals)session.patient={...(session.patient||{}),...ev.vitals};
-  addTimer({label:ev.title,dueAt:sessionMinute(),kind:"milestone",message:[ev.show,ev.vitals&&Object.entries(ev.vitals).map(([k,v])=>`${k} ${v}`).join(" · ")].filter(Boolean).join(" · ")||ev.say||""});
-  logEvent(`Instructor event: ${ev.title}`,"instructor");
-  saveSession({type:"SIM_TRIGGER",payload:{triggerId:id}});render();
-}
-function pushVitals(){
-  const vals={};$$("[data-vital]").forEach(i=>{if(i.value.trim())vals[i.dataset.vital]=i.value.trim();});
-  session.patient={...(session.patient||{}),...vals};
-  const msg=Object.entries(vals).map(([k,v])=>`${k==="SpO2"?"SpO₂":k} ${v}`).join(" · ");
-  if(!msg)return;
-  addTimer({label:"Patient status",dueAt:sessionMinute(),kind:"milestone",message:msg});
-  logEvent(`Patient status: ${msg}`,"instructor");saveSession({type:"SIM_TRIGGER",payload:{vitals:vals}});render();
-}
 function exportDebrief(print=false){
   const e=EMERGENCIES[session.emergencyId];
   const text=exportText(session,{title:`OB Emergency Assist · ${e.name}`,fmt:ms=>fmt(ms,true)});
@@ -3389,8 +3143,6 @@ document.addEventListener("click",e=>{
   if(b.dataset.check&&session?.status==="active")openCheckSheet(b.dataset.check);
   if(b.dataset.maneuver)logManeuverAttempt(b.dataset.maneuver);
   if(b.dataset.givenAgo!=null){givenAgo=Number(b.dataset.givenAgo);openMedication(b.dataset.med);}
-  if(b.dataset.trigger)fireTrigger(b.dataset.trigger);
-  if(b.dataset.observe)addNote(b.dataset.observe);
   if(b.dataset.sim){if(b.dataset.sim==="pause"){session.running?freezeClock():resumeClock();render();}else if(b.dataset.sim==="next")jumpNext();else advanceSimulation(Number(b.dataset.sim));if(!$("#infoSheet").hidden&&!D.takeover(session)&&$("#sheetTitle").textContent.startsWith("Elapsed"))showSimTime();}
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
@@ -3416,8 +3168,7 @@ document.addEventListener("click",e=>{
   if(a==="undo-maneuver")undoManeuver();
   if(a==="export-debrief")exportDebrief(false);
   if(a==="print-debrief")exportDebrief(true);
-  if(a==="push-vitals")pushVitals();
-  if(a==="add-note"){const i=$("#instrNote");addNote(i?.value.trim());}
+
   if(a==="toggle-sound"){session.sound=!session.sound;settings.sound=session.sound;saveSettings();ensureAudio();saveSession();closeSheet();render();}
   if(a==="show-timers"){if(session?.status==="active")toggleSide("timers");else showTimers();}
   if(a==="show-timeline")showTimeline();
@@ -3430,8 +3181,6 @@ document.addEventListener("click",e=>{
 });
 
 document.addEventListener("input",e=>{if(e.target.id==="medSearch")updateMedicationList(e.target.value);});
-document.addEventListener("change",e=>{if(e.target.dataset.action==="set-preset"&&session){session.preset=e.target.value||null;session.firedTriggers=[];logEvent(e.target.value?`Scenario preset: ${SCENARIOS.find(x=>x.id===e.target.value)?.title}`:"Scenario preset cleared","instructor");saveSession({type:"SIM_PRESET",payload:{preset:session.preset}});render();}});
-document.addEventListener("toggle",e=>{const d=e.target.closest?.("details[data-instr]");if(d)instrOpen[d.dataset.instr]=d.open;},true);
 // Cockpit keyboard: Y / N answer, Esc = Back to actions, D = done on the most-urgent card.
 document.addEventListener("keydown",e=>{
   if(session?.status!=="active"||route!=="emergency"||e.target.matches?.("input,textarea,select")||e.metaKey||e.ctrlKey||e.altKey)return;

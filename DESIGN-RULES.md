@@ -74,6 +74,21 @@ One pathway record per emergency (`pathways.js`) drives three views (`flowchart.
 
 Switching views never changes session or task state. A status strip (mode, clock, overdue, Actions) shows on the flowchart page whenever a session is running. In the cockpit, the Flowchart tab opens the side Overview on wide screens and the full pathway page on phones.
 
+## Sim Master (facilitator)
+
+A separate page (`sim-master.html`) — the facilitator's control center, not another copy of the clinical dashboard. Trainees use the normal Simulation cockpit (or just the mannequin); its Team tab only links here.
+
+- **Flow**: Scenario library (level per scenario) → Prebrief → Run → Debrief.
+- **Run screen**: current state on the left with *What happens next?* (Worsen · Respond · Hold, each naming the target state), Jump to state, and Quick inject. Patient status and one-tap observations on the right. On phones the order is state · vitals · next · observations · injects, with Undo · Pause · +1 min · End in the thumb bar.
+- **Suggestions highlight, never act.** A rule like "no uterotonic by 4 min" outlines the Worsen button with the reason; only a tap changes the patient.
+- **Patient states are coherent presets.** Vitals drift toward each state's targets; blood loss accumulates at the state's rate. Hold freezes the patient. Set vitals overrides until the next state.
+- **Undo** reverses the last instructor event exactly (state, inject, override, hold, observation, note).
+- **STOP · real emergency** is always visible: pauses the clock, keeps the log, offers Clinical Assist.
+- **Observations**: tap = observed with the scenario time; ⋯ = missed or not assessed. Unchecked means not documented, never failed. The debrief marks observed-after-target as late, and the instructor confirms every status.
+- **Clocks**: scenario clock always; a second event clock when it differs (time since severe BP confirmed; head-to-body, which stops at delivery and replaces the scenario clock on phones).
+- **Monitor window** (`sim-monitor.html`): large simulated vitals for a projector or bedside tablet, synced on the same device with no server. Shows labs the instructor sends and SIMULATION STOPPED / Paused.
+- **Debrief**: counts, critical actions with editable status and time from the event, suggested questions (missed and late first), narrative feedback, timeline; Copy summary and Print / save PDF. No names.
+
 ## Education
 
 Every Education topic is a built-in slide deck (`edu-decks.js`): one idea per slide, short lines, no paragraphs. Slides open full-screen with swipe, ‹ › buttons, arrow keys and dots; the first slide is always a title. A test fails if a line runs long or a list passes six items. `EDUCATION[].sections` in `data.js` remains the reviewed long-form source; keep the decks in sync with it.
