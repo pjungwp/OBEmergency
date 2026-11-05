@@ -40,7 +40,7 @@ function toast(t){const el=$("#smToast");el.textContent=t;el.classList.add("on")
 
 // ---------- progressive disclosure ----------
 const isOpen=id=>ui.printAll||ui.open===id||ui.pinned.has(id);
-function sec(id,title,count,body,{pin=true,cls=""}={}){
+function sec(id,title,count,body,{pin=false,cls=""}={}){
   const o=isOpen(id),p=ui.pinned.has(id);
   return `<section class="ds ${cls}${o?" open":""}" data-sec="${id}">
     <div class="ds-h"><button class="ds-t" data-toggle="${id}" aria-expanded="${o}"><i class="chev" aria-hidden="true"></i><span>${title}</span>${count!=null&&count!==""?`<b>${count}</b>`:""}</button>${pin?`<button class="ds-pin${p?" on":""}" data-pin="${id}" aria-pressed="${p}" title="${p?"Unpin":"Keep open"}" aria-label="${p?"Unpin":"Keep open"} ${title}">${p?"Pinned":"Pin"}</button>`:""}</div>
@@ -56,6 +56,14 @@ function broadcast(){
   sync.publish({title:scn().title,level:LEVEL_LABEL[run.level],monitor:r.monitor,v,stage:r.stage==="cmqcc"?S.pphStage(v.qbl,v):null,
     shown:run.shown.slice(-3),stopped:run.phase==="stopped",ended:run.phase==="debrief",paused:!run.clock.running});
 }
+function showMonitorView(){
+  const host=document.createElement("div");host.id="smMonView";host.setAttribute("role","dialog");host.setAttribute("aria-label","Learner monitor");
+  const paint=()=>{if(!run){host.remove();return;}const r=res(),v=S.vitalsAt(run,r,now());
+    host.innerHTML=`<div class="mv-top"><span>SIMULATION</span><b>${fmt(now())}</b></div><div class="mv-grid">${r.monitor.map(k=>`<div class="mv-v ${k}"><small>${VLABEL[k]}</small><strong>${esc(monVal(k,v))}</strong></div>`).join("")}</div>
+      ${run.shown.length?`<p class="mv-shown">${esc(run.shown.at(-1).text)}</p>`:""}<p class="mv-hint">Tap anywhere to return to Sim Master</p>`;};
+  paint();const t=setInterval(paint,1000);host.addEventListener("click",()=>{clearInterval(t);host.remove();});document.body.appendChild(host);
+}
+const monVal=(k,v)=>({BP:v.sbp?`${v.sbp}/${v.dbp}`:"—",HR:v.hr||"—",SpO2:v.spo2?`${v.spo2}%`:"—",RR:v.rr||"—",QBL:v.qbl.toLocaleString(),FHR:v.fhr||"—",Rhythm:v.rhythm||"—"}[k]);
 function openMonitor(){window.open("sim-monitor.html","obsimmonitor","width=1100,height=700");setTimeout(broadcast,600);}
 
 // ---------- render ----------
@@ -84,19 +92,30 @@ function renderLibrary(){
 }
 
 function renderPrebrief(){
-  const s=scn(),r=res();
+  const s=scn(),r=res(),pr=run.prep||(run.prep={roles:[],ready:[],seen:[]});
+  const crit=r.actions.filter(a=>a.critical),items=[...s.patient.history.map(t=>({t,k:"h"})),...s.equipment.map(t=>({t,k:"e"}))];
+  const open=ui.prep??"brief",seen=new Set(pr.seen);
+  const card=(id,title,meta,body)=>{const o=open===id;return `<article class="pc${o?" open":""}${seen.has(id)?" seen":""}">
+    <button class="pc-h" data-prep="${id}" aria-expanded="${o}"><span class="pc-t">${title}</span><span class="pc-m">${seen.has(id)&&!o?"✓ ":""}${meta}</span><i class="chev" aria-hidden="true"></i></button>
+    ${o?`<div class="pc-b">${body}</div>`:""}</article>`;};
+  const mon=monitorStatus();
   sm.innerHTML=`<section class="sm-pre">
-    <header class="sm-pre-head">${icon(s.emergency,56)}<div><p class="sm-eyebrow">PREBRIEF · ${LEVEL_LABEL[run.level].toUpperCase()} · v${esc(s.version)}${s.reviewed?` · reviewed ${esc(s.reviewed)}`:" · not yet reviewed"}</p><h1>${esc(s.title)}</h1><p>${esc(r.note)}</p></div></header>
-    <article class="sm-panel"><p class="lead">${esc(s.patient.oneLiner)}</p><p class="muted">${esc(s.patient.setting)}</p></article>
-    <div class="sm-stack">
-      ${sec("pre-roles","Assign roles",s.roles.length,`<ul>${s.roles.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`)}
-      ${sec("pre-say","Say to the team",null,`<ul>${s.prebrief.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`)}
-      ${sec("pre-crit","Critical actions to watch",r.actions.filter(a=>a.critical).length,`<ul>${r.actions.filter(a=>a.critical).map(a=>`<li>${esc(a.label)}${a.target!=null?` <span class="muted">· ${a.target} min${a.from?` after ${esc(r.states[a.from]?.name||a.from)}`:""}</span>`:""}</li>`).join("")}</ul>`)}
-      ${sec("pre-hist","History and equipment",null,`<ul>${s.patient.history.map(h=>`<li>${esc(h)}</li>`).join("")}</ul><h3 class="sm-cat">Equipment</h3><ul>${s.equipment.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`)}
+    <header class="pre-top"><button class="sm-link" data-a="library">‹ Scenarios</button><span class="pre-lvl">${LEVEL_LABEL[run.level]}</span></header>
+    <h1 class="pre-title">${esc(s.title.replace(/^Postpartum hemorrhage · /,"PPH · "))}</h1>
+    <p class="pre-meta">v${esc(s.version)} · ${s.reviewed?`reviewed ${esc(s.reviewed)}`:"not yet reviewed"} · ${esc(r.note)}</p>
+    <article class="pre-handoff"><p class="sm-eyebrow">PATIENT HANDOFF</p><p class="lead">${esc(s.patient.oneLiner)}</p><p class="muted">${esc(s.patient.setting)}</p></article>
+    <div class="pre-cards">
+      ${card("brief","Learner briefing",`${s.prebrief.length} points`,`<p class="say-who">Read aloud</p><blockquote class="pre-script">${s.prebrief.map(esc).join(" ")}</blockquote>`)}
+      ${card("roles","Assign roles",`${pr.roles.length||0} of ${s.roles.length}`,`<p class="muted small">Tap roles that are filled. Names are optional and never saved.</p><div class="chips">${s.roles.map((x,i)=>`<button class="sm-chip${pr.roles.includes(i)?" on":""}" data-role="${i}" aria-pressed="${pr.roles.includes(i)}">${esc(x)}</button>`).join("")}</div>`)}
+      ${card("room","Room setup",`${pr.ready.length} of ${items.length} ready`,`<h3 class="sm-cat">History</h3>${items.filter(x=>x.k==="h").map(x=>chk(x,items,pr)).join("")}<h3 class="sm-cat">Equipment</h3>${items.filter(x=>x.k==="e").map(x=>chk(x,items,pr)).join("")}`)}
+      ${card("obj","Objectives",`${crit.length} critical actions`,`<ul class="pre-obj">${crit.map(a=>`<li>${esc(a.label)}${a.target!=null?` <span class="muted">· ${a.target} min${a.from?` after ${esc(r.states[a.from]?.name||a.from)}`:""}</span>`:""}</li>`).join("")}</ul>`)}
     </div>
-    <div class="sm-pre-actions"><button class="sm-btn ghost" data-a="library">‹ Scenarios</button><button class="sm-btn" data-a="monitor">Open monitor window</button><button class="sm-btn primary big" data-a="start">Start scenario</button></div>
+    <p class="pre-mon">Monitor: <b class="${mon.on?"on":""}">${mon.on?"Connected":"Not connected"}</b> · <button class="sm-link" data-a="monitor-setup">${mon.on?"Options":"Set up"}</button></p>
+    <div class="pre-go"><button class="sm-btn primary big" data-a="start">▶ Start scenario</button></div>
   </section>`;
 }
+function chk(x,items,pr){const i=items.indexOf(x),on=pr.ready.includes(i);return `<button class="pre-chk${on?" on":""}" data-ready="${i}" aria-pressed="${on}"><span class="box" aria-hidden="true">${on?"✓":""}</span>${esc(x.t)}</button>`;}
+function monitorStatus(){const t=sync.status().monitorAt;return {on:!!t&&Date.now()-t<15000};}
 
 function vitalCell(k,v){
   const t=v.trend||{},arrow=x=>x>0?"▲":x<0?"▼":"";
@@ -268,6 +287,9 @@ function sheetBody(){
       ${keys.includes("BP")?f("sbp","Systolic",v.sbp)+f("dbp","Diastolic",v.dbp):""}${keys.includes("HR")?f("hr","HR",v.hr):""}${keys.includes("SpO2")?f("spo2","SpO₂",v.spo2):""}${keys.includes("RR")?f("rr","RR",v.rr):""}${keys.includes("FHR")?f("fhr","FHR",v.fhr):""}${keys.includes("Rhythm")?f("rhythm","Rhythm",v.rhythm):""}${keys.includes("QBL")?f("qblRate","Bleeding mL/min",""):""}
       </div><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Cancel</button><button class="sm-btn primary" data-a="set-vitals">Set</button></div>`;
   }
+  if(k==="monitor"){const m=monitorStatus();return `<h2>Learner monitor</h2><p class="muted">Shows vitals and the clock only — no prompts, actions or branches. The scenario runs fine without it.</p>
+    <div class="mon-opts"><button class="sm-btn big" data-a="monitor-view">On this device<small>Full-screen view; tap to return</small></button><button class="sm-btn big" data-a="monitor">Separate window<small>Drag to a second screen or TV</small></button></div>
+    <p class="muted small">Status: ${m.on?"a monitor window is connected":"no separate monitor connected"}.</p>`;}
   if(k==="time")return `<h2>Advance time</h2><p class="muted">Simulation time only. Every event keeps its simulation and wall-clock time.</p><div class="seg">${[2,3,10,15].map(m=>`<button class="sm-btn" data-a="adv" data-m="${m}">+${m} min</button>`).join("")}</div>`;
   if(k==="end")return `<h2>End the scenario?</h2><p class="muted">The clock stops and the debrief opens. The log is kept.</p><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Keep running</button><button class="sm-btn primary big" data-a="end">End and debrief</button></div>`;
   if(k==="discard")return `<h2>Discard this scenario?</h2><p class="muted">Its log and observations are deleted from this device.</p><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Keep</button><button class="sm-btn danger" data-a="discard">Discard</button></div>`;
@@ -340,6 +362,11 @@ document.addEventListener("click",e=>{
   if(b.dataset.pin){pin(b.dataset.pin);return;}
   if(a==="prebrief"){const s=getSimScenario(b.dataset.sid);run=S.createRun(s,ui.pick[s.id]||"basic");ui.phase="prebrief";ui.open=null;save();saveUI();render();return;}
   if(a==="library"){ui.phase="library";saveUI();render();return;}
+  if(b.dataset.prep){const id=b.dataset.prep;ui.prep=(ui.prep??"brief")===id?"":id;const pr=run.prep;if(pr&&!pr.seen.includes(id))pr.seen.push(id);save();saveUI();render();return;}
+  if(b.dataset.role!=null&&run?.prep){const i=+b.dataset.role,l=run.prep.roles;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
+  if(b.dataset.ready!=null&&run?.prep){const i=+b.dataset.ready,l=run.prep.ready;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
+  if(a==="monitor-setup"){openSheet("monitor");return;}
+  if(a==="monitor-view"){ui.sheet=null;renderSheet();showMonitorView();return;}
   if(a==="resume-run"){ui.phase=run.phase==="prebrief"?"prebrief":run.phase==="debrief"?"debrief":"run";saveUI();render();return;}
   if(a==="ask-discard"){openSheet("discard",{title:"Discard"});return;}
   if(a==="discard"){run=null;ui.sheet=null;save();render();return;}

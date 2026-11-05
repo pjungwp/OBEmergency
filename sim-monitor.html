@@ -47,7 +47,7 @@
       o.className="over"+(p.stopped?" on stop":p.ended?" on":p.paused?" on":"");
       o.textContent=p.stopped?"SIMULATION STOPPED":p.ended?"Scenario ended":p.paused?"Paused":"";
     }
-    try{const bc=new BroadcastChannel("ob-sim-monitor");bc.onmessage=e=>show(e.data);bc.postMessage({type:"hello"});}catch{}
+    try{const bc=new BroadcastChannel("ob-sim-monitor");bc.onmessage=e=>show(e.data);bc.postMessage({type:"hello"});setInterval(()=>{try{bc.postMessage({type:"hello"});}catch{}},5000);}catch{}
     window.addEventListener("storage",e=>{if(e.key==="ob-sim-monitor.last")try{show(JSON.parse(e.newValue));}catch{}});
     try{show(JSON.parse(localStorage.getItem("ob-sim-monitor.last")||"null"));}catch{}
     document.addEventListener("click",()=>document.documentElement.requestFullscreen?.().catch(()=>{}));

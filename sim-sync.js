@@ -15,8 +15,8 @@
 const CHANNEL="ob-sim-monitor",LAST="ob-sim-monitor.last";
 
 export function createLocalSync(role="master"){
-  let bc=null,last=null;const subs=new Set(),evs=new Set();
-  try{bc=new BroadcastChannel(CHANNEL);bc.onmessage=e=>{const m=e.data;if(m?.type==="event")evs.forEach(f=>f(m));else if(m?.type==="hello"&&role==="master"&&last)post(last);else subs.forEach(f=>f(m));};}catch{}
+  let bc=null,last=null,monitorAt=null;const subs=new Set(),evs=new Set();
+  try{bc=new BroadcastChannel(CHANNEL);bc.onmessage=e=>{const m=e.data;if(m?.type==="event")evs.forEach(f=>f(m));else if(m?.type==="hello"&&role==="master"){monitorAt=Date.now();if(last)post(last);}else subs.forEach(f=>f(m));};}catch{}
   const post=p=>{try{bc?.postMessage(p);}catch{}try{localStorage.setItem(LAST,JSON.stringify(p));}catch{}};
   return {
     role,
@@ -24,6 +24,6 @@ export function createLocalSync(role="master"){
     subscribe(fn){subs.add(fn);try{const p=JSON.parse(localStorage.getItem(LAST)||"null");if(p)fn(p);}catch{}if(role!=="master")try{bc?.postMessage({type:"hello"});}catch{}return ()=>subs.delete(fn);},
     send(event){try{bc?.postMessage({...event,type:"event",at:Date.now()});}catch{}},
     onEvent(fn){evs.add(fn);return ()=>evs.delete(fn);},
-    status(){return {connected:!!bc,lastSync:last?.at||null,mode:"local"};}
+    status(){return {connected:!!bc,lastSync:last?.at||null,mode:"local",monitorAt};}
   };
 }
