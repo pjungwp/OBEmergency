@@ -74,6 +74,7 @@ function renderLibrary(){
   const resume=run&&run.phase!=="debrief"?`<section class="sm-resume"><div><strong>Scenario in progress</strong><span>${esc(scn().title)} · ${LEVEL_LABEL[run.level]} · ${fmt(now())}</span></div><button class="sm-btn primary" data-a="resume-run">Resume</button><button class="sm-btn ghost" data-a="ask-discard">Discard</button></section>`:"";
   sm.innerHTML=`${resume}
     <div class="sm-lib-head"><h1>Choose a scenario</h1><p>${esc(SIM_REVIEW_STATUS)}</p></div>
+    <p class="sm-team-link">Team members can follow along on their phones: <a href="index.html?practice=1">open Assist in practice mode ›</a></p>
     <section class="sm-lib">${SIM_SCENARIOS.map(s=>{const lvl=ui.pick[s.id]||"basic";return `<article class="sm-card">
       <div class="sm-card-top">${icon(s.emergency)}<div><h2>${esc(s.title)}</h2><p>${esc(s.summary)}</p></div></div>
       <div class="sm-levels" role="radiogroup" aria-label="Level">${LEVELS.map(l=>`<button role="radio" aria-checked="${l===lvl}" class="${l===lvl?"on":""}" data-level="${l}" data-sid="${s.id}">${LEVEL_LABEL[l]}</button>`).join("")}</div>

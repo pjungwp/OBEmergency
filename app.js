@@ -44,6 +44,9 @@ function emergencyIcon(id,size=56){
 }
 
 let route = "emergency";
+// Practice mode: team phones during a simulation (opened from Sim Master). Clinical is the default.
+let practice=(()=>{try{const q=new URLSearchParams(location.search).get("practice");if(q!==null){q==="0"?sessionStorage.removeItem("oba.practice"):sessionStorage.setItem("oba.practice","1");history.replaceState(history.state,"",location.pathname);}return sessionStorage.getItem("oba.practice")==="1";}catch{return false;}})();
+function setPractice(on){practice=on;try{on?sessionStorage.setItem("oba.practice","1"):sessionStorage.removeItem("oba.practice");}catch{}}
 let selectedEmergency = null;
 let flowEmergency = "pph";
 let session = hydrateSession(store.loadSession());
@@ -146,6 +149,7 @@ function renderEmergency(){
         <p>Ready when seconds matter.</p>
       </div>
     </section>
+    ${practice?`<section class="practice-band"><div><strong>Practice mode</strong><small>Sessions you start here are simulations, not real emergencies.</small></div><button class="text-button" data-action="exit-practice">Exit</button></section>`:""}
     <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
     <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
@@ -155,10 +159,12 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <section class="home-foot">
-      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Best on a laptop.</small></div>
-      <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
-    </section>
+    ${practice?"":`<h2 class="home-label"><span>Training</span></h2>
+    <a class="sim-door" href="sim-master.html">
+      <span class="sim-door-icon" aria-hidden="true">▶</span>
+      <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </a>`}
     <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
   updateConnectivity(true);
 }
@@ -171,8 +177,7 @@ function renderEmergencyPreview(id){
       <div class="preview-title">${emergencyIcon(e.id,64)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
     </section>
     <section class="preview-actions">
-      <button class="button primary large" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>
-      <button class="button simulation large" data-action="start-session" data-mode="simulation">Start Simulation</button>
+      ${practice?`<button class="button simulation large full" data-action="start-session" data-mode="simulation">Start practice session</button>`:`<button class="button primary large full" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>`}
       <button class="button ghost full" data-action="open-flow" data-id="${e.id}">View full flowchart</button>
     </section>
     <section class="preview-list">
@@ -885,6 +890,7 @@ document.addEventListener("click",e=>{
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
   if(a==="back-home"){selectedEmergency=null;render();}
+  if(a==="exit-practice"){setPractice(false);render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();

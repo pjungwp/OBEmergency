@@ -688,6 +688,13 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
 .tool-bar button{min-width:0;overflow:hidden}
 .sim-note{display:grid;gap:8px;background:#e9f8f6;border:2px solid var(--teal);border-radius:14px;padding:12px 14px;margin-bottom:12px}
 .sim-note strong{font-size:17px}.sim-note span{font-size:15px;color:#33465f}.sim-note .button{justify-self:start}
+
+/* Home: simulation is a separate, secondary door; clinical assist is the default */
+.sim-door{margin:4px 12px 10px;display:grid;grid-template-columns:48px minmax(0,1fr) 16px;gap:14px;align-items:center;padding:14px;border:1px solid #b9e2dc;border-left:6px solid var(--teal);border-radius:16px;background:#f2fbf9;color:var(--ink);text-decoration:none}
+.sim-door-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#dff6f2;color:#126b63;font-size:18px}
+.sim-door .em-copy{display:flex;flex-direction:column;gap:4px}.sim-door strong{font-size:18px}.sim-door small{font-size:14px;color:var(--muted);line-height:1.35}
+.practice-band{margin:12px 12px 0;padding:12px 14px;border-radius:14px;background:var(--teal);color:white;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.practice-band>div{display:flex;flex-direction:column;gap:2px}.practice-band small{opacity:.9;font-size:13px}.practice-band .text-button{color:white;font-size:14px}
 </style>
   <title>OB Emergency Assist</title>
 </head>
@@ -733,7 +740,8 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
     <button data-nav="flowcharts">Flowcharts</button>
     <button data-nav="medications">Medications</button>
     <button data-nav="education">Education &amp; TeamSTEPPS</button>
-    <a href="sim-master.html">Sim Master <small>facilitator, on a laptop</small></a>
+    <a href="sim-master.html">Facilitate a simulation <small>Sim Master</small></a>
+    <a href="index.html?practice=1">Practice mode <small>team phone during a sim</small></a>
     <hr>
     <button data-action="toggle-text">Larger text <small id="drawerTextState">Off</small></button>
     <button data-action="share">Share this app</button>
@@ -760,7 +768,7 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
     </div>
   </template>
   <script>
-const APP_VERSION = "0.18.2-prototype";
+const APP_VERSION = "0.19.0-prototype";
 const CONTENT_REVIEW_DATE = "2026-11-02";
 
 const REFERENCES = [
@@ -2308,6 +2316,9 @@ function emergencyIcon(id,size=56){
 }
 
 let route = "emergency";
+// Practice mode: team phones during a simulation (opened from Sim Master). Clinical is the default.
+let practice=(()=>{try{const q=new URLSearchParams(location.search).get("practice");if(q!==null){q==="0"?sessionStorage.removeItem("oba.practice"):sessionStorage.setItem("oba.practice","1");history.replaceState(history.state,"",location.pathname);}return sessionStorage.getItem("oba.practice")==="1";}catch{return false;}})();
+function setPractice(on){practice=on;try{on?sessionStorage.setItem("oba.practice","1"):sessionStorage.removeItem("oba.practice");}catch{}}
 let selectedEmergency = null;
 let flowEmergency = "pph";
 let session = hydrateSession(store.loadSession());
@@ -2410,6 +2421,7 @@ function renderEmergency(){
         <p>Ready when seconds matter.</p>
       </div>
     </section>
+    ${practice?`<section class="practice-band"><div><strong>Practice mode</strong><small>Sessions you start here are simulations, not real emergencies.</small></div><button class="text-button" data-action="exit-practice">Exit</button></section>`:""}
     <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
     <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
@@ -2419,10 +2431,12 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <section class="home-foot">
-      <div><strong>Running a simulation?</strong><small>Sim Master is the facilitator view: scenarios, timed events, checklist and debrief. Best on a laptop.</small></div>
-      <a class="text-button" href="sim-master.html">Open Sim Master ›</a>
-    </section>
+    ${practice?"":`<h2 class="home-label"><span>Training</span></h2>
+    <a class="sim-door" href="sim-master.html">
+      <span class="sim-door-icon" aria-hidden="true">▶</span>
+      <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </a>`}
     <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
   updateConnectivity(true);
 }
@@ -2435,8 +2449,7 @@ function renderEmergencyPreview(id){
       <div class="preview-title">${emergencyIcon(e.id,64)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
     </section>
     <section class="preview-actions">
-      <button class="button primary large" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>
-      <button class="button simulation large" data-action="start-session" data-mode="simulation">Start Simulation</button>
+      ${practice?`<button class="button simulation large full" data-action="start-session" data-mode="simulation">Start practice session</button>`:`<button class="button primary large full" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>`}
       <button class="button ghost full" data-action="open-flow" data-id="${e.id}">View full flowchart</button>
     </section>
     <section class="preview-list">
@@ -3149,6 +3162,7 @@ document.addEventListener("click",e=>{
   const a=b.dataset.action;
   if(a==="dismiss-notice"){settings.noticeDismissed=true;saveSettings();$("#clinicalNotice").hidden=true;}
   if(a==="back-home"){selectedEmergency=null;render();}
+  if(a==="exit-practice"){setPractice(false);render();}
   if(a==="start-session")startSession(selectedEmergency,b.dataset.mode);
   if(a==="open-flow")openFlow(b.dataset.id);
   if(a==="close-sheet")closeSheet();

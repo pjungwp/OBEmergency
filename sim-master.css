@@ -216,3 +216,5 @@ body:not([data-phase="run"]) .sm-dock{display:none}
 @media (max-width:767px){.ck-vitals{gap:4px;padding:6px 8px;margin:8px -10px 0}.vs{padding:3px 6px}.vs strong{font-size:clamp(15px,4.6vw,20px)}.vs small{font-size:10.5px}.ck-vitals .stage{font-size:11px;padding:3px 6px}}
 .ck-vitals{grid-auto-flow:row;grid-auto-columns:auto}
 .ck-vitals .stage{justify-self:start}
+
+.sm-team-link{margin:-4px 2px 12px;color:var(--muted);font-size:14px}.sm-team-link a{color:var(--teal);font-weight:800}
