@@ -36,6 +36,17 @@ export function simNow(run,wall=Date.now()){const c=run.clock;return c.elapsedBa
 export function startRun(run,wall=Date.now()){run.phase="run";run.clock.running=true;run.clock.lastTickAt=wall;push(run,{kind:"clock",what:"start",text:"Scenario started"},0);}
 export function pause(run,wall=Date.now()){const c=run.clock;if(!c.running)return;c.elapsedBase=simNow(run,wall);c.running=false;c.lastTickAt=wall;push(run,{kind:"clock",what:"pause",text:"Paused"},c.elapsedBase);}
 export function resume(run,wall=Date.now()){const c=run.clock;if(c.running)return;c.running=true;c.lastTickAt=wall;push(run,{kind:"clock",what:"resume",text:"Resumed"},c.elapsedBase);}
+// Auto-pause: if the facilitator's app sat in the background longer than the grace period,
+// stop the clock at hiddenAt+grace so a forgotten scenario doesn't keep running for hours.
+export const AWAY_GRACE_MS=60000;
+export function markAway(run,wall=Date.now()){const c=run?.clock;if(c&&c.running&&run.phase==="run"&&c.hiddenAt==null)c.hiddenAt=wall;}
+export function returnFromAway(run,wall=Date.now(),grace=AWAY_GRACE_MS){
+  const c=run?.clock;if(!c)return null;const h=c.hiddenAt;delete c.hiddenAt;
+  if(h==null||!c.running||run.phase!=="run"||wall-h<=grace)return null;
+  const stopAt=Math.max(h+grace,c.lastTickAt);c.elapsedBase=simNow(run,stopAt);c.running=false;c.lastTickAt=wall;
+  push(run,{kind:"clock",what:"pause",auto:true,text:"Auto-paused — app was in the background"},c.elapsedBase);
+  return {awayMs:wall-h};
+}
 export function advance(run,ms,wall=Date.now()){
   if(!(ms>0))return;const c=run.clock;c.elapsedBase=simNow(run,wall)+ms;c.lastTickAt=wall;
   push(run,{kind:"clock",what:"advance",text:`Time advanced +${Math.round(ms/60000*10)/10} min`},c.elapsedBase);

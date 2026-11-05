@@ -35,7 +35,7 @@ function save(){try{run?localStorage.setItem(KEY,JSON.stringify(run)):localStora
 const scn=()=>run&&getSimScenario(run.scenarioId);
 const res=()=>run&&S.resolve(scn(),run.level);
 const now=()=>run?S.simNow(run):0;
-function toast(t){const el=$("#smToast");el.textContent=t;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),2200);}
+function toast(t){const el=$("#smToast");el.textContent=t;el.classList.add("on");clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove("on"),t.length>60?6000:2200);}
 
 // ---------- progressive disclosure ----------
 const isOpen=id=>ui.printAll||ui.open===id||ui.pinned.has(id);
@@ -382,5 +382,11 @@ document.addEventListener("keydown",e=>{
 });
 $("#smText")?.addEventListener("click",()=>{const on=!document.documentElement.classList.contains("text-lg");document.documentElement.classList.toggle("text-lg",on);$("#smText").setAttribute("aria-pressed",String(on));try{const k="ob-emergency-assist.settings.v1",s=JSON.parse(localStorage.getItem(k)||"{}");s.largeText=on;localStorage.setItem(k,JSON.stringify(s));}catch{}});
 window.addEventListener("beforeunload",save);
+// Auto-pause when the facilitator leaves the app (screen off, switched apps/tabs) for over a minute.
+function away(){if(run){S.markAway(run);save();}}
+function back(){if(!run)return;const r=S.returnFromAway(run);save();if(r){render();toast(`Auto-paused — you were away ${Math.round(r.awayMs/60000)} min. Tap Pause to resume.`);}}
+document.addEventListener("visibilitychange",()=>document.hidden?away():back());
+window.addEventListener("pagehide",away);
+if(run?.clock?.hiddenAt!=null)back();
 
 render();startTick();

@@ -972,7 +972,18 @@ function updateConnectivity(quiet=false){
   const online=navigator.onLine;$("#connectionDot")?.classList.toggle("offline",!online);const l=$("#connectionLabel");if(l)l.textContent=online?"Ready":"Offline";if(!online&&!quiet)toast("Offline · this device continues locally","alert");
 }
 window.addEventListener("online",()=>updateConnectivity());window.addEventListener("offline",()=>updateConnectivity());
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&session?.status==="active"){checkMilestones();render();}});
+// Simulation mode only: auto-pause if the app was in the background for over a minute. Clinical clock never pauses.
+const AWAY_GRACE_MS=60000;
+function simAway(){if(session?.status==="active"&&session.mode==="simulation"&&session.running&&session.hiddenAt==null){session.hiddenAt=Date.now();saveSession();}}
+function simBack(){
+  if(!session||session.hiddenAt==null)return false;const h=session.hiddenAt,now=Date.now();delete session.hiddenAt;
+  if(session.mode!=="simulation"||!session.running||now-h<=AWAY_GRACE_MS){saveSession();return false;}
+  const stopAt=Math.max(h+AWAY_GRACE_MS,session.lastTickAt);session.elapsedBase+=stopAt-session.lastTickAt;session.running=false;session.lastTickAt=now;session.simulationTimeMs=session.elapsedBase;
+  saveSession({type:"SESSION_PAUSED",status:"active",payload:{auto:true}});toast(`Simulation auto-paused — you were away ${Math.round((now-h)/60000)} min`);return true;
+}
+document.addEventListener("visibilitychange",()=>{if(document.hidden){simAway();return;}if(session?.status==="active"){simBack();checkMilestones();render();}});
+window.addEventListener("pagehide",simAway);
+if(session?.hiddenAt!=null)simBack();
 
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 updateConnectivity();if(session?.status==="active")startClock();render();

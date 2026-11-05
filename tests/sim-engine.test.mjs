@@ -153,3 +153,12 @@ test("2.0: debrief separates strengths, opportunities and not documented; export
   assert.equal(json.format,"ob-sim-debrief/1");assert.equal(json.scenario.version,"2.0");assert.equal(json.scenario.reviewed,null);
   assert.ok(!/patient name|MRN/i.test(csv+JSON.stringify(json)));
 });
+
+test("auto-pauses at hiddenAt+grace when the app was away too long, not for a brief switch",()=>{
+  const {x}=run();S.resume(x,0);
+  S.markAway(x,5*MIN);assert.equal(S.returnFromAway(x,5*MIN+30000),null);assert.ok(x.clock.running,"short absence keeps running");
+  S.markAway(x,10*MIN);const r=S.returnFromAway(x,24*60*MIN);
+  assert.ok(r&&r.awayMs>0);assert.equal(x.clock.running,false);
+  assert.equal(S.simNow(x,24*60*MIN),11*MIN,"clock stops one minute after leaving");
+  assert.ok(x.log.at(-1).auto);assert.equal(x.clock.hiddenAt,undefined);
+});
