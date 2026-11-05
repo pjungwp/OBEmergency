@@ -114,7 +114,7 @@ function sessionMinute(){return currentElapsed()/60000;}
 function refTags(ids=[]){return `<div class="ref-tags">${ids.map(id=>{const r=getReference(id);return r?`<span>${esc(r.short)}</span>`:"";}).join("")}</div>`;}
 
 function navigate(next,opts={}){
-  route=next;
+  route=next;if(typeof closeEduPanel==="function")closeEduPanel();
   if(opts.emergency) selectedEmergency=opts.emergency;
   $$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));
   render();
@@ -654,8 +654,14 @@ function updateMedicationList(query){
 }
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
-// Short category names for the topic cards (interface labels; deck titles and content unchanged).
-const EDU_CATEGORY={teamstepps:"Teamwork",roles:"Teamwork","four-ts":"PPH","severe-htn":"Hypertension","mag-safety":"Seizure","pregnancy-status":"ED screening","shoulder-dystocia":"Time critical","t3-bleeding":"Bleeding / trauma","arrest-pregnancy":"Cardiac arrest",simulation:"Simulation"};
+// Education is organised into a few categories (interface grouping only; deck titles and content unchanged).
+const EDU_GROUPS=[
+  {id:"team",name:"Teamwork & simulation",accent:"teal",topics:["teamstepps","roles","simulation"]},
+  {id:"hemorrhage",name:"Hemorrhage",accent:"crimson",topics:["four-ts","t3-bleeding"]},
+  {id:"htn",name:"Hypertension & seizure",accent:"amber",topics:["severe-htn","mag-safety"]},
+  {id:"critical",name:"Arrest & delivery emergencies",accent:"violet",topics:["arrest-pregnancy","shoulder-dystocia"]},
+  {id:"screening",name:"ED screening",accent:"navy",topics:["pregnancy-status"]}
+];
 // Source rows: publisher / document type above a short title. The full citation stays in the link's label and the About sheet.
 const DOC_LABEL={
   "acog-pph-183":["ACOG / Practice Bulletin 183","Postpartum Hemorrhage"],
@@ -671,21 +677,56 @@ const DOC_LABEL={
   "ahrq-teamstepps":["AHRQ / TeamSTEPPS","TeamSTEPPS 3.0 Curriculum"]
 };
 const EXT_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
-function renderEducation(){
-  // Topics open as built-in slide decks. Sources are links, not paragraphs. One page scroll.
-  const docs=REFERENCES.filter(r=>r.url);
-  const docRow=r=>{const [label,title]=DOC_LABEL[r.id]||[`${r.short} · ${r.year}`,r.title];
-    return `<a class="doc-link" href="${r.url}" target="_blank" rel="noopener" aria-label="${esc(r.title)} (${esc(r.year)}), opens the publisher's site"><span class="doc-copy"><small>${esc(label)}</small><strong>${esc(title)}</strong></span>${EXT_ICON}</a>`;};
-  main.innerHTML=`<section class="edu-page">
-    <header class="edu-head"><h1>Education</h1><p>Quick teaching decks and source documents</p></header>
-    <section class="edu-decks" aria-label="Topics">${EDUCATION.map(x=>{const n=(EDU_DECKS[x.id]||[]).length;return `<button class="edu-deck ${x.accent}" data-education="${x.id}"><span class="edu-kicker">${esc(EDU_CATEGORY[x.id]||x.kicker)}</span><strong>${esc(x.title)}</strong><span class="edu-meta"><span>${n?`${n} slides`:"Open deck"}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></button>`;}).join("")}</section>
-    <details class="source-docs" ${WIDE.matches?"open":""}><summary><h2 id="srcDocsH">Source documents</h2><span class="src-count">${docs.length}</span></summary>
-      <div class="doc-list" aria-labelledby="srcDocsH">${docs.map(docRow).join("")}</div>
-      <p class="doc-note">Opens the publisher’s site · needs internet · some ACOG documents ask for a member sign-in.</p>
-    </details>
-    <p class="home-meta">Prototype ${APP_VERSION} · content review ${CONTENT_REVIEW_DATE} · <button class="text-button" data-action="show-about">About</button></p>
-  </section>`;
+const CHEV='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+function eduGroups(){
+  const known=new Set(EDU_GROUPS.flatMap(g=>g.topics));
+  const extra=EDUCATION.filter(x=>!known.has(x.id)).map(x=>x.id); // any new deck still shows up
+  const groups=EDU_GROUPS.map(g=>({...g,items:g.topics.map(id=>EDUCATION.find(x=>x.id===id)).filter(Boolean)}));
+  if(extra.length)groups.push({id:"more",name:"More topics",accent:"navy",items:extra.map(id=>EDUCATION.find(x=>x.id===id))});
+  return groups.filter(g=>g.items.length);
 }
+function docRow(r){const [label,title]=DOC_LABEL[r.id]||[`${r.short} · ${r.year}`,r.title];
+  return `<a class="doc-link" href="${r.url}" target="_blank" rel="noopener" aria-label="${esc(r.title)} (${esc(r.year)}), opens the publisher's site"><span class="doc-copy"><small>${esc(label)}</small><strong>${esc(title)}</strong></span>${EXT_ICON}</a>`;}
+function renderEducation(){
+  // Dashboard: category cards on the left, source documents on the right (the list scrolls inside its panel).
+  const docs=REFERENCES.filter(r=>r.url);
+  main.innerHTML=`<section class="edu-dash">
+    <header class="edu-head"><h1>Education</h1><p>Pick a category to see its teaching decks</p></header>
+    <section class="edu-cats" aria-label="Education categories">${eduGroups().map(g=>`<button class="edu-cat ${g.accent}" data-edu-group="${g.id}" aria-haspopup="dialog">
+        <span class="edu-cat-name">${esc(g.name)}</span>
+        <span class="edu-cat-topics">${g.items.map(x=>`<span>${esc(x.title)}</span>`).join("")}</span>
+        <span class="edu-meta"><span>${g.items.length} topic${g.items.length>1?"s":""}</span>${CHEV}</span></button>`).join("")}
+      <button class="edu-cat docs-card" data-action="edu-docs" aria-haspopup="dialog"><span class="edu-cat-name">Source documents</span><span class="edu-cat-topics"><span>ACOG, AHA, SMFM, AHRQ and more</span></span><span class="edu-meta"><span>${docs.length} documents</span>${CHEV}</span></button>
+    </section>
+    <aside class="edu-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">Source documents</h2>
+      <div class="doc-list">${docs.map(docRow).join("")}</div>
+      <p class="doc-note">Opens the publisher’s site · needs internet · some ACOG documents ask for a member sign-in.</p>
+    </aside>
+  </section>`;  requestAnimationFrame(fitEduTopics);
+}
+// Category cards list their topics only as far as they fit; anything that would be cut off is hidden (the count stays).
+function fitEduTopics(){
+  $$(".edu-cat-topics").forEach(box=>{const sp=[...box.children];sp.forEach(x=>x.hidden=false);
+    const lim=box.getBoundingClientRect().bottom+0.5;let cut=false;
+    sp.forEach(x=>{if(cut||x.getBoundingClientRect().bottom>lim){x.hidden=true;cut=true;}});});
+}
+window.addEventListener("resize",()=>{if(route==="education")fitEduTopics();});
+document.fonts?.ready?.then(()=>{if(route==="education")fitEduTopics();});
+// Full-page panel listing a category's topics (or the source documents on small screens).
+function openEduPanel({title,eyebrow,html,accent=""}){
+  let el=$("#eduPanel");
+  if(!el){el=document.createElement("div");el.id="eduPanel";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");document.body.appendChild(el);}
+  el.className=`edu-panel ${accent}`;el.hidden=false;
+  el.innerHTML=`<div class="edu-panel-head"><div><small>${esc(eyebrow)}</small><h2 id="eduPanelH">${esc(title)}</h2></div><button class="icon-button" data-action="edu-panel-close" aria-label="Close">×</button></div><div class="edu-panel-body">${html}</div>`;
+  el.setAttribute("aria-labelledby","eduPanelH");document.body.classList.add("edu-panel-open");
+  requestAnimationFrame(()=>el.querySelector("[data-action=edu-panel-close]")?.focus());
+}
+function closeEduPanel(){const el=$("#eduPanel");if(el)el.hidden=true;document.body.classList.remove("edu-panel-open");}
+function openEduGroup(id){
+  const g=eduGroups().find(x=>x.id===id);if(!g)return;
+  openEduPanel({eyebrow:"EDUCATION",title:g.name,accent:g.accent,html:`<div class="edu-decks">${g.items.map(x=>{const n=(EDU_DECKS[x.id]||[]).length;return `<button class="edu-deck ${x.accent}" data-education="${x.id}"><span class="edu-kicker">${esc(x.kicker)}</span><strong>${esc(x.title)}</strong><span class="edu-meta"><span>${n?`${n} slides`:"Open deck"}</span>${CHEV}</span></button>`;}).join("")}</div>`});
+}
+function openEduDocs(){const docs=REFERENCES.filter(r=>r.url);openEduPanel({eyebrow:"EDUCATION",title:"Source documents",html:`<div class="doc-list">${docs.map(docRow).join("")}</div><p class="doc-note">Opens the publisher’s site · needs internet · some ACOG documents ask for a member sign-in.</p>`});}
 
 // ---------- Built-in slide decks ----------
 let deck=null; // {id, i}
@@ -992,6 +1033,9 @@ document.addEventListener("click",e=>{
   if(b.dataset.navJump)navigate(b.dataset.navJump);
   if(b.dataset.emergency){selectedEmergency=b.dataset.emergency;render();}
   if(b.dataset.education)openEducation(b.dataset.education);
+  if(b.dataset.eduGroup)openEduGroup(b.dataset.eduGroup);
+  if(b.dataset.action==="edu-docs")openEduDocs();
+  if(b.dataset.action==="edu-panel-close")closeEduPanel();
   if(b.dataset.medId)openMedication(b.dataset.medId);
   if(b.dataset.taskInfo)openTaskInfo(b.dataset.emergencyId,b.dataset.taskInfo);
   if(b.dataset.taskAction)handleTask(b.dataset.taskId,b.dataset.taskAction);
@@ -1130,6 +1174,7 @@ if(session?.hiddenAt!=null)simBack();
 let leaveArmedUntil=0;
 installBackGuard(()=>{
   if(deck){closeDeck();return true;}
+  if($("#eduPanel")&&!$("#eduPanel").hidden){closeEduPanel();return true;}
   if(!$("#infoSheet").hidden){closeSheet();return true;}
   if(!$("#menuDrawer").hidden){closeMenu();return true;}
   if(route==="flowcharts"&&flowView!=="overview"){flowView="overview";render();return true;}
