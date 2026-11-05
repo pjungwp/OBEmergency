@@ -1061,3 +1061,15 @@ details.mt-sec summary h3{margin:0}
   body.landing[data-route=emergency] .emergency-grid .emergency-card strong,.fc-landing .emergency-card strong{font-size:16px}
   .fc-landing .emergency-grid{margin-top:8px}
 }
+
+/* Team join: in-app QR scanner */
+.scan-btn{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 0}
+.scan-btn svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.team-or{display:flex;align-items:center;gap:10px;margin:12px 0 4px;color:var(--muted);font-size:14px;font-weight:700}
+.team-or::before,.team-or::after{content:"";flex:1;border-top:1px solid var(--line)}
+.qr-scan{position:fixed;inset:0;z-index:200;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:20px 16px calc(24px + env(safe-area-inset-bottom));gap:14px}
+.qr-scan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.qr-frame{position:absolute;left:50%;top:44%;width:min(68vw,300px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid rgba(255,255,255,.9);border-radius:18px;box-shadow:0 0 0 100vmax rgba(0,0,0,.45)}
+.qr-msg{position:relative;margin:0;padding:10px 14px;border-radius:12px;background:rgba(5,15,35,.75);color:#fff;font-weight:700;font-size:16px;text-align:center;max-width:420px}
+.qr-scan.err .qr-msg{background:#8b4e00}
+.qr-scan .button{position:relative;min-height:52px;min-width:240px}

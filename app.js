@@ -1036,11 +1036,48 @@ async function teamCopy(){const st=store.teamStatus();if(!st.code)return;const l
 }
 function showTeamJoin(prefill=""){
   openSheet({eyebrow:"TEAM",title:"Join a team session",html:`
-    <p class="lead">Enter the 6-character code shown on the team lead's phone.</p>
+    <p class="lead">Scan the QR or enter the 6-character code on the team lead's phone.</p>
+    ${canScan()?`<button class="button secondary large full scan-btn" data-action="team-scan"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 12h8"/></svg>Scan the QR code</button><p class="team-or"><span>or enter the code</span></p>`:`<p class="team-hint">Tip: point your phone's Camera app at the QR on the lead's screen, or enter the code.</p>`}
     <label class="team-input"><span class="sr-only">Team code</span><input id="teamCode" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="7" placeholder="ABC-234" value="${esc(prefill?formatCode(prefill):"")}"></label>
     ${session?.status==="active"?`<p class="warning-box"><strong>This phone has its own active session.</strong> Joining replaces it on this phone.</p>`:""}
     <button class="button primary large full" data-action="team-join-go">Join</button>`});
   requestAnimationFrame(()=>{const i=$("#teamCode");i?.focus();i?.addEventListener("keydown",e=>{if(e.key==="Enter")teamJoin();});});
+}
+// ---------- In-app QR scanner (BarcodeDetector where available; jsQR loaded on demand otherwise) ----------
+function canScan(){return !!(navigator.mediaDevices?.getUserMedia)&&window.isSecureContext;}
+let scanStream=null,scanLoop=null;
+function loadJsQR(){if(window.jsQR)return Promise.resolve(window.jsQR);return new Promise((res,rej)=>{const sc=document.createElement("script");sc.src="vendor/jsQR.js";sc.onload=()=>res(window.jsQR);sc.onerror=rej;document.head.appendChild(sc);});}
+function codeFromScan(text){
+  const t=String(text||"").trim();
+  try{const u=new URL(t);const c=u.searchParams.get("team");if(c)return normalizeCode(c);}catch{}
+  const c=normalizeCode(t);return c.length===6?c:"";
+}
+function stopScan(){clearTimeout(scanLoop);scanLoop=null;scanStream?.getTracks().forEach(t=>t.stop());scanStream=null;$("#qrScan")?.remove();}
+async function startScan(){
+  closeSheet();
+  const el=document.createElement("div");el.id="qrScan";el.className="qr-scan";el.setAttribute("role","dialog");el.setAttribute("aria-label","Scan the team QR code");
+  el.innerHTML=`<video playsinline muted aria-hidden="true"></video><div class="qr-frame" aria-hidden="true"></div><p class="qr-msg" aria-live="polite">Point the camera at the QR on the lead's phone</p><button class="button secondary" data-action="scan-cancel">Cancel · enter code instead</button>`;
+  document.body.appendChild(el);
+  const video=el.querySelector("video"),msg=el.querySelector(".qr-msg");
+  try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});}
+  catch(e){msg.textContent=e?.name==="NotAllowedError"?"Camera permission was denied. Allow the camera in your browser settings, or enter the code.":"No camera available on this device. Enter the code instead.";el.classList.add("err");return;}
+  video.srcObject=scanStream;await video.play().catch(()=>{});
+  let detector=null;
+  if("BarcodeDetector" in window){try{const f=await BarcodeDetector.getSupportedFormats();if(f.includes("qr_code"))detector=new BarcodeDetector({formats:["qr_code"]});}catch{}}
+  let decode=null;
+  if(!detector){try{const jsQR=await loadJsQR();const cv=document.createElement("canvas"),cx=cv.getContext("2d",{willReadFrequently:true});
+    decode=()=>{const w=video.videoWidth,h=video.videoHeight;if(!w)return null;const sc=Math.min(1,640/Math.max(w,h));cv.width=Math.round(w*sc);cv.height=Math.round(h*sc);cx.drawImage(video,0,0,cv.width,cv.height);const r=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height,{inversionAttempts:"dontInvert"});return r?.data||null;};}
+    catch{msg.textContent="The scanner could not load. Enter the code instead.";el.classList.add("err");return;}}
+  const tick=async()=>{
+    if(!scanStream)return;
+    let text=null;
+    try{if(detector){const r=await detector.detect(video);text=r[0]?.rawValue||null;}else text=decode();}catch{}
+    const code=text?codeFromScan(text):"";
+    if(code){navigator.vibrate?.(60);stopScan();showTeamJoin(code);teamJoin();return;}
+    if(text)msg.textContent="That QR isn't an OB Emergency Assist team code";
+    scanLoop=setTimeout(tick,200);
+  };
+  tick();
 }
 async function teamJoin(){
   const code=normalizeCode($("#teamCode")?.value);const btn=$("[data-action=team-join-go]");
@@ -1163,6 +1200,8 @@ document.addEventListener("click",e=>{
   if(a==="team-leave")teamLeave();
   if(a==="team-join")showTeamJoin();
   if(a==="team-join-go")teamJoin();
+  if(a==="team-scan")startScan();
+  if(a==="scan-cancel"){stopScan();showTeamJoin();}
   if(a==="team-role")showRolePicker();
   if(b.dataset.pickRole!=null)pickRole(b.dataset.pickRole);
   if(a==="team-copy")teamCopy();
@@ -1275,6 +1314,7 @@ if(session?.hiddenAt!=null)simBack();
 // Phone back button: close the top overlay, then step back through screens; never drop out mid-session by accident.
 let leaveArmedUntil=0;
 installBackGuard(()=>{
+  if($("#qrScan")){stopScan();showTeamJoin();return true;}
   if(deck){closeDeck();return true;}
   if($("#eduPanel")&&!$("#eduPanel").hidden){closeEduPanel();return true;}
   if(!$("#infoSheet").hidden){closeSheet();return true;}
