@@ -1,4 +1,4 @@
-export const APP_VERSION = "0.20.0-prototype";
+export const APP_VERSION = "0.21.0-prototype";
 export const CONTENT_REVIEW_DATE = "2026-11-02";
 
 export const REFERENCES = [

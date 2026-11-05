@@ -1008,6 +1008,9 @@ installBackGuard(()=>{
   return false;
 });
 
+// Splash: fade once the first screen has rendered (at least ~0.8 s so it reads, never longer than needed).
+(()=>{const el=document.getElementById("splash");if(!el)return;const wait=Math.max(0,800-(Date.now()-(window.__splashAt||Date.now())));
+  setTimeout(()=>{el.classList.add("done");setTimeout(()=>el.remove(),400);},wait);})();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 updateConnectivity();if(session?.status==="active")startClock();render();
 store.subscribe(next=>{

@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0b2149"/>
-  <path d="M87 258h79l30-80 55 165 43-120 30 75h101" fill="none" stroke="#ff596f" stroke-width="31" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="404" cy="298" r="20" fill="#fff"/>
-  <text x="256" y="132" text-anchor="middle" font-family="Arial,sans-serif" font-size="78" font-weight="800" fill="#fff">OB</text>
-  <text x="256" y="437" text-anchor="middle" font-family="Arial,sans-serif" font-size="42" font-weight="700" fill="#fff">ASSIST</text>
-</svg>
