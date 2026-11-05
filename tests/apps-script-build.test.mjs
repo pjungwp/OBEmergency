@@ -24,6 +24,7 @@ test("Apps Script bundle is valid JavaScript (catches $$ / replace mangling)",()
   assert.doesNotThrow(()=>new Function(main));
   assert.match(main,/const \$\$ =/);
   assert.match(main,/PATHWAYS/);
+  assert.match(main,/function installBackGuard/,"back guard is bundled");
   assert.match(main,/const D=\{[^}]*answer[^}]*\}/,"decisions namespace is rebuilt for the bundle");
   assert.match(main,/function buildChecklist/);
 });
