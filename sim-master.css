@@ -322,3 +322,14 @@ main{padding-bottom:120px}
 @media (max-width:767px){.ck-vitals{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(68px,1fr))!important}.vs.metric{grid-column:span 2}.vs.metric strong{font-size:16px}}
 
 .leave-opts{display:grid;gap:10px;margin-top:12px}.leave-opts .sm-btn{width:100%;min-height:56px}
+
+/* Tools button, Focus layout */
+.ck-tools{flex:none;min-height:44px;min-width:44px;border:1.5px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:12px;font-size:22px;font-weight:900;cursor:pointer;line-height:1}
+.ck-grid.focus .ck-obs,.ck-grid.focus .ck-side{display:none}
+.ck-grid.focus{grid-template-columns:minmax(0,1fr)!important;grid-template-areas:"flow" "main"!important;max-width:980px;margin:0 auto}
+@media (min-width:1100px){.ck-grid.focus{grid-template-columns:240px minmax(0,1fr)!important;grid-template-areas:"flow main"!important;max-width:1240px}}
+.focus-chip{display:flex;align-items:center;gap:8px;width:100%;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:12px 16px;min-height:52px;font:inherit;font-weight:800;font-size:16px;color:var(--navy);cursor:pointer}
+.focus-chip span{margin-left:auto;color:var(--teal);white-space:nowrap}.focus-chip{white-space:nowrap}
+.sm-sheet .ob{margin-bottom:6px}
+
+@media (max-width:360px){.rp-t{display:none}.ck-row1{gap:6px}.ck-tools{min-width:40px}.sm-stop{padding:6px 9px}.ck-clock>strong{font-size:26px}}

@@ -21,10 +21,20 @@ Source: "OB Emergency Assist — Sim Master 2.0 Master Rebuild Plan" (Nov 2026) 
 - Clinical content versioned and reviewable: scenario `version` + `reviewed` (null until review), shown in UI and exports.
 - Collaborative consistency through reconnection: pending phase 4.
 
-## Sim Master 3.0 — situation dashboard (Nov 2026, in progress)
+## Sim Master 3.0 (Nov 2026) — built on preview
 
-- Each state has a one-sentence facilitator line (`state.say`, DRAFT, needs review) shown large as "Say · Nurse/Patient".
-- Scenario flow map (states in teaching order; current, visited, and tappable next states).
-- Laptop ≥1100px: flow | script + "What happens next?" | Watch for + log, large type. Tablet: flow strip + two columns. Phone: stacked.
-- QBL capped at 6,000 mL. Tap RUNNING/PAUSED in the header to pause.
-- Next: context-aware prompts (hide cues for actions already recorded), per-state "reveal on request" findings.
+| Plan item | Status |
+| --- | --- |
+| Prebrief workspace (handoff, read-aloud briefing, role chips, room ready checks, objectives, one Start) | Done |
+| Monitor status + on-device learner monitor (separate window on Netlify only) | Done |
+| Cockpit: flow map, prompt card (Say / Prompt if needed, Delivered / Skip, More information) | Done |
+| Context-aware prompts: per-state line + overdue-action nudges, lag by level, hide when recorded | Done (content DRAFT) |
+| Emergency-specific status tiles (bleeding; seizure + magnesium; head-to-body + maneuvers; delivery by 5 min) | Done |
+| Action states: tap = done; long-press = partial / not performed / N/A; undo keeps the audit event | Done |
+| Focus / Parallel: facilitator choice in ⋯ tools, app marks the suggested one, never switches itself | Done |
+| Facilitator tools menu (hold, jump, set vitals, time, monitor) | Done |
+| Back / leave: Resume · Pause and leave · End; auto-pause in background; update announced, never mid-session | Done |
+| Layout checked at 320×700, 360×740, 390×844, 768×1024, 1200×800, 1440×900 (no horizontal scroll) | Done |
+| Netlify + Apps Script from one source (pipeline.yml, DEPLOYMENT.md) | Done; Google needs one-time setup |
+| Shared multi-device sessions (network sync adapter) | Not started |
+| Clinical review of say lines, nudges, timings | Needed before teaching use |

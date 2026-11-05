@@ -166,26 +166,20 @@ function renderRun(){
         <span class="sim-tag">SIM</span>
         <div class="ck-title"><strong>${esc(s.title.replace(/^Postpartum hemorrhage/,"PPH"))}</strong><span>${LEVEL_LABEL[run.level]}</span></div>
         <div class="ck-clock${showEv&&s.eventClock.stopAt?" ev-first":""}"><strong id="simClock" aria-label="Scenario clock">${fmt(t)}</strong>${showEv?`<span class="ev"><small>${esc(ec.label)}</small><b id="evClock">${fmt(ec.ms)}</b></span>`:""}</div>
-        <button class="run-pill ${run.clock.running?"on":"off"}" data-a="pause" aria-label="${run.clock.running?"Pause":"Resume"} the scenario clock">${run.clock.running?"❚❚ RUNNING":"▶ PAUSED"}</button>
-        <button class="sm-stop" data-a="stop" aria-label="Stop the simulation: real emergency">STOP</button>
+        <button class="run-pill ${run.clock.running?"on":"off"}" data-a="pause" aria-label="${run.clock.running?"Pause":"Resume"} the scenario clock"><span aria-hidden="true">${run.clock.running?"❚❚":"▶"}</span><span class="rp-t"> ${run.clock.running?"RUNNING":"PAUSED"}</span></button>
+        <button class="ck-tools" data-a="tools" aria-label="Facilitator tools">⋯</button>
+                <button class="sm-stop" data-a="stop" aria-label="Stop the simulation: real emergency">STOP</button>
       </div>
       <div class="ck-vitals" style="grid-template-columns:${mets.map(()=>"1.35fr").join(" ")} ${r.monitor.map(k=>({BP:"1.55fr",QBL:"1.2fr",Rhythm:"1.7fr",SpO2:"1.1fr"}[k]||"1fr")).join(" ")}${stage?" auto":""}">${mets.map(metricCell).join("")}${r.monitor.map(k=>vitalCell(k,v)).join("")}${stage?`<span class="stage s${stage}">Stage ${stage}</span>`:""}</div>
     </header>
-    <div class="ck-grid">
+    <div class="ck-grid ${layout()==="focus"?"focus":""}">
       <nav class="ck-col ck-flowcol" aria-label="Scenario flow">${flowHTML(r,moves)}</nav>
       <div class="ck-col ck-control">
         ${promptCard(r,st,t)}
+        ${layout()==="focus"?`<button class="focus-chip" data-a="checklist">Learner actions <b>${recorded}/${primary.length}</b><span>Checklist ›</span></button>`:""}
         <p class="ck-next-h">What happens next?</p>
         <section class="ck-moves">${primaryMoves.map(moveCard).join("")}</section>
-        ${sec("more","More options",null,`<div class="more-grid">
-          ${hold?`<button class="sm-btn${run.hold?" primary":""}" data-next="same" data-to="${hold.to}">${run.hold?"Release hold":"Hold patient state"}</button>`:""}
-          ${extraMoves.map(n=>`<button class="sm-btn" data-next="${n.kind}" data-to="${n.to}" data-label="${esc(n.label)}">${esc(n.label)}</button>`).join("")}
-          <label class="more-jump">Jump to <select data-a="jump"><option value="">state…</option>${Object.values(r.states).filter(x=>x.id!==run.state).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label>
-          <button class="sm-btn" data-a="vitals">Set vitals…</button>
-          <button class="sm-btn" data-a="adv" data-m="5">+5 min</button>
-          <button class="sm-btn" data-a="advanced-time">Advance by…</button>
-          <button class="sm-btn" data-a="monitor">Monitor window ↗</button>
-        </div>`)}
+        ${extraMoves.length?`<div class="more-grid">${extraMoves.map(n=>`<button class="sm-btn" data-next="${n.kind}" data-to="${n.to}" data-label="${esc(n.label)}">${esc(n.label)}</button>`).join("")}</div>`:""}
         ${sec("ref","Instructor reference",null,refHTML(s,r))}
       </div>
       <div class="ck-col ck-obs">
@@ -208,6 +202,10 @@ function renderRun(){
     </nav>
     ${run.phase==="stopped"?stoppedHTML():""}`;
 }
+// Layout: Parallel (decision + watch list side by side) or Focus (one decision; checklist in a sheet).
+// The app suggests one; it never switches on its own.
+const layout=()=>ui.layout||"parallel";
+function suggestedLayout(r){const open=S.checklist(run,r).primary.filter(a=>!run.obs[a.id]?.status).length;return open>=3?"parallel":"focus";}
 function promptCard(r,st,t){
   const P=S.prompts(run,r,t),p=P[0];lastPrompts=P.map(x=>x.id).join();
   const due=S.checklist(run,r).primary.filter(a=>!run.obs[a.id]?.status);
@@ -317,6 +315,16 @@ function sheetBody(){
       ${keys.includes("BP")?f("sbp","Systolic",v.sbp)+f("dbp","Diastolic",v.dbp):""}${keys.includes("HR")?f("hr","HR",v.hr):""}${keys.includes("SpO2")?f("spo2","SpO₂",v.spo2):""}${keys.includes("RR")?f("rr","RR",v.rr):""}${keys.includes("FHR")?f("fhr","FHR",v.fhr):""}${keys.includes("Rhythm")?f("rhythm","Rhythm",v.rhythm):""}${keys.includes("QBL")?f("qblRate","Bleeding mL/min",""):""}
       </div><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Cancel</button><button class="sm-btn primary" data-a="set-vitals">Set</button></div>`;
   }
+  if(k==="tools"){const st=r.states[run.state],hold=st.next.find(n=>n.kind==="same"),sug=suggestedLayout(r),L=layout();
+    return `<h2>Facilitator tools</h2>
+      <p class="sm-eyebrow">LAYOUT</p><div class="seg">${[["parallel","Parallel"],["focus","Focus"]].map(([k2,l])=>`<button class="sm-btn${L===k2?" primary":""}" data-layout="${k2}">${l}${sug===k2&&L!==k2?" · suggested":""}</button>`).join("")}</div>
+      <p class="sm-eyebrow">PATIENT</p><div class="more-grid">
+        ${hold?`<button class="sm-btn${run.hold?" primary":""}" data-next="same" data-to="${hold.to}">${run.hold?"Release hold":"Hold patient state"}</button>`:""}
+        <button class="sm-btn" data-a="vitals">Set vitals…</button>
+        <label class="more-jump">Jump to <select data-a="jump"><option value="">state…</option>${Object.values(r.states).filter(x=>x.id!==run.state).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label></div>
+      <p class="sm-eyebrow">TIME</p><div class="more-grid"><button class="sm-btn" data-a="adv" data-m="5">+5 min</button><button class="sm-btn" data-a="advanced-time">Advance by…</button></div>
+      <p class="sm-eyebrow">DISPLAY</p><div class="more-grid"><button class="sm-btn" data-a="monitor-setup">Learner monitor…</button></div>`;}
+  if(k==="checklist"){const {primary,optional}=S.checklist(run,r);return `<h2>Learner actions</h2><p class="muted small">Tap = done · long-press for partial, not performed or N/A</p>${primary.map(obsRow).join("")}${optional.length?`<p class="sm-eyebrow">MORE</p>${optional.map(obsRow).join("")}`:""}`;}
   if(k==="leave")return `<h2>Leave the scenario?</h2><p class="muted">Nothing is lost — the log and clock are saved on this device.</p>
     <div class="leave-opts"><button class="sm-btn primary big" data-a="close-sheet">Resume scenario</button><button class="sm-btn big" data-a="pause-leave">Pause and leave</button><button class="sm-btn ghost big" data-a="ask-end">End and debrief</button></div>`;
   if(k==="monitor"){const m=monitorStatus();return `<h2>Learner monitor</h2><p class="muted">Shows vitals and the clock only — no prompts, actions or branches. The scenario runs fine without it.</p>
@@ -400,6 +408,9 @@ document.addEventListener("click",e=>{
   if(b.dataset.ready!=null&&run?.prep){const i=+b.dataset.ready,l=run.prep.ready;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(a==="monitor-setup"){openSheet("monitor");return;}
   if(a==="ask-leave"){openSheet("leave");return;}
+  if(a==="tools"){openSheet("tools");return;}
+  if(a==="checklist"){openSheet("checklist");return;}
+  if(b.dataset.layout){ui.layout=b.dataset.layout;saveUI();ui.sheet=null;render();return;}
   if(a==="pause-leave"){S.pause(run);save();ui.sheet=null;ui.phase="library";saveUI();render();window.scrollTo(0,0);toast("Paused — resume from the scenario list");return;}
   if(a==="reload"){save();location.reload();return;}
   if(b.dataset.prompt){const id=b.dataset.prompt,st=b.dataset.pst;act(()=>S.markPrompt(run,res(),id,st,now()),st==="delivered"?"Logged as said":"Skipped");return;}
