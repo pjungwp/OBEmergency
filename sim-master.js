@@ -1,3 +1,4 @@
+import {installBackGuard} from "./back-guard.js";
 import {SIM_SCENARIOS,getSimScenario,LEVELS,LEVEL_LABEL,SIM_REVIEW_STATUS} from "./sim-scenarios.js";
 import * as S from "./sim-engine.js";
 import {createLocalSync} from "./sim-sync.js";
@@ -381,6 +382,13 @@ document.addEventListener("keydown",e=>{
   const n=Number(e.key);if(n>=1&&n<=3)$$(".mv")[n-1]?.click();
 });
 $("#smText")?.addEventListener("click",()=>{const on=!document.documentElement.classList.contains("text-lg");document.documentElement.classList.toggle("text-lg",on);$("#smText").setAttribute("aria-pressed",String(on));try{const k="ob-emergency-assist.settings.v1",s=JSON.parse(localStorage.getItem(k)||"{}");s.largeText=on;localStorage.setItem(k,JSON.stringify(s));}catch{}});
+// Phone back button: close the sheet, then step back a screen. During a running scenario it never leaves.
+installBackGuard(()=>{
+  if(ui.sheet){closeSheet();return true;}
+  if(ui.phase==="run"){toast("Scenario running — use Pause, STOP or Debrief");return true;}
+  if(ui.phase==="prebrief"||ui.phase==="debrief"){ui.phase="library";saveUI();render();window.scrollTo(0,0);return true;}
+  return false;
+});
 window.addEventListener("beforeunload",save);
 // Auto-pause when the facilitator leaves the app (screen off, switched apps/tabs) for over a minute.
 function away(){if(run){S.markAway(run);save();}}

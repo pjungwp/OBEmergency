@@ -1,3 +1,4 @@
+import {installBackGuard} from "./back-guard.js";
 import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
 import {PATHWAYS} from "./pathways.js";
@@ -111,7 +112,9 @@ function navigate(next,opts={}){
   window.scrollTo({top:0,behavior:"instant"});
 }
 
+let routeStack=[],shownRoute=route,routeBack=false;
 function render(){
+  if(route!==shownRoute){if(!routeBack)routeStack.push(shownRoute);if(routeStack.length>20)routeStack.shift();shownRoute=route;}routeBack=false;
   const cockpit=route==="emergency"&&session?.status==="active";
   document.body.classList.toggle("in-cockpit",cockpit);
   $("#clinicalNotice").hidden=settings.noticeDismissed||cockpit;
@@ -984,6 +987,20 @@ function simBack(){
 document.addEventListener("visibilitychange",()=>{if(document.hidden){simAway();return;}if(session?.status==="active"){simBack();checkMilestones();render();}});
 window.addEventListener("pagehide",simAway);
 if(session?.hiddenAt!=null)simBack();
+
+// Phone back button: close the top overlay, then step back through screens; never drop out mid-session by accident.
+let leaveArmedUntil=0;
+installBackGuard(()=>{
+  if(deck){closeDeck();return true;}
+  if(!$("#infoSheet").hidden){closeSheet();return true;}
+  if(!$("#menuDrawer").hidden){closeMenu();return true;}
+  if(route==="flowcharts"&&flowView!=="overview"){flowView="overview";render();return true;}
+  const prev=routeStack.pop();
+  if(prev&&prev!==route){routeBack=true;navigate(prev);return true;}
+  if(route!=="emergency"){routeBack=true;navigate("emergency");return true;}
+  if(session?.status==="active"&&Date.now()>leaveArmedUntil){leaveArmedUntil=Date.now()+2500;toast("Press back again to leave — the session is saved");return true;}
+  return false;
+});
 
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 updateConnectivity();if(session?.status==="active")startClock();render();
