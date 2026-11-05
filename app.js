@@ -176,7 +176,7 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <p class="home-meta">${TEAM_ON?`<button class="text-button" data-action="team-join">Join a team session</button> · `:"Sessions stay on this device. "}<button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
+`;
   updateConnectivity(true);
 }
 
@@ -1162,6 +1162,7 @@ store.subscribe(next=>{
   }
 });
 let lastRosterKey="";
+if(TEAM_ON)$$("[data-team-only]").forEach(el=>{el.hidden=false;});
 if(TEAM_ON){
   store.onTeamStatus(()=>{const el=$("#teamPill");if(el)el.outerHTML=teamPillHTML();const rk=JSON.stringify(store.teamStatus().roster);if(rk!==lastRosterKey){lastRosterKey=rk;if($(".rpick-list")&&!$("#infoSheet").hidden)showRolePicker();}});
   const q=new URLSearchParams(location.search).get("team");

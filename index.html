@@ -41,6 +41,9 @@
         <button class="hdr-btn pill" data-action="toggle-text" aria-pressed="false" title="Larger text" aria-label="Larger text">
           <span class="aa" aria-hidden="true">A<b>A</b></span><span class="lbl">Larger text</span>
         </button>
+        <button class="hdr-btn pill" data-action="team-join" title="Join a team session" aria-label="Join a team session" data-team-only hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.2 4.6 1.7 5.1 4.8"/></svg><span class="lbl">Join team</span>
+        </button>
         <button class="hdr-btn pill" data-action="share" title="Share this" aria-label="Share this">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2v2h-2zM18 14h2v2h-2z"/></svg><span class="lbl">Share this</span>
         </button>
@@ -77,6 +80,7 @@
     <a href="index.html?practice=1">Practice mode <small>team phone during a sim</small></a>
     <hr>
     <button data-action="toggle-text">Larger text <small id="drawerTextState">Off</small></button>
+    <button data-action="team-join" data-team-only hidden>Join a team session <small>enter a code</small></button>
     <button data-action="share">Share this app</button>
     <button data-action="install">Download app</button>
     <button data-action="show-about">About &amp; sources</button>
