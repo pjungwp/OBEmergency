@@ -163,7 +163,7 @@ body:not([data-phase="run"]) .sm-dock{display:none}
 .sm-counts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
 .sm-counts span{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-weight:700;color:var(--muted);font-size:14px}
 .sm-counts b{font-size:20px;color:var(--navy);margin-right:6px}
-.c-observed b{color:var(--green)!important}.c-late b{color:var(--amber)!important}.c-missed b{color:var(--red)!important}
+.c-observed b{color:var(--green)!important}.c-late b,.c-partial b{color:var(--amber)!important}.c-missed b{color:var(--red)!important}
 .db-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
 .span2{grid-column:1/-1}
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
@@ -301,3 +301,14 @@ main{padding-bottom:120px}
 .mv-v small{font-weight:900;letter-spacing:.1em;color:#8fa6bf}.mv-v strong{font-size:clamp(40px,10vw,84px);font-variant-numeric:tabular-nums;line-height:1}
 .mv-v.HR strong{color:#3ff58f}.mv-v.SpO2 strong{color:#38d6ff}.mv-v.BP strong{color:#ff6b7a}.mv-v.RR strong{color:#ffd36b}
 .mv-shown{font-size:20px;font-weight:700;margin:0}.mv-hint{color:#5c7490;font-size:13px;margin:0;text-align:center}
+
+/* Prompt card */
+.ck-say.nudge{border-left-color:var(--amber)}.ck-say.nudge .say-who{color:var(--amber)}
+.say-why{margin:6px 0 0;color:var(--muted);font-size:14.5px;font-weight:700}
+.say-acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}.say-acts .sm-btn{min-height:48px;font-size:16px;padding:0 18px}
+.say-more{color:var(--muted);font-weight:800;font-size:14px}
+.say-idle{margin:8px 0 0;font-size:20px;font-weight:700;color:var(--muted)}
+.say-info{margin-top:12px;border-top:1px solid var(--line);padding-top:4px}.say-info summary{font-size:15px}.say-info p,.say-info li{font-size:16px;margin:6px 0}
+.ob.partial .ob-main{border-color:#ecd28c;background:var(--amber-soft)}.ob.partial .box{background:var(--amber);border-color:var(--amber)}
+.ob-main{-webkit-touch-callout:none;user-select:none}
+@media (min-width:1100px){.say-acts .sm-btn{min-height:54px;font-size:18px}.say-why{font-size:16px}}

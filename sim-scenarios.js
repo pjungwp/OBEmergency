@@ -378,8 +378,31 @@ const SAY={
   "arrest":{arrest:["Nurse","She's not responding — I can't feel a pulse!"],noROSC:["Recorder","Four minutes of CPR. Still no pulse."],delivered:["Neonatal team","We have the baby."],rosc:["Nurse","I feel a pulse!"],afe:["Nurse","She's bleeding from everywhere — IV sites, the incision."]},
   "trauma-abruption":{arrival:["Patient","My belly hurts where the seatbelt was. Is my baby okay?"],stable:["Nurse","She's comfortable. Baby looks good on the monitor."],abruption:["Patient","The pain is getting worse — it doesn't stop."],shock:["Nurse","Baby's heart rate is way down and not coming back!"],delivered:["Neonatal team","Baby's out — we're resuscitating."]}
 };
+
+// action.nudge {who,line}: what a confederate says if the team hasn't done this by its target. DRAFT.
+// Shown as "Prompt if needed" only when the action is overdue; it disappears once recorded.
+const N_PPH={"a-recognize":["Nurse","The pad's soaked again — that's a lot of blood, right?"],"a-help":["Nurse","Should I call anyone else in?"],
+  "a-massage":["Nurse","Her uterus feels really soft."],"a-uterotonic":["Nurse","What medication do you want me to get?"],
+  "a-second":["Nurse","Oxytocin's running and she's still bleeding."],"a-txa":["Nurse","Anything else for the bleeding while we wait?"],
+  "a-mtp":["Nurse","Blood bank is on the phone — what do you need?"],"a-reassess":["Nurse","How's she doing? Should I update the team?"]};
+const NUDGE={"pph-atony":N_PPH,
+  "pph-preeclampsia":{...N_PPH,"a-avoid":["Medication nurse","I have Methergine ready — giving it now?"],"a-bp":["Nurse","Her pressure's still up. Keep the BP meds going?"]},
+  "pph-trauma":{"a-help":["Nurse","Should I call anyone else in?"],"a-tone":["Nurse","How does her uterus feel?"],"a-4ts":["Nurse","Uterus is firm — so why is she still bleeding?"],
+    "a-exam":["Nurse","Do you want lights and a speculum?"],"a-iv":["Nurse","She only has one IV. Another one, and labs?"],"a-escalate":["Nurse","That tear is hard to see. Repair here, or the OR?"]},
+  "htn-eclampsia":{"a-recheck":["Nurse","Want me to repeat that pressure?"],"a-notify":["Nurse","Should I let the OB on call know?"],"a-treat":["Nurse","Still severe. What do you want to give?"],
+    "a-mag":["Nurse","Should I hang magnesium?"],"a-labs":["Nurse","Any labs you want sent?"],"a-safety":["Nurse","She's seizing — what do I do?"],"a-tox":["Nurse","Her reflexes are gone and she's barely breathing."]},
+  "shoulder":{"a-call":["Nurse","The head's not moving — should I call for help?"],"a-time":["Nurse","How long since the head delivered?"],"a-nopush":["Patient","Should I keep pushing?"],
+    "a-mcroberts":["Nurse","Do you want her legs back?"],"a-suprapubic":["Nurse","Should I push above the pubic bone?"],"a-posterior":["Nurse","Still stuck. What's next?"],
+    "a-rotate":["Nurse","Nothing's working. Other options?"],"a-allfours":["Nurse","Nothing's working. Other options?"]},
+  "arrest":{"a-call":["Nurse","Should I call a code?"],"a-cpr":["Nurse","No pulse — who's starting compressions?"],"a-lud":["Nurse","Compressions are going. Anything for the uterus?"],
+    "a-rhythm":["Recorder","It's been two minutes."],"a-airway":["Nurse","Anesthesia is here. Airway?"],"a-iv":["Nurse","Do we have access?"],
+    "a-decide":["Recorder","We're at four minutes."],"a-delivery":["Recorder","Five minutes — where are we with delivery?"],"a-afe":["Nurse","She's oozing everywhere. What's happening?"]},
+  "trauma-abruption":{"a-call":["Nurse","Who should I call down?"],"a-primary":["Nurse","Where do you want to start?"],"a-lud":["Nurse","She's flat on her back. Is that okay?"],
+    "a-ivlabs":["Nurse","Want IVs and labs?"],"a-ftm":["Nurse","Should I put her on the fetal monitor?"],"a-abruption":["Patient","The pain won't let up."],"a-deliver":["Nurse","Baby's heart rate is still down."]}
+};
 for(const s of SIM_SCENARIOS){
   const c=CONTEXT[s.id]||{};
+  for(const a of s.actions){const n=(NUDGE[s.id]||{})[a.id];if(n)a.nudge={who:n[0],line:n[1]};}
   for(const [id,[who,line]] of Object.entries(SAY[s.id]||{}))if(s.states[id])s.states[id].say={who,line};
   s.version=s.version||"2.0";s.reviewed=s.reviewed??null;
   for(const [id,list] of Object.entries(c.states||{}))if(s.states[id])s.states[id].injects=list;

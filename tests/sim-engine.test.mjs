@@ -169,3 +169,20 @@ test("every reachable state has a facilitator line; QBL is capped; flow starts a
     const f=S.flowOrder(r);assert.equal(f[0],r.start);assert.equal(new Set(f).size,Object.keys(r.states).length);}
   const {r,x}=run();S.resume(x,0);assert.ok(S.vitalsAt(x,r,48*60*MIN).qbl<=S.QBL_MAX);
 });
+
+test("prompts: the state's line first; overdue nudges appear, then drop out when recorded or delivered",()=>{
+  const {r,x}=run();S.resume(x,0);
+  let P=S.prompts(x,r,30000);assert.equal(P[0].id,"say");assert.ok(!P.some(p=>p.kind==="nudge"),"nothing overdue at 30 s");
+  P=S.prompts(x,r,1.5*MIN);assert.ok(P.some(p=>p.id==="n:a-help"),"call-for-help nudge after its 1-min target (basic)");
+  S.observe(x,"a-help","observed",1.6*MIN);assert.ok(!S.prompts(x,r,1.7*MIN).some(p=>p.id==="n:a-help"),"gone once recorded");
+  S.markPrompt(x,r,"say","delivered",1.8*MIN);assert.notEqual(S.prompts(x,r,1.9*MIN)[0]?.id,"say");
+  assert.match(x.log.at(-1).text,/^Said: /);S.undo(x);assert.equal(S.prompts(x,r,1.9*MIN)[0].id,"say","undo restores the prompt");
+  const adv=S.createRun(getSimScenario("pph-atony"),"advanced",0);S.startRun(adv,0);const ra=S.resolve(getSimScenario("pph-atony"),"advanced");
+  assert.ok(!S.prompts(adv,ra,1.5*MIN).some(p=>p.id==="n:a-help"),"advanced waits longer");
+});
+
+test("every critical action with a target has a nudge line; partial is a debrief status",()=>{
+  for(const sc of SIM_SCENARIOS)for(const a of sc.actions)if(a.critical&&a.target!=null)assert.ok(a.nudge?.line,`${sc.id}/${a.id} nudge`);
+  const {x}=run();S.observe(x,"a-massage","partial",MIN);const d=S.debrief(x,getSimScenario("pph-atony"));
+  assert.equal(d.actions.find(a=>a.id==="a-massage").status,"partial");assert.ok(d.opportunities.some(a=>a.id==="a-massage"));
+});

@@ -53,7 +53,7 @@ export function advance(run,ms,wall=Date.now()){
 }
 
 function push(run,entry,at,prev){run.seq++;run.log.push({seq:run.seq,at,wallAt:new Date().toISOString(),...entry,...(prev?{prev}:{})});return run.log[run.log.length-1];}
-function snap(run){return clone({state:run.state,stateAt:run.stateAt,hold:run.hold,overrides:run.overrides,anchor:run.anchor,obs:run.obs,shown:run.shown,queue:run.queue||[],delivery:run.delivery||{}});}
+function snap(run){return clone({state:run.state,stateAt:run.stateAt,hold:run.hold,overrides:run.overrides,anchor:run.anchor,obs:run.obs,shown:run.shown,queue:run.queue||[],delivery:run.delivery||{},prompts:run.prompts||{}});}
 
 // ---------- physiology ----------
 function targetOf(run,scn){
@@ -139,7 +139,7 @@ export function acknowledge(run,seq,now){
   run.delivery=run.delivery||{};run.delivery[seq]="acknowledged";
   return push(run,{kind:"ack",ref:seq,text:`Acknowledged: ${e.label||e.text}`},now);
 }
-/** status: "observed" | "missed" | "na" | null (clear) */
+/** status: "observed" | "partial" | "missed" | "na" | null (clear) */
 export function observe(run,actionId,status,now){
   const prev=snap(run);
   if(status)run.obs[actionId]={status,at:now};else delete run.obs[actionId];
@@ -197,6 +197,33 @@ export function eventClock(run,scn,now,startId){
   return {label:ec.label,ms:(stop??now)-from,stopped:stop!=null};
 }
 
+
+// ---------- facilitator prompts (Sim Master 3.0) ----------
+/** Extra minutes before a "prompt if needed" appears: beginners get help sooner; advanced only for critical actions. */
+export const NUDGE_LAG={basic:0,intermediate:1,advanced:2};
+/** Prompts eligible now, highest priority first: the state's line, then overdue-action nudges (oldest first).
+ *  Each prompt is per visit to a state; delivered or skipped prompts drop out. */
+export function prompts(run,scn,now){
+  const r=scn.states?scn:resolve(scn,run.level),st=r.states[run.state],done=run.prompts||{},key=id=>`${id}@${run.stateAt}`,out=[];
+  if(st?.say&&!done[key("say")])out.push({id:"say",kind:"say",who:st.say.who,line:st.say.line});
+  if(run.phase!=="run"||st?.final)return out;
+  const lag=NUDGE_LAG[run.level]??0,nudges=[];
+  for(const a of checklist(run,r).primary){
+    if(!a.nudge||a.target==null||run.obs[a.id]?.status)continue;
+    if(run.level==="advanced"&&!a.critical)continue;
+    const trig=a.from?firstEntry(run,r,a.from,r.start):0;if(trig==null)continue;
+    const due=trig+(a.target+lag)*60000;if(now<due||done[key("n:"+a.id)])continue;
+    nudges.push({id:"n:"+a.id,kind:"nudge",action:a.id,who:a.nudge.who,line:a.nudge.line,why:`${a.label} — not recorded`,due});
+  }
+  return out.concat(nudges.sort((x,y)=>x.due-y.due));
+}
+/** status: "delivered" | "skipped". Logged (with undo) so the debrief shows what was said and when. */
+export function markPrompt(run,scn,id,status,now){
+  const prev=snap(run),r=scn.states?scn:resolve(scn,run.level),p=prompts(run,r,now).find(x=>x.id===id);
+  run.prompts={...(run.prompts||{}),[`${id}@${run.stateAt}`]:{status,at:now}};
+  return push(run,{kind:"prompt",id,status,who:p?.who,line:p?.line,text:`${status==="delivered"?"Said":"Skipped"}: ${p?`${p.who} — “${p.line}”`:id}`},now,prev);
+}
+
 // ---------- checklist (primary vs optional) ----------
 /** Critical actions plus any optional action surfaced by the current state go first; the rest are optional. */
 export function checklist(run,scn){
@@ -209,7 +236,7 @@ export function checklist(run,scn){
 
 // ---------- debrief ----------
 /** Status words used everywhere; "not documented" never means "not performed". */
-export const STATUS={observed:"Recorded on time",late:"Recorded after target",missed:"Missed",na:"Not applicable / not assessed","not documented":"Not documented"};
+export const STATUS={observed:"Recorded on time",late:"Recorded after target",partial:"Partially done",missed:"Missed",na:"Not applicable / not assessed","not documented":"Not documented"};
 export function debrief(run,scn){
   const r=resolve(scn,run.level);
   const ec=scn.eventClock,origin=ec?.from&&ec.from!=="start"?firstEntry(run,r,ec.from,r.start)??0:0;
@@ -227,17 +254,17 @@ export function debrief(run,scn){
   const timeline=live.filter(e=>e.kind!=="clock"||["start","advance","pause","resume"].includes(e.what)).map(e=>({seq:e.seq,at:e.at,wallAt:e.wallAt,kind:e.kind,status:e.kind==="obs"?e.status:undefined,text:e.kind==="obs"?obsText(e,r):e.kind==="state"?`→ ${r.states[e.to]?.name||e.to}`:e.text}));
   const critIds=new Set(actions.filter(a=>a.critical).map(a=>a.id));
   const keyTimeline=timeline.filter(e=>e.kind==="state"||e.kind==="stop"||e.kind==="inject"&&live.find(x=>x.seq===e.seq)?.to||e.kind==="obs"&&e.status==="observed"&&critIds.has(live.find(x=>x.seq===e.seq)?.action));
-  const weak=actions.filter(a=>["late","missed","not documented"].includes(a.status));
+  const weak=actions.filter(a=>["late","partial","missed","not documented"].includes(a.status));
   const prompts=[...weak.flatMap(a=>a.prompts||[]),...(scn.debrief||[])];
-  const counts={observed:0,late:0,missed:0,na:0,"not documented":0};actions.forEach(a=>counts[a.status]=(counts[a.status]||0)+1);
+  const counts={observed:0,late:0,partial:0,missed:0,na:0,"not documented":0};actions.forEach(a=>counts[a.status]=(counts[a.status]||0)+1);
   const end=[...run.log].reverse().find(e=>e.kind==="end")?.at??simNow(run);
   const team=actions.filter(a=>a.cat==="Teamwork");
   return {actions,timeline,keyTimeline,prompts:[...new Set(prompts)],suggested:[...new Set(prompts)].slice(0,3),counts,elapsed:end,origin,
-    strengths:actions.filter(a=>a.status==="observed"),opportunities:actions.filter(a=>a.status==="late"||a.status==="missed"),
+    strengths:actions.filter(a=>a.status==="observed"),opportunities:actions.filter(a=>a.status==="late"||a.status==="missed"||a.status==="partial"),
     undocumented:actions.filter(a=>a.critical&&a.status==="not documented"),team,notes:run.notes||[],
     critical:actions.filter(a=>a.critical),states:[...new Set(live.filter(e=>e.kind==="state").map(e=>e.to))]};
 }
-function obsText(e,r){const a=r.actions.find(x=>x.id===e.action);const l=a?a.label:e.action;return e.status==="observed"?l:e.status?`${l} — ${e.status==="na"?"not assessed":e.status}`:`${l} — cleared`;}
+function obsText(e,r){const a=r.actions.find(x=>x.id===e.action);const l=a?a.label:e.action;return e.status==="observed"?l:e.status?`${l} — ${e.status==="na"?"not assessed":e.status==="partial"?"partially done":e.status}`:`${l} — cleared`;}
 
 // ---------- exports (no identifiers) ----------
 const csvCell=v=>{const s=String(v??"");return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};

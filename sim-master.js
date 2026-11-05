@@ -26,7 +26,7 @@ const QUALITY=["Good","Adequate","Needs work"];
 let ui=loadUI();
 let run=load();
 if(run)ui.phase=run.phase==="prebrief"?"prebrief":run.phase==="debrief"?"debrief":"run";else ui.phase="library";
-let tick=null,lastSuggest="",lastState="";
+let tick=null,lastSuggest="",lastState="",lastPrompts="";
 const sync=createLocalSync("master");
 
 function loadUI(){try{const u=JSON.parse(sessionStorage.getItem(UIKEY)||"null");if(u)return {...u,pinned:new Set(u.pinned||[]),pick:u.pick||{}};}catch{}return {phase:"library",pick:{},open:null,pinned:new Set(innerWidth>=1280?["sent","log"]:[]),sheet:null};}
@@ -128,7 +128,7 @@ function vitalCell(k,v){
 function obsRow(a){
   const o=run.obs[a.id],st=o?.status;
   return `<div class="ob ${st||""}">
-    <button class="ob-main" data-obs="${a.id}" aria-pressed="${st==="observed"}"><span class="box" aria-hidden="true">${st==="observed"?"✓":st==="missed"?"✕":st==="na"?"–":""}</span><span class="lbl">${esc(a.label)}${a.surfaced?` <em class="now-tag">Now relevant</em>`:""}</span><span class="when">${st?`${st==="observed"?"":(st==="missed"?"Missed":"N/A")+" · "}${fmt(o.at)}`:""}${o?.quality?` · ${esc(o.quality)}`:""}</span></button>
+    <button class="ob-main" data-obs="${a.id}" aria-pressed="${st==="observed"}"><span class="box" aria-hidden="true">${st==="observed"?"✓":st==="partial"?"½":st==="missed"?"✕":st==="na"?"–":""}</span><span class="lbl">${esc(a.label)}${a.surfaced?` <em class="now-tag">Now relevant</em>`:""}</span><span class="when">${st?`${st==="observed"?"":({partial:"Partial",missed:"Not done",na:"N/A"}[st])+" · "}${fmt(o.at)}`:""}${o?.quality?` · ${esc(o.quality)}`:""}</span></button>
     <button class="ob-more" data-obs-more="${a.id}" aria-label="Details for ${esc(a.label)}">•••</button></div>`;
 }
 
@@ -157,11 +157,7 @@ function renderRun(){
     <div class="ck-grid">
       <nav class="ck-col ck-flowcol" aria-label="Scenario flow">${flowHTML(r,moves)}</nav>
       <div class="ck-col ck-control">
-        <section class="ck-say">
-          <p class="say-now">NOW${run.hold?` · <b class="holding">HOLDING</b>`:""}<strong>${esc(st.name)}</strong></p>
-          ${st.say?`<p class="say-who">Say · ${esc(st.say.who)}</p><blockquote>“${esc(st.say.line)}”</blockquote>`:`<blockquote>${esc(st.text)}</blockquote>`}
-          <p class="say-find">${esc(st.findings||st.text)}</p>
-        </section>
+        ${promptCard(r,st,t)}
         <p class="ck-next-h">What happens next?</p>
         <section class="ck-moves">${primaryMoves.map(moveCard).join("")}</section>
         ${sec("more","More options",null,`<div class="more-grid">
@@ -195,6 +191,22 @@ function renderRun(){
     </nav>
     ${run.phase==="stopped"?stoppedHTML():""}`;
 }
+function promptCard(r,st,t){
+  const P=S.prompts(run,r,t),p=P[0];lastPrompts=P.map(x=>x.id).join();
+  const due=S.checklist(run,r).primary.filter(a=>!run.obs[a.id]?.status);
+  const reveal=(st.injects||[]).map(id=>r.injects.find(i=>i.id===id)).filter(i=>i&&(i.kind==="lab"||i.kind==="vitals"));
+  return `<section class="ck-say${p?.kind==="nudge"?" nudge":""}">
+    <p class="say-now">NOW${run.hold?` · <b class="holding">HOLDING</b>`:""}<strong>${esc(st.name)}</strong></p>
+    ${p?`<p class="say-who">${p.kind==="nudge"?"Prompt if needed":"Say"} · ${esc(p.who)}</p><blockquote>“${esc(p.line)}”</blockquote>${p.why?`<p class="say-why">${esc(p.why)}</p>`:""}
+      <div class="say-acts"><button class="sm-btn primary" data-prompt="${esc(p.id)}" data-pst="delivered">✓ Delivered</button><button class="sm-btn ghost" data-prompt="${esc(p.id)}" data-pst="skipped">Skip</button>${P.length>1?`<span class="say-more">+${P.length-1} more</span>`:""}</div>`
+     :`<p class="say-idle">Nothing to say right now — watch the team.</p>`}
+    <details class="say-info"${ui.info?" open":""}><summary data-a="info">More information</summary>
+      <p><b>Findings on request:</b> ${esc(st.findings||st.text)}</p>
+      ${reveal.length?`<p><b>Results if asked:</b></p><ul>${reveal.map(i=>`<li>${esc(i.label)} — ${esc(i.text)}</li>`).join("")}</ul>`:""}
+      ${due.length?`<p><b>Expected, not yet recorded:</b></p><ul>${due.map(a=>`<li>${esc(a.label)}</li>`).join("")}</ul>`:""}
+    </details>
+  </section>`;
+}
 function flowHTML(r,moves){
   const order=S.flowOrder(r),next=new Map(moves.map(n=>[n.to,n]));
   const seen=new Set([r.start,...run.log.filter(e=>!e.undone&&e.kind==="state").map(e=>e.to)]);
@@ -226,6 +238,7 @@ function logText(e,r){
   if(e.kind==="state")return `→ ${r.states[e.to]?.name||e.to}`;
   if(e.kind==="obs")return e.status?`${e.status==="observed"?"Recorded":e.status==="missed"?"Missed":"Not applicable"}: ${lbl(e.action)}`:`Cleared: ${lbl(e.action)}`;
   if(e.kind==="obsdetail")return `${lbl(e.action)}${e.quality?` · ${e.quality}`:""}${e.comment?` · “${e.comment}”`:""}`;
+  if(e.kind==="prompt")return e.text;
   if(e.kind==="schedule")return `Queued ${r.injects.find(i=>i.id===e.id)?.label||e.id} for ${fmt(e.dueAt)}`;
   return e.text;
 }
@@ -268,7 +281,7 @@ function sheetBody(){
   if(k==="obs"){
     const a=r.actions.find(x=>x.id===ui.sheet.id),o=run.obs[a.id]||{};
     return `<h2>${esc(a.label)}</h2><p class="muted">${esc(a.cat)}${a.target!=null?` · target ${a.target} min${a.from?` after ${esc(r.states[a.from]?.name||a.from)}`:""} (teaching reference, not a clinical deadline)`:""}</p>
-      <div class="seg">${[["observed","Recorded now"],["missed","Missed"],["na","Not applicable"],["","Clear"]].map(([v,l])=>`<button class="sm-btn${(o.status||"")===v&&v?" primary":""}" data-obs-set="${v}" data-id="${a.id}">${l}</button>`).join("")}</div>
+      <div class="seg">${[["observed","Done"],["partial","Partially done"],["missed","Not performed"],["na","Not applicable"],["","Clear"]].map(([v,l])=>`<button class="sm-btn${(o.status||"")===v&&v?" primary":""}" data-obs-set="${v}" data-id="${a.id}">${l}</button>`).join("")}</div>
       <p class="sm-eyebrow">QUALITY</p><div class="seg">${QUALITY.map(q=>`<button class="sm-chip${o.quality===q?" on":""}" data-quality="${q}" data-id="${a.id}">${q}</button>`).join("")}</div>
       <div class="sm-note-row"><input id="obsComment" value="${esc(o.comment||"")}" placeholder="Comment (no names)" autocomplete="off"><button class="sm-btn" data-a="save-comment" data-id="${a.id}">Save</button></div>
       ${(a.prompts||[]).length?`<details><summary>Debrief questions</summary><ul>${a.prompts.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></details>`:""}`;
@@ -304,7 +317,7 @@ function renderDebrief(){
   const li=a=>`<li>${esc(a.label)}${a.fromTrigger!=null?` <span class="muted">· ${fmt(a.fromTrigger)}${a.from?` after ${esc(res().states[a.from]?.name||a.from)}`:""}${a.target!=null?` (target ${a.target} min)`:""}</span>`:""}</li>`;
   sm.innerHTML=`<section class="sm-debrief">
     <header class="sm-pre-head">${icon(s.emergency,56)}<div><p class="sm-eyebrow">SIMULATION DEBRIEF · ${LEVEL_LABEL[run.level].toUpperCase()} · v${esc(run.scenarioVersion||s.version)}</p><h1>${esc(s.title)}</h1><p>${fmt(d.elapsed)} simulation time · ${new Date(run.createdAt).toLocaleDateString()}</p></div></header>
-    <div class="sm-counts">${["observed","late","missed","na","not documented"].map(k=>`<span class="c-${k.replace(" ","-")}"><b>${d.counts[k]||0}</b>${S.STATUS[k]}</span>`).join("")}</div>
+    <div class="sm-counts">${["observed","late","partial","missed","na","not documented"].map(k=>`<span class="c-${k.replace(" ","-")}"><b>${d.counts[k]||0}</b>${S.STATUS[k]}</span>`).join("")}</div>
     <div class="db-grid">
       <article class="sm-panel"><h2>Strengths</h2>${d.strengths.length?`<ul>${d.strengths.map(li).join("")}</ul>`:`<p class="muted">None recorded on time.</p>`}</article>
       <article class="sm-panel"><h2>Opportunities</h2>${d.opportunities.length?`<ul>${d.opportunities.map(a=>`<li>${esc(a.label)} <span class="muted">· ${a.status==="late"?`${fmt(a.fromTrigger)} — after target ${a.target} min`:"missed"}</span></li>`).join("")}</ul>`:`<p class="muted">No late or missed actions recorded.</p>`}
@@ -346,7 +359,7 @@ function liveUpdate(){
   const ec=S.eventClock(run,r,t,r.start),e=$("#evClock");if(e&&ec)e.textContent=fmt(ec.ms);
   for(const k of r.monitor){const el=$(`[data-live="${k}"]`);if(!el)continue;el.textContent={BP:v.sbp?`${v.sbp}/${v.dbp}`:"—",HR:v.hr||"—",SpO2:v.spo2?`${v.spo2}%`:"—",RR:v.rr||"—",QBL:v.qbl.toLocaleString(),FHR:v.fhr||"—",Rhythm:v.rhythm||"—"}[k];
     const tr={BP:v.trend.sbp,HR:v.trend.hr,SpO2:v.trend.spo2,RR:v.trend.rr,FHR:v.trend.fhr}[k],ti=$(`[data-live-trend="${k}"]`);if(ti)ti.textContent=tr>0?"▲":tr<0?"▼":"";}
-  if(JSON.stringify(S.suggestion(run,r,t))!==lastSuggest)safeRender();
+  if(JSON.stringify(S.suggestion(run,r,t))!==lastSuggest||S.prompts(run,r,t).map(x=>x.id).join()!==lastPrompts)safeRender();
 }
 // Re-render without disturbing what the instructor is doing (typing, an open sheet).
 function safeRender(){if(document.activeElement?.matches("input,select,textarea")||ui.sheet&&ui.sheet.kind!=="inject")return;const y=window.scrollY;render();window.scrollTo(0,y);}
@@ -366,6 +379,8 @@ document.addEventListener("click",e=>{
   if(b.dataset.role!=null&&run?.prep){const i=+b.dataset.role,l=run.prep.roles;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(b.dataset.ready!=null&&run?.prep){const i=+b.dataset.ready,l=run.prep.ready;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(a==="monitor-setup"){openSheet("monitor");return;}
+  if(b.dataset.prompt){const id=b.dataset.prompt,st=b.dataset.pst;act(()=>S.markPrompt(run,res(),id,st,now()),st==="delivered"?"Logged as said":"Skipped");return;}
+  if(a==="info"){e.preventDefault();ui.info=!ui.info;saveUI();const y=window.scrollY;render();window.scrollTo(0,y);return;}
   if(a==="monitor-view"){ui.sheet=null;renderSheet();showMonitorView();return;}
   if(a==="resume-run"){ui.phase=run.phase==="prebrief"?"prebrief":run.phase==="debrief"?"debrief":"run";saveUI();render();return;}
   if(a==="ask-discard"){openSheet("discard",{title:"Discard"});return;}
@@ -408,6 +423,12 @@ document.addEventListener("click",e=>{
   if(a==="ask-new")openSheet("new",{title:"New scenario"});
   if(a==="new"){run=null;ui.sheet=null;ui.phase="library";save();saveUI();render();}
 });
+// Long-press an observation for the other statuses (partial, not performed, N/A); a tap records "done".
+let lpT=null,lpFired=false;
+document.addEventListener("pointerdown",e=>{const b=e.target.closest("[data-obs]");if(!b)return;lpFired=false;clearTimeout(lpT);lpT=setTimeout(()=>{lpFired=true;openSheet("obs",{id:b.dataset.obs,title:"Observation"});},550);});
+["pointerup","pointercancel","pointerleave"].forEach(k=>document.addEventListener(k,()=>clearTimeout(lpT)));
+document.addEventListener("click",e=>{if(lpFired&&e.target.closest("[data-obs]")){e.stopImmediatePropagation();e.preventDefault();lpFired=false;}},true);
+document.addEventListener("contextmenu",e=>{if(e.target.closest("[data-obs]"))e.preventDefault();});
 document.addEventListener("change",e=>{
   if(!run)return;
   if(e.target.dataset.a==="jump"&&e.target.value){const to=e.target.value;act(()=>S.goTo(run,res(),to,now(),`Jump to ${res().states[to].name}`),"State changed");}
