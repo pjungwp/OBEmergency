@@ -834,3 +834,35 @@ body.landing[data-route=education]{overflow:hidden}
 body.edu-panel-open{overflow:hidden}
 .edu-cat-topics span[hidden]{display:none}
 @media (max-width:759px){.edu-cat-topics{display:none}}
+
+/* ---------- Emergency guide (before start): one screen ---------- */
+.ep{display:flex;flex-direction:column;gap:10px;padding:8px 12px 10px}
+.ep-main{display:flex;flex-direction:column;gap:10px}
+.ep-back{padding:0;min-height:36px;align-self:flex-start}
+.ep-head{display:flex;gap:12px;align-items:center}
+.ep-head .em-icon img{width:52px;height:52px;border-radius:14px}
+.ep-head .eyebrow{margin:0 0 2px;font-size:11.5px}
+.ep-head h1{margin:0;font-size:clamp(23px,5.6vw,32px);line-height:1.1;letter-spacing:-.02em;color:var(--navy)}
+.ep-sum{margin:3px 0 0;color:var(--muted);font-size:15px}
+.ep-actions{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:8px}
+.ep-actions .button{margin:0;min-height:52px;font-size:17px}
+.ep-basis{margin:0;font-size:13px;color:var(--muted);line-height:1.4}
+.ep-basis span{font-weight:900;letter-spacing:.08em;text-transform:uppercase;font-size:11px;margin-right:6px;color:#4a5a72}
+.ep-basis small{display:block;font-size:12.5px}
+.ep-first .eyebrow{margin:2px 2px 6px;font-size:11.5px}
+.ep-list{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.ep-list li{display:grid;grid-template-columns:28px minmax(0,1fr) 44px;align-items:center;gap:10px;min-height:56px;padding:6px 6px 6px 10px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.ep-n{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:#eef3fa;color:var(--navy);font-weight:900;font-size:13px}
+.ep-txt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.ep-txt small{font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted)}
+.ep-txt strong{font-size:16.5px;line-height:1.25;color:var(--ink)}
+.ep-list .info-dot{width:40px;height:40px}
+.ep.crimson .ep-list li{border-left:4px solid var(--crimson)}.ep.amber .ep-list li{border-left:4px solid var(--amber)}.ep.violet .ep-list li{border-left:4px solid var(--violet)}
+@media (min-width:760px){
+  .ep{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;padding-top:16px;max-width:1100px;margin:0 auto}
+  .ep-first{padding-top:42px}
+}
+@media (max-width:759px) and (max-height:720px){
+  .ep{gap:6px;padding-top:2px;padding-bottom:4px}.ep-main{gap:6px}.ep-back{min-height:32px}.ep-list{gap:5px}.ep-basis small{display:none}
+  .ep-head .em-icon img{width:44px;height:44px}.ep-list li{min-height:50px}.ep-actions .button{min-height:50px}
+}

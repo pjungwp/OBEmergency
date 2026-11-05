@@ -181,21 +181,23 @@ function renderEmergency(){
 }
 
 function renderEmergencyPreview(id){
+  // One screen: identity + start on the left (top on phones), first actions beside/below. No scrolling to start.
   const e=EMERGENCIES[id];
-  main.innerHTML=`
-    <section class="preview-head ${e.accent}">
-      <button class="back-button" data-action="back-home">‹ Emergencies</button>
-      <div class="preview-title">${emergencyIcon(e.id,64)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></div>
+  main.innerHTML=`<section class="ep ${e.accent}">
+    <div class="ep-main">
+      <button class="back-button ep-back" data-action="back-home">‹ Emergencies</button>
+      <header class="ep-head">${emergencyIcon(e.id,56)}<div><p class="eyebrow">EMERGENCY GUIDE</p><h1>${esc(e.name)}</h1><p class="ep-sum">${esc(SHORT_SUMMARIES[e.id]||e.summary)}</p></div></header>
+      <div class="ep-actions">
+        ${practice?`<button class="button simulation large" data-action="start-session" data-mode="simulation">Start practice session</button>`:`<button class="button primary large" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>`}
+        <button class="button ghost" data-action="open-flow" data-id="${e.id}">Flowchart</button>
+      </div>
+      <p class="ep-basis"><span>Basis</span>${(e.source||[]).map(id=>getReference(id)?.short).filter(Boolean).map(esc).join(" · ")}<small>Local activation language, medication preparation and timer defaults require institutional approval.</small></p>
+    </div>
+    <section class="ep-first" aria-labelledby="epFirstH">
+      <h2 id="epFirstH" class="eyebrow">FIRST ACTIONS · visible before the clock starts</h2>
+      <ol class="ep-list">${e.tasks.slice(0,4).map((t,i)=>`<li><span class="ep-n">${i+1}</span><span class="ep-txt"><small>${esc(t.group)}</small><strong>${esc(taskLabel(t))}</strong></span><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${e.id}" aria-label="More information: ${esc(taskLabel(t))}">i</button></li>`).join("")}</ol>
     </section>
-    <section class="preview-actions">
-      ${practice?`<button class="button simulation large full" data-action="start-session" data-mode="simulation">Start practice session</button>`:`<button class="button primary large full" data-action="start-session" data-mode="clinical">Start Clinical Assist</button>`}
-      <button class="button ghost full" data-action="open-flow" data-id="${e.id}">View full flowchart</button>
-    </section>
-    <section class="preview-list">
-      <div class="section-heading"><p class="eyebrow">IMMEDIATE OVERVIEW</p><h2>Actions are visible before the clock starts</h2></div>
-      ${e.tasks.slice(0,4).map(t=>`<article class="preview-task"><span>${esc(t.group)}</span><strong>${esc(taskLabel(t))}</strong><button class="info-dot" data-task-info="${t.id}" data-emergency-id="${e.id}" aria-label="More information">i</button></article>`).join("")}
-    </section>
-    <div class="source-band"><span>Content basis</span>${refTags(e.source)}<small>Local activation language, medication preparation and timer defaults require institutional approval.</small></div>`;
+  </section>`;
 }
 
 function newSession(emergencyId,mode){
