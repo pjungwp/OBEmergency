@@ -312,3 +312,11 @@ main{padding-bottom:120px}
 .ob.partial .ob-main{border-color:#ecd28c;background:var(--amber-soft)}.ob.partial .box{background:var(--amber);border-color:var(--amber)}
 .ob-main{-webkit-touch-callout:none;user-select:none}
 @media (min-width:1100px){.say-acts .sm-btn{min-height:54px;font-size:18px}.say-why{font-size:16px}}
+
+/* Emergency-specific status tiles */
+.vs.metric{background:#fff;border-width:2px}.vs.metric strong{font-size:20px}
+.vs.metric.ok{border-color:#9fd3bd}.vs.metric.ok strong{color:var(--green)}
+.vs.metric.amber{border-color:#ecd28c;background:var(--amber-soft)}.vs.metric.amber strong{color:#8a5a00}
+.vs.metric.warn{border-color:#efb3bd;background:var(--red-soft)}.vs.metric.warn strong{color:var(--red)}
+@media (min-width:1100px){.vs.metric strong{font-size:30px}}
+@media (max-width:767px){.ck-vitals{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(68px,1fr))!important}.vs.metric{grid-column:span 2}.vs.metric strong{font-size:16px}}

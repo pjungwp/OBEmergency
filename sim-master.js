@@ -125,6 +125,22 @@ function vitalCell(k,v){
   return `<button class="vs${warn?" warn":""}${k==="Rhythm"?" rhythm":""}" data-a="patient" aria-label="${VLABEL[k]} ${esc(val)}${warn?" (abnormal)":""}"><small>${VLABEL[k]}</small><strong data-live="${k}">${esc(val)}</strong><i data-live-trend="${k}" aria-hidden="true">${arrow(tr)}</i></button>`;
 }
 
+// Emergency-specific status tiles shown before the vitals (live-updated).
+const MANEUVERS=["a-mcroberts","a-suprapubic","a-posterior","a-rotate","a-allfours"];
+function metrics(s,r,t){
+  const st=r.states[run.state],since=x=>Math.max(0,t-x),out=[];
+  if(s.emergency==="pph"){const q=st.qblRate||0;out.push({k:"bleed",label:"Bleeding",val:q>=80?"Heavy":q>=20?"Ongoing":q>=5?"Slowing":"Minimal",cls:q>=80?"warn":q>=20?"amber":"ok"});}
+  if(s.emergency==="htn"){const sz=["seizure","recurrent"].includes(run.state),n=run.log.filter(e=>!e.undone&&e.kind==="state"&&["seizure","recurrent"].includes(e.to)).length;
+    out.push({k:"seiz",label:sz?"Seizure":"Seizures",val:sz?fmt(since(run.stateAt)):n?`${n} so far`:"None",cls:sz?"warn":n?"amber":"ok"});
+    const mg=run.obs["a-mag"]?.status==="observed";out.push({k:"mg",label:"Magnesium",val:mg?"Given":"Not yet",cls:mg?"ok":"amber"});}
+  if(s.emergency==="shoulder"){const ec=S.eventClock(run,r,t,r.start),tried=MANEUVERS.filter(id=>run.obs[id]?.status).map(id=>r.actions.find(a=>a.id===id)).filter(Boolean);
+    out.push({k:"h2b",label:"Head → body",val:ec?fmt(ec.ms):"—",cls:ec&&ec.ms>=240000?"warn":ec&&ec.ms>=120000?"amber":""});
+    out.push({k:"man",label:`Maneuvers · ${tried.length}`,val:tried.length?tried.at(-1).label.split(/[ (]/)[0]:"None yet",cls:tried.length?"":"amber"});}
+  if(s.emergency==="arrest"){const done=run.log.some(e=>!e.undone&&e.kind==="state"&&e.to==="delivered")||run.state==="delivered",left=300000-t;
+    out.push({k:"del",label:"Delivery by 5 min",val:done?"Delivered":left>0?`${fmt(left)} left`:`${fmt(-left)} over`,cls:done?"ok":left<60000?"warn":"amber"});}
+  return out;
+}
+const metricCell=m=>`<button class="vs metric ${m.cls||""}" data-a="patient"><small>${esc(m.label)}</small><strong data-live-metric="${m.k}">${esc(m.val)}</strong></button>`;
 function obsRow(a){
   const o=run.obs[a.id],st=o?.status;
   return `<div class="ob ${st||""}">
@@ -135,7 +151,7 @@ function obsRow(a){
 function renderRun(){
   const s=scn(),r=res(),t=now(),st=r.states[run.state],v=S.vitalsAt(run,r,t),sug=S.suggestion(run,r,t),ec=S.eventClock(run,r,t,r.start);
   lastSuggest=JSON.stringify(sug);lastState=run.state;
-  const stage=r.stage==="cmqcc"?S.pphStage(v.qbl,v):null;
+  const stage=r.stage==="cmqcc"?S.pphStage(v.qbl,v):null,mets=metrics(s,r,t);
   const moves=st.next.filter(n=>n.kind!=="same"),hold=st.next.find(n=>n.kind==="same");
   const primaryMoves=moves.slice(0,3),extraMoves=moves.slice(3);
   const {primary,optional}=S.checklist(run,r);
@@ -152,7 +168,7 @@ function renderRun(){
         <button class="run-pill ${run.clock.running?"on":"off"}" data-a="pause" aria-label="${run.clock.running?"Pause":"Resume"} the scenario clock">${run.clock.running?"❚❚ RUNNING":"▶ PAUSED"}</button>
         <button class="sm-stop" data-a="stop" aria-label="Stop the simulation: real emergency">STOP</button>
       </div>
-      <div class="ck-vitals" style="grid-template-columns:${r.monitor.map(k=>({BP:"1.55fr",QBL:"1.2fr",Rhythm:"1.7fr",SpO2:"1.1fr"}[k]||"1fr")).join(" ")}${stage?" auto":""}">${r.monitor.map(k=>vitalCell(k,v)).join("")}${stage?`<span class="stage s${stage}">Stage ${stage}</span>`:""}</div>
+      <div class="ck-vitals" style="grid-template-columns:${mets.map(()=>"1.35fr").join(" ")} ${r.monitor.map(k=>({BP:"1.55fr",QBL:"1.2fr",Rhythm:"1.7fr",SpO2:"1.1fr"}[k]||"1fr")).join(" ")}${stage?" auto":""}">${mets.map(metricCell).join("")}${r.monitor.map(k=>vitalCell(k,v)).join("")}${stage?`<span class="stage s${stage}">Stage ${stage}</span>`:""}</div>
     </header>
     <div class="ck-grid">
       <nav class="ck-col ck-flowcol" aria-label="Scenario flow">${flowHTML(r,moves)}</nav>
@@ -356,6 +372,7 @@ function liveUpdate(){
   if((run.queue||[]).some(q=>q.dueAt<=t)){const fired=S.processDue(run,r,t);save();fired.forEach(q=>toast(`Sent: ${r.injects.find(i=>i.id===q.id)?.label}`));safeRender();return;}
   const v=S.vitalsAt(run,r,t);
   const c=$("#simClock");if(c)c.textContent=fmt(t);
+  for(const m of metrics(scn(),r,t)){const el=$(`[data-live-metric="${m.k}"]`);if(el&&el.textContent!==m.val){el.textContent=m.val;el.parentElement.className=`vs metric ${m.cls||""}`;}}
   const ec=S.eventClock(run,r,t,r.start),e=$("#evClock");if(e&&ec)e.textContent=fmt(ec.ms);
   for(const k of r.monitor){const el=$(`[data-live="${k}"]`);if(!el)continue;el.textContent={BP:v.sbp?`${v.sbp}/${v.dbp}`:"—",HR:v.hr||"—",SpO2:v.spo2?`${v.spo2}%`:"—",RR:v.rr||"—",QBL:v.qbl.toLocaleString(),FHR:v.fhr||"—",Rhythm:v.rhythm||"—"}[k];
     const tr={BP:v.trend.sbp,HR:v.trend.hr,SpO2:v.trend.spo2,RR:v.trend.rr,FHR:v.trend.fhr}[k],ti=$(`[data-live-trend="${k}"]`);if(ti)ti.textContent=tr>0?"▲":tr<0?"▼":"";}
