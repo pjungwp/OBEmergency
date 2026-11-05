@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "codes": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null && !data.exists() && newData.exists()",
+        ".validate": "$code.matches(/^[A-Z2-9]{6}$/) && newData.hasChildren(['room','createdAt'])"
+      }
+    },
+    "sessions": {
+      "$room": {
+        ".read": "auth != null && $room.length >= 20",
+        "snap": {
+          ".write": "auth != null && $room.length >= 20 && newData.exists() && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1)"
+        }
+      }
+    }
+  }
+}

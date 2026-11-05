@@ -2,6 +2,9 @@ import {installBackGuard} from "./back-guard.js";
 import {watchForUpdate} from "./update-check.js";
 import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
+import {createTeamSessionStore,formatCode,normalizeCode} from "./team-sync.js";
+import {TEAM_SYNC} from "./team-config.js";
+import {qrcode} from "./vendor/qrcode.js";
 import {PATHWAYS} from "./pathways.js";
 import {EDU_DECKS} from "./edu-decks.js";
 import {renderOverview,renderGuided,renderChart,mountChart,nodeStatus,TYPE_LABEL} from "./flowchart.js";
@@ -20,7 +23,9 @@ const $$ = (s,root=document)=>[...root.querySelectorAll(s)];
 const main = $("#main");
 const STORAGE_KEY = "ob-emergency-assist.session.v1";
 const SETTINGS_KEY = "ob-emergency-assist.settings.v1";
-const store = createLocalSessionStore({key:STORAGE_KEY});
+// Team sync is on only when team-config.js has Firebase values (Netlify build). Otherwise local only.
+const TEAM_ON = typeof TEAM_SYNC!=="undefined" && !!(TEAM_SYNC.apiKey && TEAM_SYNC.databaseURL) && typeof createTeamSessionStore==="function";
+const store = TEAM_ON ? createTeamSessionStore({config:TEAM_SYNC,key:STORAGE_KEY}) : createLocalSessionStore({key:STORAGE_KEY});
 const SHORT_TASKS = {
   "pph-help":"Call hemorrhage response.","pph-assess":"Check bleeding, tone + vitals.","pph-massage":"Massage uterus. Start bimanual compression.","pph-access":"Get IV access, labs + blood.","pph-oxytocin":"Give oxytocin. Add uterotonics.","pph-cause":"Check 4 Ts.","pph-txa":"Consider TXA now.","pph-escalate":"Escalate ongoing bleeding.",
   "htn-help":"Call OB. Activate severe-BP response.","htn-bp":"Repeat BP within 15 minutes.","htn-symptoms":"Check severe symptoms.","htn-labs":"Get preeclampsia labs.","htn-treat":"Give first-line BP medication.","htn-mag":"Start magnesium if indicated.","htn-monitor":"Recheck BP after every dose.","htn-escalate":"Escalate persistent severe BP.",
@@ -169,7 +174,7 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
+    <p class="home-meta">${TEAM_ON?`<button class="text-button" data-action="team-join">Join a team session</button> · `:"Sessions stay on this device. "}<button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
   updateConnectivity(true);
 }
 
@@ -269,6 +274,7 @@ function renderActiveSession(){
         <button class="ch-back" data-action="session-menu" aria-label="Session menu: sound, end session"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
         <h1 class="ch-title">${emergencyIcon(e.id,40)}<span class="ch-txt">${esc(e.id==="pph"?"PPH":e.short)}<span class="ch-mode"> · ${dyst?"Maneuvers":"Action Dashboard"}</span></span></h1>
         <strong id="elapsedClock" class="ch-clock" aria-label="Elapsed time">${fmt(currentElapsed())}</strong>
+        ${teamPillHTML()}
         <span class="ch-badge ${sim?(session.running?"sim":"sim paused"):"live"}">${sim?(session.running?"SIMULATION":"PAUSED"):"LIVE"}</span>
         <button class="ch-menu" data-action="session-menu" aria-label="Session menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg></button>
       </div>
@@ -317,6 +323,7 @@ function showSessionMenu(){
     <button class="button secondary full" data-action="toggle-sound">${session.sound?"🔊 Sound on — mute":"🔇 Sound off — unmute"}</button>
     <button class="button secondary full" data-action="toggle-text">Larger text: ${settings.largeText?"on":"off"}</button>
     ${sim?`<button class="button secondary full" data-action="sim-time">Simulation clock</button>`:`<button class="button secondary full" data-action="live-advance">Advance time…</button>`}
+    ${TEAM_ON?`<button class="button secondary full" data-action="team">${store.teamStatus().code?`👥 Team · ${formatCode(store.teamStatus().code)}`:"👥 Share with team phones"}</button>`:""}
     <button class="button danger full" data-action="end-session">End session</button></div>`});
 }
 
@@ -864,6 +871,62 @@ function confirmAction(title,text,onConfirm){
 function endSession(){
   confirmAction("End this assist session?","This stops all alerts. The timeline will be cleared when you leave this session.",()=>{clearInterval(clockHandle);freezeClock();session.status="ended";saveSession({type:"SESSION_ENDED",status:"ended"});openSheet({eyebrow:"SESSION ENDED",title:`Elapsed ${fmt(currentElapsed(),true)}`,html:`<p class="lead">Ending the app session does not label the clinical emergency resolved.</p><button class="button secondary full" data-action="show-timeline">View timeline</button><button class="button primary full" data-action="clear-session">Return to emergency home</button>`});render();});
 }
+// ---------- Team sync (Netlify build with Firebase configured) ----------
+function teamLink(code){return `${location.origin}${location.pathname.replace(/index\.html$/,"")}?team=${code}`;}
+function teamPillHTML(){
+  if(!TEAM_ON)return "";const st=store.teamStatus();if(!st.code)return "";
+  const label={live:"Team synced",connecting:"Connecting to team",offline:"Team offline — changes will send when back online"}[st.state]||"Team";
+  return `<button id="teamPill" class="ch-team ${st.state}" data-action="team" aria-label="${label} · code ${formatCode(st.code)}" title="${label}"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.3 3-5 6-5s5.4 1.7 6 5"/><circle cx="17" cy="9" r="2.5"/><path d="M15.5 14.2c2.6.2 4.6 1.7 5.1 4.8"/></svg><i aria-hidden="true"></i></button>`;
+}
+function qrSVG(text){
+  const q=qrcode(0,"M");q.addData(text);q.make();const n=q.getModuleCount();let d="";
+  for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))d+=`M${c+4} ${r+4}h1v1h-1z`;
+  return `<svg class="team-qr" viewBox="0 0 ${n+8} ${n+8}" role="img" aria-label="QR code to join this team session" shape-rendering="crispEdges"><rect width="100%" height="100%" fill="#fff"/><path d="${d}" fill="#0b2149"/></svg>`;
+}
+function showTeam(){
+  const st=store.teamStatus();
+  if(!st.code){openSheet({eyebrow:"TEAM",title:"Share with team phones",html:`
+    <p class="lead">Other phones join with a code or QR and see the same checklist, timers and clock. A tap on any phone updates all of them.</p>
+    <ul class="team-facts"><li>Shared: which actions are done or ongoing, timers and the clock.</li><li>Stays on this phone: the timeline notes and medication details.</li><li>No names or patient details are entered or sent.</li></ul>
+    <button class="button primary large full" data-action="team-share">Share this session</button>`});return;}
+  const label={live:"Synced",connecting:"Connecting…",offline:"Offline — changes send when back online"}[st.state]||"";
+  openSheet({eyebrow:"TEAM",title:"Team session",html:`
+    <div class="team-code-card"><small>Team code</small><strong>${formatCode(st.code)}</strong><span class="team-state ${st.state}">${label}</span></div>
+    ${qrSVG(teamLink(st.code))}
+    <p class="team-hint">On another phone: scan this, or open OB Emergency Assist → <b>Join a team session</b> and enter the code.</p>
+    <div class="button-row"><button class="button secondary" data-action="team-copy">Copy join link</button><button class="button ghost" data-action="team-leave">Stop sharing on this phone</button></div>`});
+}
+async function teamShare(){
+  const btn=$("[data-action=team-share]");if(btn){btn.disabled=true;btn.textContent="Sharing…";}
+  try{await store.shareSession();showTeam();}
+  catch(e){toast(navigator.onLine?"Could not start team sharing — try again":"No connection — team sharing needs internet","alert");if(btn){btn.disabled=false;btn.textContent="Share this session";}}
+}
+function teamLeave(){
+  confirmAction("Stop sharing on this phone?","This phone keeps the session but stops sending and receiving team updates. Other phones keep going.",()=>{store.leaveTeam();closeSheet();render();});
+}
+async function teamCopy(){const st=store.teamStatus();if(!st.code)return;const link=teamLink(st.code);
+  if(navigator.share){try{await navigator.share({title:"Join OB Emergency Assist team session",text:`Team code ${formatCode(st.code)}`,url:link});return;}catch{}}
+  try{await navigator.clipboard.writeText(link);toast("Join link copied");}catch{toast(`Code ${formatCode(st.code)}`);}
+}
+function showTeamJoin(prefill=""){
+  openSheet({eyebrow:"TEAM",title:"Join a team session",html:`
+    <p class="lead">Enter the 6-character code shown on the team lead's phone.</p>
+    <label class="team-input"><span class="sr-only">Team code</span><input id="teamCode" inputmode="text" autocapitalize="characters" autocomplete="off" spellcheck="false" maxlength="7" placeholder="ABC-234" value="${esc(prefill?formatCode(prefill):"")}"></label>
+    ${session?.status==="active"?`<p class="warning-box"><strong>This phone has its own active session.</strong> Joining replaces it on this phone.</p>`:""}
+    <button class="button primary large full" data-action="team-join-go">Join</button>`});
+  requestAnimationFrame(()=>{const i=$("#teamCode");i?.focus();i?.addEventListener("keydown",e=>{if(e.key==="Enter")teamJoin();});});
+}
+async function teamJoin(){
+  const code=normalizeCode($("#teamCode")?.value);const btn=$("[data-action=team-join-go]");
+  if(code.length!==6){toast("Enter the 6-character code","alert");return;}
+  if(btn){btn.disabled=true;btn.textContent="Joining…";}
+  try{
+    const joined=await store.joinTeam(code);
+    session=hydrateSession(joined);selectedEmergency=session.emergencyId;closeSheet();
+    if(session.status==="active"){ensureAudio();startClock();}
+    navigate("emergency");toast(`Joined team ${formatCode(code)}`);
+  }catch(e){toast(e.message||"Could not join","alert");if(btn){btn.disabled=false;btn.textContent="Join";}}
+}
 function clearSession(){session=null;store.clear();selectedEmergency=null;closeSheet();navigate("emergency");}
 
 document.addEventListener("click",e=>{
@@ -925,6 +988,12 @@ document.addEventListener("click",e=>{
   if(a==="record-med")recordMedication(b.dataset.medId);
   if(a==="show-about")showAbout();
   if(a==="end-session")endSession();
+  if(a==="team")showTeam();
+  if(a==="team-share")teamShare();
+  if(a==="team-leave")teamLeave();
+  if(a==="team-join")showTeamJoin();
+  if(a==="team-join-go")teamJoin();
+  if(a==="team-copy")teamCopy();
   if(a==="clear-session")clearSession();
 });
 
@@ -1024,8 +1093,20 @@ if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.ser
 updateConnectivity();if(session?.status==="active")startClock();render();
 store.subscribe(next=>{
   if(suppressStoreNotification||!next||!session||next.id!==session.id)return;
-  if((next.revision||0)>(session.revision||0)){session=hydrateSession(next);render();}
+  const reset=!!next._teamReset;
+  if(reset||(next.revision||0)>(session.revision||0)){
+    const wasActive=session.status==="active";
+    delete next._teamReset;session=hydrateSession(next);
+    if(reset)toast("Another phone saved first — latest team state loaded. Re-check your last tap.","alert");
+    if(wasActive&&session.status!=="active"){clearInterval(clockHandle);toast("The team session was ended on another phone","alert");}
+    render();
+  }
 });
+if(TEAM_ON){
+  store.onTeamStatus(()=>{const el=$("#teamPill");if(el)el.outerHTML=teamPillHTML();});
+  const q=new URLSearchParams(location.search).get("team");
+  if(q){try{const u=new URL(location.href);u.searchParams.delete("team");history.replaceState(history.state,"",u);}catch{}showTeamJoin(normalizeCode(q));}
+}
 
 // Flowchart nodes: tap or keyboard (SVG groups are not native buttons)
 document.addEventListener("click",e=>{const n=e.target.closest("[data-fnode]");if(!n)return;const host=n.closest("[data-pathway]");if(host)openNodeDetail(host.dataset.pathway,n.dataset.fnode);});
