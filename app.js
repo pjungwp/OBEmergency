@@ -155,6 +155,11 @@ function renderEmergency(){
       </div>
     </section>
     ${practice?`<section class="practice-band"><div><strong>Practice mode</strong><small>Sessions you start here are simulations, not real emergencies.</small></div><button class="text-button" data-action="exit-practice">Exit</button></section>`:""}
+    ${practice?"":`<a class="sim-door" href="sim-master.html" aria-label="Facilitate a simulation: run a practice scenario for your team">
+      <span class="sim-door-icon" aria-hidden="true">▶</span>
+      <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
+      <span class="chevron" aria-hidden="true">›</span>
+    </a>`}
     <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
     <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
@@ -164,12 +169,6 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-    ${practice?"":`<h2 class="home-label"><span>Training</span></h2>
-    <a class="sim-door" href="sim-master.html">
-      <span class="sim-door-icon" aria-hidden="true">▶</span>
-      <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
-      <span class="chevron" aria-hidden="true">›</span>
-    </a>`}
     <p class="home-meta">Sessions stay on this device. <button class="text-button" data-action="show-about">About &amp; sources</button></p>`;
   updateConnectivity(true);
 }

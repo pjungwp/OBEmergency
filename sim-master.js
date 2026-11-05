@@ -328,10 +328,11 @@ function sheetBody(){
         <button class="sm-btn" data-a="vitals">Set vitals…</button>
         <label class="more-jump">Jump to <select data-a="jump"><option value="">state…</option>${Object.values(r.states).filter(x=>x.id!==run.state).map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join("")}</select></label></div>
       <p class="sm-eyebrow">TIME</p><div class="more-grid"><button class="sm-btn" data-a="adv" data-m="5">+5 min</button><button class="sm-btn" data-a="advanced-time">Advance by…</button></div>
+      <p class="sm-eyebrow">LEAVE</p><div class="more-grid"><button class="sm-btn" data-a="ask-leave">Leave scenario…</button></div>
       <p class="sm-eyebrow">DISPLAY</p><div class="more-grid"><button class="sm-btn" data-a="monitor-setup">Learner monitor…</button></div>`;}
   if(k==="checklist"){const {primary,optional}=S.checklist(run,r);return `<h2>Learner actions</h2><p class="muted small">Tap = done · long-press for partial, not performed or N/A</p>${primary.map(obsRow).join("")}${optional.length?`<p class="sm-eyebrow">MORE</p>${optional.map(obsRow).join("")}`:""}`;}
   if(k==="leave")return `<h2>Leave the scenario?</h2><p class="muted">Nothing is lost — the log and clock are saved on this device.</p>
-    <div class="leave-opts"><button class="sm-btn primary big" data-a="close-sheet">Resume scenario</button><button class="sm-btn big" data-a="pause-leave">Pause and leave</button><button class="sm-btn ghost big" data-a="ask-end">End and debrief</button></div>`;
+    <div class="leave-opts"><button class="sm-btn primary big" data-a="close-sheet">Resume scenario</button><button class="sm-btn big" data-a="pause-leave">Pause · scenario list</button><button class="sm-btn big" data-a="pause-home">Pause · OB Emergency Assist home</button><button class="sm-btn ghost big" data-a="ask-end">End and debrief</button></div>`;
   if(k==="monitor"){const m=monitorStatus();return `<h2>Learner monitor</h2><p class="muted">Shows vitals and the clock only — no prompts, actions or branches. The scenario runs fine without it.</p>
     <div class="mon-opts"><button class="sm-btn big" data-a="monitor-view">On this device<small>Full-screen view; tap to return</small></button>${window.__GAS?"":`<button class="sm-btn big" data-a="monitor">Separate window<small>Drag to a second screen or TV</small></button>`}</div>
     <p class="muted small">Status: ${m.on?"a monitor window is connected":"no separate monitor connected"}.</p>`;}
@@ -416,6 +417,7 @@ document.addEventListener("click",e=>{
   if(a==="tools"){openSheet("tools");return;}
   if(a==="checklist"){openSheet("checklist");return;}
   if(b.dataset.layout){ui.layout=b.dataset.layout;saveUI();ui.sheet=null;render();return;}
+  if(a==="pause-home"){S.pause(run);save();ui.sheet=null;ui.phase="library";saveUI();location.href="./";return;}
   if(a==="pause-leave"){S.pause(run);save();ui.sheet=null;ui.phase="library";saveUI();render();window.scrollTo(0,0);toast("Paused — resume from the scenario list");return;}
   if(a==="reload"){save();location.reload();return;}
   if(b.dataset.prompt){const id=b.dataset.prompt,st=b.dataset.pst;act(()=>S.markPrompt(run,res(),id,st,now()),st==="delivered"?"Logged as said":"Skipped");return;}

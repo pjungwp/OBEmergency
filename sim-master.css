@@ -9,6 +9,8 @@ ul,ol{margin:4px 0 0;padding-left:20px;line-height:1.45}
 .muted{color:var(--muted)}.small{font-size:13.5px}
 .sm-top{position:sticky;top:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 12px;background:var(--navy);color:#fff}
 .sm-brand{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+.sm-home{font-style:normal;font-size:26px;line-height:1;font-weight:700;margin-right:-4px;opacity:.9}
+.sm-brand{min-height:44px}
 .sm-brand span{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--teal);font-weight:900;font-size:14px}
 .sm-brand strong{display:block;font-size:16px}.sm-brand small{font-size:12px;opacity:.8}
 .sm-top-right{display:flex;gap:6px;align-items:center}

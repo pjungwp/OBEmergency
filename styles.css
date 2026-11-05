@@ -705,10 +705,9 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
   body.landing[data-route=emergency] .emergency-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,1.4vh,12px)}
   body.landing[data-route=emergency] .emergency-grid .emergency-card,
   body.landing[data-route=emergency] .emergency-grid .emergency-card:first-child{grid-column:auto;min-height:clamp(68px,12vh,118px);padding-top:8px;padding-bottom:8px}
-  body.landing[data-route=emergency] .home-label:nth-of-type(2){display:none}
-  body.landing[data-route=emergency] #main>.sim-door{grid-column:1;margin:clamp(8px,1.6vh,14px) 12px clamp(6px,1vh,10px);padding:8px 14px}
+  body.landing[data-route=emergency] #main>.sim-door{margin:clamp(8px,1.4vh,12px) 12px 0;padding:6px 14px}
   body.landing[data-route=emergency] .sim-door small{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-  body.landing[data-route=emergency] #main>.home-meta{grid-column:2;margin:0 16px 0 0;white-space:nowrap}
+  body.landing[data-route=emergency] #main>.home-meta{margin:clamp(6px,1.2vh,12px) 16px 0}
 
   /* Medications: one-line heading, search + filters side by side, 4-column cards */
   body.landing[data-route=medications] #main{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
@@ -741,4 +740,22 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
   /* Flowcharts: compact heading so the chart starts higher */
   body.landing[data-route=flowcharts] .fc-head{padding-top:10px;padding-bottom:6px}
   body.landing[data-route=flowcharts] .fc-head h1{font-size:24px}
+}
+
+/* Phones: simulation as a slim row under the hero, pathways in two columns */
+@media (max-width:599px){
+  body.landing[data-route=emergency] .hero-copy h1{font-size:26px}
+  body.landing[data-route=emergency] .sim-door{margin:10px 12px 0;padding:8px 12px;grid-template-columns:36px minmax(0,1fr) 14px;gap:10px;min-height:56px}
+  body.landing[data-route=emergency] .sim-door-icon{width:36px;height:36px;font-size:14px}
+  body.landing[data-route=emergency] .sim-door small{display:none}
+  body.landing[data-route=emergency] .emergency-grid{grid-template-columns:1fr 1fr;gap:8px;padding:0 12px}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card{grid-template-columns:1fr;grid-template-rows:auto 1fr;align-content:start;justify-items:start;gap:8px;min-height:0;padding:12px 12px 12px 10px}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card .chevron{display:none}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card strong{font-size:17px;line-height:1.2}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card small{font-size:13.5px}
+}
+/* Desktop: the clinical-prototype notice sits in the header's empty middle instead of its own band */
+@media (min-width:1024px) and (min-aspect-ratio:4/3){
+  body:not(.in-cockpit) .app-shell{position:relative}
+  body:not(.in-cockpit) .clinical-notice{position:absolute;z-index:31;top:10px;left:76px;right:545px;height:48px;padding:4px 6px 4px 12px;border:1px solid #f0d58c;border-radius:12px;align-items:center;justify-content:space-between;text-align:left;font-size:13px;line-height:1.3}
 }
