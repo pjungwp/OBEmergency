@@ -95,24 +95,29 @@ function renderLibrary(){
 function renderPrebrief(){
   const s=scn(),r=res(),pr=run.prep||(run.prep={roles:[],ready:[],seen:[]});
   const crit=r.actions.filter(a=>a.critical),items=[...s.patient.history.map(t=>({t,k:"h"})),...s.equipment.map(t=>({t,k:"e"}))];
-  const open=ui.prep??"brief",seen=new Set(pr.seen);
-  const card=(id,title,meta,body)=>{const o=open===id;return `<article class="pc${o?" open":""}${seen.has(id)?" seen":""}">
-    <button class="pc-h" data-prep="${id}" aria-expanded="${o}"><span class="pc-t">${title}</span><span class="pc-m">${seen.has(id)&&!o?"✓ ":""}${meta}</span><i class="chev" aria-hidden="true"></i></button>
-    ${o?`<div class="pc-b">${body}</div>`:""}</article>`;};
+  // Every section starts closed; the facilitator opens what they need.
+  const open=ui.prep||"",seen=new Set(pr.seen);
+  const row=(id,title,meta,body)=>{const o=open===id,done=seen.has(id)&&!o;return `<article class="pc${o?" open":""}${seen.has(id)?" seen":""}">
+    <button class="pc-h" data-prep="${id}" aria-expanded="${o}" aria-controls="pc-${id}"><span class="pc-t">${title}</span><span class="pc-m">${done?'<span class="pc-ok" aria-label="Reviewed">✓</span>':""}${meta}</span><i class="chev" aria-hidden="true"></i></button>
+    ${o?`<div class="pc-b" id="pc-${id}">${body}</div>`:""}</article>`;};
   const mon=monitorStatus();
   sm.innerHTML=`<section class="sm-pre">
-    <header class="pre-top"><button class="sm-link" data-a="library">‹ Scenarios</button><span class="pre-lvl">${LEVEL_LABEL[run.level]}</span></header>
-    <h1 class="pre-title">${esc(s.title.replace(/^Postpartum hemorrhage · /,"PPH · "))}</h1>
-    <p class="pre-meta">v${esc(s.version)} · ${s.reviewed?`reviewed ${esc(s.reviewed)}`:"not yet reviewed"} · ${esc(r.note)}</p>
-    <article class="pre-handoff"><p class="sm-eyebrow">PATIENT HANDOFF</p><p class="lead">${esc(s.patient.oneLiner)}</p><p class="muted">${esc(s.patient.setting)}</p></article>
-    <div class="pre-cards">
-      ${card("brief","Learner briefing",`${s.prebrief.length} points`,`<p class="say-who">Read aloud</p><blockquote class="pre-script">${s.prebrief.map(esc).join(" ")}</blockquote>`)}
-      ${card("roles","Assign roles",`${pr.roles.length||0} of ${s.roles.length}`,`<p class="muted small">Tap roles that are filled. Names are optional and never saved.</p><div class="chips">${s.roles.map((x,i)=>`<button class="sm-chip${pr.roles.includes(i)?" on":""}" data-role="${i}" aria-pressed="${pr.roles.includes(i)}">${esc(x)}</button>`).join("")}</div>`)}
-      ${card("room","Room setup",`${pr.ready.length} of ${items.length} ready`,`<h3 class="sm-cat">History</h3>${items.filter(x=>x.k==="h").map(x=>chk(x,items,pr)).join("")}<h3 class="sm-cat">Equipment</h3>${items.filter(x=>x.k==="e").map(x=>chk(x,items,pr)).join("")}`)}
-      ${card("obj","Objectives",`${crit.length} critical actions`,`<ul class="pre-obj">${crit.map(a=>`<li>${esc(a.label)}${a.target!=null?` <span class="muted">· ${a.target} min${a.from?` after ${esc(r.states[a.from]?.name||a.from)}`:""}</span>`:""}</li>`).join("")}</ul>`)}
+    <div class="pre-main">
+      <header class="pre-top"><button class="sm-link" data-a="library">‹ Scenarios</button><span class="pre-lvl">${LEVEL_LABEL[run.level]}</span></header>
+      <h1 class="pre-title">${esc(s.title.replace(/^Postpartum hemorrhage · /,"PPH · "))}</h1>
+      <p class="pre-meta">v${esc(s.version)} · ${s.reviewed?`reviewed ${esc(s.reviewed)}`:"not yet reviewed"} · ${esc(r.note)}</p>
+      <article class="pre-handoff" aria-label="Patient handoff"><p class="sm-eyebrow">PATIENT HANDOFF</p><p class="lead">${esc(s.patient.oneLiner)}</p><p class="muted">${esc(s.patient.setting)}</p></article>
+      <div class="pre-go">
+        <button class="sm-btn primary big" data-a="start">▶ Start scenario</button>
+        <p class="pre-mon">Monitor: <b class="${mon.on?"on":""}">${mon.on?"Connected":"Not connected"}</b> · <button class="sm-link" data-a="monitor-setup">${mon.on?"Options":"Set up"}</button></p>
+      </div>
     </div>
-    <p class="pre-mon">Monitor: <b class="${mon.on?"on":""}">${mon.on?"Connected":"Not connected"}</b> · <button class="sm-link" data-a="monitor-setup">${mon.on?"Options":"Set up"}</button></p>
-    <div class="pre-go"><button class="sm-btn primary big" data-a="start">▶ Start scenario</button></div>
+    <div class="pre-cards" role="group" aria-label="Prebrief checklist">
+      ${row("brief","Learner briefing",`${s.prebrief.length} points · read aloud`,`<p class="say-who">Read aloud</p><blockquote class="pre-script">${s.prebrief.map(esc).join(" ")}</blockquote>`)}
+      ${row("roles","Assign roles",`${pr.roles.length||0} of ${s.roles.length} filled`,`<p class="muted small">Tap roles that are filled. Names are optional and never saved.</p><div class="chips">${s.roles.map((x,i)=>`<button class="sm-chip${pr.roles.includes(i)?" on":""}" data-role="${i}" aria-pressed="${pr.roles.includes(i)}">${esc(x)}</button>`).join("")}</div>`)}
+      ${row("room","Room setup",`${pr.ready.length} of ${items.length} ready`,`<h3 class="sm-cat">History</h3>${items.filter(x=>x.k==="h").map(x=>chk(x,items,pr)).join("")}<h3 class="sm-cat">Equipment</h3>${items.filter(x=>x.k==="e").map(x=>chk(x,items,pr)).join("")}`)}
+      ${row("obj","Critical actions",`${crit.length} to watch for`,`<ul class="pre-obj">${crit.map(a=>`<li>${esc(a.label)}${a.target!=null?` <span class="muted">· ${a.target} min${a.from?` after ${esc(r.states[a.from]?.name||a.from)}`:""}</span>`:""}</li>`).join("")}</ul>`)}
+    </div>
   </section>`;
 }
 function chk(x,items,pr){const i=items.indexOf(x),on=pr.ready.includes(i);return `<button class="pre-chk${on?" on":""}" data-ready="${i}" aria-pressed="${on}"><span class="box" aria-hidden="true">${on?"✓":""}</span>${esc(x.t)}</button>`;}
@@ -401,9 +406,9 @@ document.addEventListener("click",e=>{
   if(b.dataset.level){ui.pick[b.dataset.sid]=b.dataset.level;saveUI();renderLibrary();return;}
   if(b.dataset.toggle){toggle(b.dataset.toggle);return;}
   if(b.dataset.pin){pin(b.dataset.pin);return;}
-  if(a==="prebrief"){const s=getSimScenario(b.dataset.sid);run=S.createRun(s,ui.pick[s.id]||"basic");ui.phase="prebrief";ui.open=null;save();saveUI();render();return;}
+  if(a==="prebrief"){const s=getSimScenario(b.dataset.sid);run=S.createRun(s,ui.pick[s.id]||"basic");ui.phase="prebrief";ui.open=null;ui.prep="";save();saveUI();render();return;}
   if(a==="library"){ui.phase="library";saveUI();render();return;}
-  if(b.dataset.prep){const id=b.dataset.prep;ui.prep=(ui.prep??"brief")===id?"":id;const pr=run.prep;if(pr&&!pr.seen.includes(id))pr.seen.push(id);save();saveUI();render();return;}
+  if(b.dataset.prep){const id=b.dataset.prep;ui.prep=ui.prep===id?"":id;const pr=run.prep;if(pr&&!pr.seen.includes(id))pr.seen.push(id);save();saveUI();render();return;}
   if(b.dataset.role!=null&&run?.prep){const i=+b.dataset.role,l=run.prep.roles;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(b.dataset.ready!=null&&run?.prep){const i=+b.dataset.ready,l=run.prep.ready;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(a==="monitor-setup"){openSheet("monitor");return;}
