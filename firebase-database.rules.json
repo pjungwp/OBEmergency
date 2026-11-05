@@ -10,6 +10,12 @@
     "sessions": {
       "$room": {
         ".read": "auth != null && $room.length >= 20",
+        "roster": {
+          "$device": {
+            ".write": "auth != null && $room.length >= 20",
+            ".validate": "!newData.exists() || (newData.hasChildren(['role','at']) && newData.child('role').isString() && newData.child('role').val().length <= 60)"
+          }
+        },
         "snap": {
           ".write": "auth != null && $room.length >= 20 && newData.exists() && (!data.exists() || newData.child('revision').val() === data.child('revision').val() + 1)"
         }

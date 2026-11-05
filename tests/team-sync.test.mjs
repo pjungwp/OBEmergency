@@ -14,6 +14,7 @@ function fakeFirebase(){
     if(/^codes\/[A-Z2-9]{6}$/.test(p))return old===undefined&&v?.room&&v?.createdAt;
     const m=p.match(/^sessions\/([^/]{20,})\/snap$/);
     if(m)return !!v&&(old===undefined||v.revision===old.revision+1);
+    if(/^sessions\/[^/]{20,}\/roster\/[^/]+$/.test(p))return v===null||(typeof v.role==="string"&&v.at);
     return false;
   };
   const fetchImpl=async(url,opt={})=>{
@@ -23,7 +24,8 @@ function fakeFirebase(){
     if((opt.method||"GET")==="GET")return {ok:true,json:async()=>structuredClone(get(p)??null)};
     const v=JSON.parse(opt.body);
     if(!allowed(p,v))return {ok:false,status:401};
-    set(p,v);(streams.get(p)||[]).forEach(s=>s.emit("put",{path:"/",data:structuredClone(v)}));
+    set(p,v);
+    for(const [sp,list] of streams)if(p===sp||p.startsWith(sp+"/"))list.forEach(s=>s.emit("put",{path:p===sp?"/":p.slice(sp.length),data:structuredClone(v)}));
     return {ok:true,json:async()=>v};
   };
   class ES{constructor(url){const u=new URL(url);this.p=u.pathname.replace(/^\//,"").replace(/\.json$/,"");this.l={};this.readyState=1;
@@ -86,6 +88,18 @@ test("when two phones save at once, the second loads the shared state instead of
   assert.equal(shared.tasks.x?.status,"completed");assert.equal(shared.tasks.y,undefined,"the losing write did not overwrite");
   assert.equal(nurse.loadSession().tasks.x?.status,"completed","the losing phone now shows the shared state");
   assert.ok(seen.some(s=>s?._teamReset),"the losing phone is told to re-check");
+});
+
+test("simulation roles are shared so phones can see which roles are taken",async()=>{
+  const fb=fakeFirebase(),lead=phone(fb),obs=phone(fb);
+  lead.createSession({...seed,mode:"simulation"});const {code}=await lead.shareSession();await obs.joinTeam(code);
+  await lead.setRole("Team leader");await obs.setRole("Observer");await flush();
+  const roles=r=>Object.values(r.teamStatus().roster).map(x=>x.role).sort();
+  assert.deepEqual(roles(lead),["Observer","Team leader"]);
+  assert.deepEqual(roles(obs),["Observer","Team leader"]);
+  assert.equal(obs.teamStatus().role,"Observer");
+  obs.leaveTeam();await flush();
+  assert.deepEqual(roles(lead),["Team leader"],"leaving frees the role");
 });
 
 test("a wrong code gives a clear message",async()=>{

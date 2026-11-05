@@ -51,14 +51,15 @@ export function createTeamSessionStore({
   let team = readTeam();          // {code, room, sessionId} while sharing
   let auth = readAuth();          // {idToken, refreshToken, expiresAt}
   let stream = null, retryTimer = null, retryMs = 1000;
-  let state = team ? "connecting" : "off", lastSync = null;
+  let state = team ? "connecting" : "off", lastSync = null, roster = {};
+  const deviceId = (() => { try { let d = storage.getItem(TEAM_KEY + ".device"); if(!d){ d = randomString(16, "abcdefghijkmnpqrstuvwxyz23456789"); storage.setItem(TEAM_KEY + ".device", d); } return d; } catch { return randomString(16, "abcdefghijkmnpqrstuvwxyz23456789"); } })();
 
   function readTeam(){ try { return JSON.parse(storage.getItem(TEAM_KEY) || "null"); } catch { return null; } }
   function writeTeam(t){ try { t ? storage.setItem(TEAM_KEY, JSON.stringify(t)) : storage.removeItem(TEAM_KEY); } catch {} }
   function readAuth(){ try { return JSON.parse(storage.getItem(TEAM_KEY + ".auth") || "null"); } catch { return null; } }
   function writeAuth(a){ try { storage.setItem(TEAM_KEY + ".auth", JSON.stringify(a)); } catch {} }
   function setState(s){ if(s === "live") lastSync = now(); state = s; const st = status(); statusListeners.forEach(fn => { try { fn(st); } catch {} }); }
-  function status(){ return {enabled, state, code: team?.code || null, lastSync}; }
+  function status(){ return {enabled, state, code: team?.code || null, lastSync, role: team?.role || null, roster: clone(roster), deviceId}; }
 
   async function token(){
     if(auth && auth.expiresAt - 60000 > now()) return auth.idToken;
@@ -102,14 +103,19 @@ export function createTeamSessionStore({
     if(!team || !EventSourceImpl) return;
     setState(state === "live" ? "live" : "connecting");
     let es;
-    try { es = new EventSourceImpl(await url(`sessions/${team.room}/snap`)); }
+    try { es = new EventSourceImpl(await url(`sessions/${team.room}`)); }
     catch { scheduleRetry(); return; }
     stream = es;
     const onData = ev => {
       retryMs = 1000; setState("live");
       let msg; try { msg = JSON.parse(ev.data); } catch { return; }
-      if(!msg || msg.path !== "/" || !msg.data) return; // snapshots are always written whole
-      mergeRemote(msg.data);
+      if(!msg) return;
+      const p = msg.path || "/", d = msg.data;
+      if(p === "/"){ if(d?.snap) mergeRemote(d.snap); roster = d?.roster || {}; setState("live"); return; }
+      if(p === "/snap"){ if(d) mergeRemote(d); return; }               // snapshots are always written whole
+      if(p === "/roster"){ roster = d || {}; setState("live"); return; }
+      const m = p.match(/^\/roster\/([^/]+)$/);
+      if(m){ if(d) roster[m[1]] = d; else delete roster[m[1]]; setState("live"); }
     };
     es.addEventListener("put", onData);
     es.addEventListener("patch", onData);
@@ -173,8 +179,10 @@ export function createTeamSessionStore({
       if(code.length !== 6) throw new Error("Enter the 6-character team code");
       const entry = await get(`codes/${code}`).catch(() => null);
       if(!entry?.room) throw new Error("No team session with that code");
-      const remote = await get(`sessions/${entry.room}/snap`);
+      const roomData = await get(`sessions/${entry.room}`);
+      const remote = roomData?.snap;
       if(!remote?.id) throw new Error("That team session has no data yet");
+      roster = roomData.roster || {};
       stopStream();
       const mine = local.loadSession();
       if(mine && mine.id !== remote.id) local.clear();
@@ -183,6 +191,17 @@ export function createTeamSessionStore({
       startStream();
       return merged;
     },
-    leaveTeam(){ stopStream(); team = null; writeTeam(null); setState("off"); }
+    // Simulation roles: each phone announces its role so others can see which roles are filled.
+    async setRole(role){
+      if(!team) throw new Error("Not in a team session");
+      team = {...team, role}; writeTeam(team);
+      roster[deviceId] = {role, at: now()}; setState(state);
+      const r = await put(`sessions/${team.room}/roster/${deviceId}`, {role, at: now()}).catch(() => ({ok: false}));
+      return r.ok;
+    },
+    leaveTeam(){
+      if(team?.role){ const room = team.room; put(`sessions/${room}/roster/${deviceId}`, null).catch(() => {}); }
+      stopStream(); team = null; roster = {}; writeTeam(null); setState("off");
+    }
   };
 }

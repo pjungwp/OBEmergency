@@ -776,3 +776,16 @@ body.in-cockpit .toast-region{top:calc(70px + env(safe-area-inset-top));bottom:a
 .team-hint{text-align:center;color:var(--muted);font-size:14.5px;line-height:1.45;margin:4px 0 12px}
 .team-input input{width:100%;min-height:60px;border:2px solid #c8d3e2;border-radius:14px;padding:8px 14px;font-size:30px;font-weight:800;letter-spacing:.14em;text-align:center;text-transform:uppercase;color:var(--navy);margin:4px 0 12px}
 .team-input input:focus{outline:3px solid #1d55c4;outline-offset:1px;border-color:#1d55c4}
+/* Simulation roles */
+.role-chip{border:1px solid #9bcfc7;background:#e6f6f4;color:#0b5f58;border-radius:999px;min-height:36px;padding:4px 12px;font-weight:800;font-size:14px;white-space:nowrap;max-width:60vw;overflow:hidden;text-overflow:ellipsis}
+.role-chip.observer{background:#eef1f6;border-color:#c8d3e2;color:#42536b}
+.rpick-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media (max-width:360px){.rpick-list{grid-template-columns:1fr}}
+.role-opt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:60px;padding:10px 12px;text-align:left;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--navy);cursor:pointer}
+.role-opt strong{font-size:16px;line-height:1.2}.role-opt small{font-size:13px;color:var(--muted)}
+.role-opt.on{border-color:#0e8077;background:#e6f6f4;box-shadow:inset 0 0 0 1px #0e8077}
+.role-opt.observer{grid-column:1/-1}
+.role-sep{margin:14px 2px 6px;font-size:13px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+body.observer .dash{opacity:.92}
+body.observer.in-cockpit #main::before{content:"OBSERVER · watch only";display:block;margin:8px 12px 0;padding:6px 12px;border-radius:10px;background:#eef1f6;color:#42536b;font-weight:900;font-size:13px;letter-spacing:.06em;text-align:center}
+body.observer .sim-time-btn{display:none}

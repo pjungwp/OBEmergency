@@ -4,6 +4,7 @@ import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERE
 import {createLocalSessionStore} from "./local-session-store.js";
 import {createTeamSessionStore,formatCode,normalizeCode} from "./team-sync.js";
 import {TEAM_SYNC} from "./team-config.js";
+import {SIM_SCENARIOS} from "./sim-scenarios.js";
 import {qrcode} from "./vendor/qrcode.js";
 import {PATHWAYS} from "./pathways.js";
 import {EDU_DECKS} from "./edu-decks.js";
@@ -126,6 +127,7 @@ function render(){
   if(route!==shownRoute){if(!routeBack)routeStack.push(shownRoute);if(routeStack.length>20)routeStack.shift();shownRoute=route;}routeBack=false;
   const cockpit=route==="emergency"&&session?.status==="active";
   document.body.classList.toggle("in-cockpit",cockpit);
+  document.body.classList.toggle("observer",!!isObserver());
   // Tab landing screens get a one-screen layout on laptops/desktops (see "Desktop fit" in styles.css).
   document.body.dataset.route=route;
   document.body.classList.toggle("landing",!cockpit&&!(route==="emergency"&&selectedEmergency));
@@ -220,7 +222,7 @@ function cockpitCtx(){
     rowState:(t,kind)=>{
       const od=overdueTimerFor(t.id);
       if(od&&kind!=="completed")return `<span class="due-pill">Due now</span>`;
-      if(kind==="completed")return `<span class="ck-time">${fmt(taskState(t.id).completedAt||0)}</span>`;
+      if(kind==="completed"){const by=taskState(t.id).by;return `<span class="ck-time">${fmt(taskState(t.id).completedAt||0)}${by?` · ${esc(by)}`:""}</span>`;}
       if(kind==="ongoing"){const nx=session.timers.find(x=>x.taskId===t.id&&!x.cancelled&&!x.ack);return nx?`<span class="ck-time">in <span class="live-countdown" data-due-at="${nx.dueAt}">${formatCountdown(nx)}</span></span>`:"";}
       return "";
     }};
@@ -302,6 +304,7 @@ function statusStripHTML2(waitingList,alerts,sim){
   if(od)parts.push(`<b class="overdue-count">${od} overdue</b>`);
   const next=getFutureEvents()[0];
   if(next)parts.push(`<span class="next-up">Next: ${esc(next.label)} in <span class="live-countdown" data-due-at="${next.at}">${fmt((next.at-sessionMinute())*60000)}</span></span>`);
+  if(sim&&TEAM_ON&&store.teamStatus().code){const r=store.teamStatus().role;parts.push(`<button class="role-chip${r===OBSERVER?" observer":""}" data-action="team-role" aria-label="Your simulation role: ${esc(r||"not chosen")}. Change role">${r?esc(r):"Choose your role"}</button>`);}
   if(sim)parts.push(`<button class="sim-time-btn${session.running?"":" paused"}" data-action="sim-time">${session.running?"⏩ Sim time":"⏸ Paused"}</button>`);
   return parts.length?`<div class="cockpit-status-row">${parts.join("")}</div>`:"";
 }
@@ -457,9 +460,10 @@ function handleTask(taskId,action){
   const at=currentElapsed();
   if(action==="done"&&t.type==="med"){openMedicationChooser(t);return;}
   const prev=taskState(taskId);
-  if(action==="start"||action==="ongoing"){session.tasks[taskId]={...prev,status:"ongoing",startedAt:at};logEvent(`Ongoing: ${t.title}`,"task");}
+  const by=TEAM_ON&&session.mode==="simulation"?store.teamStatus().role||undefined:undefined;
+  if(action==="start"||action==="ongoing"){session.tasks[taskId]={...prev,status:"ongoing",startedAt:at,...(by?{by}:{})};logEvent(`Ongoing: ${t.title}`,"task");}
   if(action==="done"){
-    session.tasks[taskId]={...prev,status:"done",completedAt:at};
+    session.tasks[taskId]={...prev,status:"done",completedAt:at,...(by?{by}:{})};
     logEvent(`${t.type==="repeat"?"Assessed":"Completed"}: ${t.title}`,"task");
     cancelTaskTimers(taskId);
     if(t.type==="repeat"&&t.repeatMin) addTimer({taskId,label:t.title,dueAt:sessionMinute()+t.repeatMin,kind:"repeat"});
@@ -898,7 +902,7 @@ function showTeam(){
 }
 async function teamShare(){
   const btn=$("[data-action=team-share]");if(btn){btn.disabled=true;btn.textContent="Sharing…";}
-  try{await store.shareSession();showTeam();}
+  try{await store.shareSession();if(session?.mode==="simulation")showRolePicker({after:"share"});else showTeam();}
   catch(e){toast(navigator.onLine?"Could not start team sharing — try again":"No connection — team sharing needs internet","alert");if(btn){btn.disabled=false;btn.textContent="Share this session";}}
 }
 function teamLeave(){
@@ -925,8 +929,41 @@ async function teamJoin(){
     session=hydrateSession(joined);selectedEmergency=session.emergencyId;closeSheet();
     if(session.status==="active"){ensureAudio();startClock();}
     navigate("emergency");toast(`Joined team ${formatCode(code)}`);
+    if(session.mode==="simulation")showRolePicker({after:"join"});
   }catch(e){toast(e.message||"Could not join","alert");if(btn){btn.disabled=false;btn.textContent="Join";}}
 }
+// ---------- Simulation roles (team sessions in simulation mode only) ----------
+const OBSERVER="Observer";
+const DEFAULT_ROLES=["Team leader","Recorder / timekeeper","Primary nurse","Medication nurse","Anesthesia","Runner"];
+// Roles come from the simulation scenarios written for this emergency; Observer is always offered.
+function rolesFor(emergencyId){
+  const list=[];(typeof SIM_SCENARIOS!=="undefined"?SIM_SCENARIOS:[]).filter(x=>x.emergency===emergencyId).forEach(x=>x.roles.forEach(r=>{if(!list.includes(r))list.push(r);}));
+  // Scenarios name some roles more or less specifically ("Runner" vs "Runner / blood bank"): keep the specific one.
+  const out=list.filter(r=>!list.some(o=>o!==r&&(o.startsWith(r+" /")||o.startsWith(r+" ("))));
+  return out.length?out:DEFAULT_ROLES;
+}
+function isObserver(){return TEAM_ON&&session?.mode==="simulation"&&store.teamStatus().code&&store.teamStatus().role===OBSERVER;}
+function showRolePicker({after}={}){
+  if(!session)return;const st=store.teamStatus();const counts={};
+  Object.entries(st.roster||{}).forEach(([dev,x])=>{if(dev!==st.deviceId&&x?.role)counts[x.role]=(counts[x.role]||0)+1;});
+  const btn=(r,sub)=>{const n=counts[r]||0,on=st.role===r;return `<button class="role-opt${on?" on":""}${r===OBSERVER?" observer":""}" data-pick-role="${esc(r)}" aria-pressed="${on}"><strong>${esc(r)}</strong><small>${sub||(n?`${n} other phone${n>1?"s":""}`:"Open")}</small></button>`;};
+  openSheet({eyebrow:"SIMULATION · TEAM "+formatCode(st.code||""),title:"Choose your role",html:`
+    <p class="lead">Pick the role you're playing. Everyone sees the same checklist; your role is noted on what you tap.</p>
+    <div class="rpick-list" role="group" aria-label="Team roles">${rolesFor(session.emergencyId).map(r=>btn(r)).join("")}</div>
+    <p class="role-sep">Not playing a role?</p>
+    <div class="rpick-list">${btn(OBSERVER,`Watch only · can't change the session${counts[OBSERVER]?` · ${counts[OBSERVER]} other${counts[OBSERVER]>1?"s":""}`:""}`)}</div>
+    ${after==="share"?`<button class="button ghost full" data-action="team">Show team code and QR</button>`:""}`});
+}
+async function pickRole(role){
+  await store.setRole(role);document.body.classList.toggle("observer",isObserver());
+  closeSheet();render();toast(role===OBSERVER?"Observer · watch only":`You are: ${role}`);
+}
+// Observers watch: anything that changes the session is blocked on their phone.
+const OBSERVER_BLOCK='[data-answer],[data-check],[data-task-action],[data-maneuver],[data-given-ago],[data-gcheck],[data-gbranch],[data-action=ack-timer],[data-action=defer-decision],[data-action=live-advance],[data-action=mark-delivered],[data-action=record-med],[data-action=sim-time],[data-action=snooze-timer],[data-action=undo-maneuver],[data-action=end-session]';
+document.addEventListener("click",e=>{
+  if(!isObserver())return;const b=e.target.closest(OBSERVER_BLOCK);if(!b)return;
+  e.preventDefault();e.stopImmediatePropagation();toast("Observer · watch only. Change role to take part.","alert");
+},true);
 function clearSession(){session=null;store.clear();selectedEmergency=null;closeSheet();navigate("emergency");}
 
 document.addEventListener("click",e=>{
@@ -993,6 +1030,8 @@ document.addEventListener("click",e=>{
   if(a==="team-leave")teamLeave();
   if(a==="team-join")showTeamJoin();
   if(a==="team-join-go")teamJoin();
+  if(a==="team-role")showRolePicker();
+  if(b.dataset.pickRole!=null)pickRole(b.dataset.pickRole);
   if(a==="team-copy")teamCopy();
   if(a==="clear-session")clearSession();
 });
@@ -1102,8 +1141,9 @@ store.subscribe(next=>{
     render();
   }
 });
+let lastRosterKey="";
 if(TEAM_ON){
-  store.onTeamStatus(()=>{const el=$("#teamPill");if(el)el.outerHTML=teamPillHTML();});
+  store.onTeamStatus(()=>{const el=$("#teamPill");if(el)el.outerHTML=teamPillHTML();const rk=JSON.stringify(store.teamStatus().roster);if(rk!==lastRosterKey){lastRosterKey=rk;if($(".rpick-list")&&!$("#infoSheet").hidden)showRolePicker();}});
   const q=new URLSearchParams(location.search).get("team");
   if(q){try{const u=new URL(location.href);u.searchParams.delete("team");history.replaceState(history.state,"",u);}catch{}showTeamJoin(normalizeCode(q));}
 }
