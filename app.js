@@ -652,18 +652,77 @@ function guidedCheck(key){
   localChecks.has(key)?localChecks.delete(key):localChecks.add(key);render();
 }
 
-function renderMedications(query=""){
-  const q=query.toLowerCase();const meds=MEDICATIONS.filter(m=>!q||`${m.name} ${m.context} ${m.dose} ${m.avoid}`.toLowerCase().includes(q));
-  main.innerHTML=`<section class="page-head"><p class="eyebrow">DIRECT LOOKUP</p><h1>Medication reference</h1><p>Opening a card never records a dose. Confirm actual administration to start any medication-specific timer.</p></section>
-    <label class="search-box"><span>⌕</span><input id="medSearch" type="search" placeholder="Search medication or contraindication" value="${esc(query)}"></label>
-    <div class="filter-chips"><button class="active" data-med-filter="">All</button><button data-med-filter="PPH">PPH</button><button data-med-filter="hypertension">Severe BP</button><button data-med-filter="eclampsia">Eclampsia</button></div>
-    <section class="med-list">${meds.map(m=>medCard(m)).join("")||`<p class="empty">No medication matched that search.</p>`}</section>`;
+// ---------- Medications & Treatment (guide → detail). Clinical text comes only from MEDICATIONS / PATHWAYS. ----------
+// Generic name first, brand in parentheses. Brand names and route labels are new interface labels — pending clinical review.
+const MED_BRAND={oxytocin:"Pitocin",methylergonovine:"Methergine",carboprost:"Hemabate",misoprostol:"Cytotec",txa:"Cyklokapron",labetalol:"Trandate",hydralazine:"Apresoline",nifedipine:"Procardia",lorazepam:"Ativan",midazolam:"Versed"};
+const MED_GENERIC={carboprost:"Carboprost",txa:"Tranexamic acid",labetalol:"Labetalol",hydralazine:"Hydralazine",nifedipine:"Nifedipine"};
+const MED_ROUTE={oxytocin:"IV infusion or IM",methylergonovine:"IM",carboprost:"IM or intramyometrial",misoprostol:"Oral, sublingual or rectal",txa:"IV · TXA",labetalol:"IV",hydralazine:"IV",nifedipine:"PO, immediate release",magnesium:"IV (IM if no IV access)","calcium-gluconate":"IV",lorazepam:"IV",midazolam:"IM"};
+function medTitle(id){const m=getMedication(id);const g=MED_GENERIC[id]||m.name;return MED_BRAND[id]?`${g} (${MED_BRAND[id]})`:g;}
+// First sentence of the reviewed "avoid" text, shown in full before a medication is opened.
+function medCaution(m){const t=(m.avoid||"").trim();const first=(t.match(/^.*?\.(\s|$)/)||[t])[0].trim();return first;}
+const MED_CATS={
+  hemorrhage:{name:"Hemorrhage",accent:"crimson",icon:"pph",line:"Uterotonics, TXA, bleeding control and escalation",groups:[
+    {h:"Initial response",p:"Start treatment while assessing the bleeding source.",items:[{med:"oxytocin"},{node:"uterotonics",label:"Uterine massage · bimanual compression",sub:"Hands-on measures for atony"}]},
+    {h:"Additional uterotonics",p:"Persistent atony: choose an agent based on contraindications.",items:[{med:"methylergonovine"},{med:"carboprost"},{med:"misoprostol"}]},
+    {h:"Early adjunct",p:"TXA accompanies early treatment.",items:[{med:"txa"}]},
+    {h:"Bleeding control",p:"Consider the bleeding source and appropriate control measures.",items:[{node:"fourts",label:"Cause-directed care (4 Ts)",sub:"Tone · Trauma · Tissue · Thrombin"},{node:"escalate",label:"Hemorrhage-control devices",sub:"Balloon or vacuum device · must not delay definitive care"}]},
+    {h:"Resuscitation & escalation",p:"Escalate according to bleeding, clinical condition and local protocol.",items:[{node:"resus",label:"Resuscitation",sub:"Access, labs, blood products"},{node:"escalate",label:"Escalation · MTP · OR / IR",sub:"Massive transfusion, operating room, interventional radiology, transfer"}]}
+  ],note:"Treatment groups, not sequential steps — they often run at the same time."},
+  htn:{name:"Severe hypertension",accent:"amber",icon:"htn",line:"First-line IV and oral antihypertensives",groups:[
+    {h:"Medications",p:"Guide being rebuilt in the new format — medications and full details below.",items:[{med:"labetalol"},{med:"hydralazine"},{med:"nifedipine"}]}]},
+  seizure:{name:"Seizure & magnesium",accent:"violet",icon:"eclampsia",line:"Magnesium, toxicity rescue and persistent seizure",groups:[
+    {h:"Medications",p:"Guide being rebuilt in the new format — medications and full details below.",items:[{med:"magnesium"},{med:"calcium-gluconate"},{med:"lorazepam"},{med:"midazolam"}]}]}
+};
+let medState={cat:null,sel:null,q:""}; // UI only
+function medRow(it,catId){
+  if(it.med){const m=getMedication(it.med);if(!m)return "";const on=medState.sel===it.med;
+    return `<button class="mt-row${on?" on":""}" data-med-pick="${it.med}" aria-pressed="${on}" aria-describedby="mtc-${it.med}"><span class="mt-copy"><strong>${esc(medTitle(it.med))}</strong><small>${esc(MED_ROUTE[it.med]||"")}</small><b class="mt-warn" aria-hidden="true" title="${esc(medCaution(m))}">⚠</b><span class="mt-cau sr-only" id="mtc-${it.med}">Caution: ${esc(medCaution(m))}</span></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`;}
+  return `<button class="mt-row ref" data-med-node="${it.node}" data-pathway-id="pph"><span class="mt-copy"><strong>${esc(it.label)}</strong><small>${esc(it.sub||"")}</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`;
 }
-function updateMedicationList(query){
-  const q=query.toLowerCase();
-  const meds=MEDICATIONS.filter(m=>!q||`${m.name} ${m.context} ${m.dose} ${m.avoid}`.toLowerCase().includes(q));
-  const list=$(".med-list");if(list)list.innerHTML=meds.map(m=>medCard(m)).join("")||`<p class="empty">No medication matched that search.</p>`;
+function medDetailHTML(id,{back=false}={}){
+  const m=getMedication(id);if(!m)return "";const r=getReference(m.source);const live=session?.status==="active";
+  return `<article class="mt-detail ${m.accent}" aria-labelledby="mtDetailH">
+    ${back?`<button class="back-button mt-back" data-action="med-back">‹ Back to ${esc(MED_CATS[medState.cat]?.name.toLowerCase()||"medications")}</button>`:""}
+    <p class="mt-eyebrow">SELECTED TREATMENT</p>
+    <h2 id="mtDetailH">${esc(medTitle(id))}</h2>
+    <p class="mt-sub">${esc(m.context)}${MED_ROUTE[id]?` · ${esc(MED_ROUTE[id])}`:""}</p>
+    <div class="mt-caution" role="note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9.5 17H2.5z"/><path d="M12 10v4.5M12 17.5v.2"/></svg><div><strong>Contraindications &amp; key cautions</strong><p>${esc(m.avoid)}</p></div></div>
+    <section class="mt-sec"><h3>Dose &amp; route</h3><p class="mt-dose">${esc(m.dose)}</p></section>
+    <details class="mt-sec"${innerHeight>720?" open":""}><summary><h3>Repeat / maximum</h3></summary><p>${esc(m.repeat)}</p></details>
+    <details class="mt-sec"><summary><h3>Monitoring &amp; reassessment</h3></summary><p>${esc(m.watch)}</p></details>
+    <details class="mt-sec"><summary><h3>Administration</h3></summary><p>${esc(m.administration)}</p></details>
+    <details class="mt-sec"><summary><h3>Source &amp; review</h3></summary><p>${esc(r?.title||"")}${r?.year?` (${esc(r.year)})`:""}. Content review ${esc(CONTENT_REVIEW_DATE)}. Follow your institution's approved protocol.</p></details>
+    ${live?`<button class="button primary full" data-med-id="${id}">Record a dose in the running session…</button>`:""}
+  </article>`;
 }
+function renderMedications(){
+  const q=medState.q.trim().toLowerCase();
+  const narrow=!matchMedia("(min-width:900px)").matches;
+  const search=`<label class="mt-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg><span class="sr-only">Search medication or treatment</span><input id="medSearch" type="search" placeholder="Search medication or treatment" value="${esc(medState.q)}" autocomplete="off"></label>`;
+  const tabs=`<div class="mt-tabs" role="tablist" aria-label="Category">${Object.entries(MED_CATS).map(([k,c])=>`<button role="tab" aria-selected="${medState.cat===k}" class="${medState.cat===k?"on":""}" data-med-cat="${k}">${esc(c.name)}</button>`).join("")}</div>`;
+  let body="";
+  if(q){
+    const hits=MEDICATIONS.filter(m=>`${m.name} ${MED_BRAND[m.id]||""} ${m.context}`.toLowerCase().includes(q));
+    body=`<section class="mt-results" aria-label="Search results">${hits.length?hits.map(m=>`<button class="mt-row" data-med-open="${m.id}"><span class="mt-copy"><strong>${esc(medTitle(m.id))}</strong><small>${esc(m.context)}</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`).join(""):`<p class="empty">No medication matched “${esc(medState.q)}”.</p>`}</section>`;
+  }else if(!medState.cat){
+    body=`<section class="mt-cats" aria-label="Browse by emergency">${Object.entries(MED_CATS).map(([k,c])=>`<button class="mt-cat ${c.accent}" data-med-cat="${k}">${emergencyIcon(c.icon,56)}<span><strong>${esc(c.name)}</strong><small>${esc(c.line)}</small></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>`).join("")}</section>`;
+  }else{
+    const c=MED_CATS[medState.cat];
+    if(narrow&&medState.sel){main.innerHTML=`<section class="mt-page">${medDetailHTML(medState.sel,{back:true})}</section>`;return;}
+    const guide=`<section class="mt-guide ${c.accent}"><h2 class="sr-only">${esc(c.name)}</h2>${c.note?`<p class="mt-guide-sub">${esc(c.note)}</p>`:""}
+      ${c.groups.map(g=>`<div class="mt-group"><div class="mt-gh"><h3>${esc(g.h)}</h3><p>${esc(g.p)}</p></div><div class="mt-items">${g.items.map(it=>medRow(it,medState.cat)).join("")}</div></div>`).join("")}</section>`;
+    const pane=narrow?"":`<aside class="mt-pane">${medState.sel?medDetailHTML(medState.sel):`<p class="mt-empty">Point at or select a treatment to see its cautions, dose and monitoring.</p>`}</aside>`;
+    body=`<div class="mt-split">${guide}${pane}</div>`;
+  }
+  const inGuide=!!(medState.cat||q);
+  main.innerHTML=`<section class="mt-page${inGuide?" in-guide":""}"><header class="mt-head"><h1>Medications &amp; Treatment</h1>${inGuide?"":search}</header>${inGuide?`<h1 class="sr-only">Medications &amp; Treatment</h1><div class="mt-bar">${tabs}${search}</div>`:""}${body}</section>`;
+}
+// Desktop: hovering or focusing a treatment previews its cautions and dose in the side pane before it is opened.
+document.addEventListener("pointerover",e=>{const b=e.target.closest?.("[data-med-pick]");const pane=$(".mt-pane");if(!b||!pane||pane.dataset.preview===b.dataset.medPick)return;pane.dataset.preview=b.dataset.medPick;pane.innerHTML=medDetailHTML(b.dataset.medPick);});
+document.addEventListener("focusin",e=>{const b=e.target.closest?.("[data-med-pick]");const pane=$(".mt-pane");if(!b||!pane)return;pane.dataset.preview=b.dataset.medPick;pane.innerHTML=medDetailHTML(b.dataset.medPick);});
+document.addEventListener("pointerout",e=>{const b=e.target.closest?.("[data-med-pick]");const pane=$(".mt-pane");if(!b||!pane||e.relatedTarget?.closest?.("[data-med-pick]")===b)return;
+  if(e.relatedTarget?.closest?.(".mt-pane"))return;delete pane.dataset.preview;pane.innerHTML=medState.sel?medDetailHTML(medState.sel):`<p class="mt-empty">Point at or select a treatment to see its cautions, dose and monitoring.</p>`;});
+function updateMedicationList(query){medState.q=query;const pos=$("#medSearch")?.selectionStart;renderMedications();const i=$("#medSearch");if(i){i.focus();try{i.setSelectionRange(pos,pos);}catch{}}}
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
 // Education is organised into a few categories (interface grouping only; deck titles and content unchanged).
@@ -706,9 +765,8 @@ function renderEducation(){
     <header class="edu-head"><h1>Education</h1><p>Pick a category to see its teaching decks</p></header>
     <section class="edu-cats" aria-label="Education categories">${eduGroups().map(g=>`<button class="edu-cat ${g.accent}" data-edu-group="${g.id}" aria-haspopup="dialog">
         <span class="edu-cat-name">${esc(g.name)}</span>
-        <span class="edu-cat-topics">${g.items.map(x=>`<span>${esc(x.title)}</span>`).join("")}</span>
         <span class="edu-meta"><span>${g.items.length} topic${g.items.length>1?"s":""}</span>${CHEV}</span></button>`).join("")}
-      <button class="edu-cat docs-card" data-action="edu-docs" aria-haspopup="dialog"><span class="edu-cat-name">Source documents</span><span class="edu-cat-topics"><span>ACOG, AHA, SMFM, AHRQ and more</span></span><span class="edu-meta"><span>${docs.length} documents</span>${CHEV}</span></button>
+      <button class="edu-cat docs-card" data-action="edu-docs" aria-haspopup="dialog"><span class="edu-cat-name">Source documents</span><span class="edu-meta"><span>${docs.length} documents</span>${CHEV}</span></button>
     </section>
     <aside class="edu-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">Source documents</h2>
       <div class="doc-list">${docs.map(docRow).join("")}</div>
@@ -1061,6 +1119,11 @@ document.addEventListener("click",e=>{
   if(b.dataset.gbranch){const p=PATHWAYS[flowEmergency],to=b.dataset.gbranch;const k=p.steps.findIndex(st=>st.nodes.includes(to));if(k>=0){guidedStep[flowEmergency]=k;guidedBranch[flowEmergency]=null;}else guidedBranch[flowEmergency]=to;renderFlowcharts();requestAnimationFrame(()=>$(".g-step.current")?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(b.dataset.gcheck)guidedCheck(b.dataset.gcheck);
   if(b.dataset.zoom&&chartCtl){const z=b.dataset.zoom;if(z==="print"){document.body.classList.add("print-chart");window.print();setTimeout(()=>document.body.classList.remove("print-chart"),500);}else if(z==="full")chartCtl.full();else if(z==="fit")chartCtl.fit();else chartCtl.zoom(z);}
+  if(b.dataset.medCat){medState={cat:b.dataset.medCat,sel:null,q:""};renderMedications();window.scrollTo(0,0);}
+  if(b.dataset.medPick){medState.sel=b.dataset.medPick;renderMedications();if(!matchMedia("(min-width:900px)").matches)window.scrollTo(0,0);}
+  if(b.dataset.medOpen){const id=b.dataset.medOpen;const cat=Object.keys(MED_CATS).find(k=>MED_CATS[k].groups.some(g=>g.items.some(it=>it.med===id)));medState={cat,sel:id,q:""};renderMedications();window.scrollTo(0,0);}
+  if(b.dataset.medNode)openNodeDetail(b.dataset.pathwayId||"pph",b.dataset.medNode);
+  if(b.dataset.action==="med-back"){medState.sel=null;renderMedications();}
   if(b.dataset.medFilter){
     $$(".filter-chips button").forEach(x=>x.classList.toggle("active",x===b));
     const input=$("#medSearch");if(input){input.value=b.dataset.medFilter;updateMedicationList(b.dataset.medFilter);}
@@ -1141,6 +1204,7 @@ function goRoot(r){
   if(r==="emergency"&&session?.status!=="active")selectedEmergency=null;
   if(r==="flowcharts"){flowPicked=false;flowView="overview";}
   if(r==="education"&&deck)closeDeck();
+  if(r==="medications")medState={cat:null,sel:null,q:""};
 }
 // Menu tree: every section's branches unfold a second after the menu opens, so people can jump straight in.
 function buildMenuTree(){
@@ -1149,7 +1213,7 @@ function buildMenuTree(){
   const branches={
     emergency:em.map(e=>[`em:${e.id}`,e.name]),
     flowcharts:em.map(e=>[`fc:${e.id}`,e.name]),
-    medications:[["med:PPH","Hemorrhage"],["med:hypertension","Severe hypertension"],["med:eclampsia","Seizure & magnesium"]],
+    medications:Object.entries(MED_CATS).map(([k,c])=>[`med:${k}`,c.name]),
     education:(typeof eduGroups==="function"?eduGroups():[]).map(g=>[`edu:${g.id}`,g.name])
   };
   Object.entries(branches).forEach(([nav,items])=>{
@@ -1164,7 +1228,7 @@ function drawerGo(go){
   const [k,id]=go.split(":");closeMenu();
   if(k==="em"){if(session?.status==="active"){navigate("emergency");toast("A session is running — end it to open another emergency","alert");return;}selectedEmergency=id;navigate("emergency");}
   if(k==="fc"){flowEmergency=id;flowPicked=true;flowView="overview";navigate("flowcharts");}
-  if(k==="med"){navigate("medications");const chip=$(`[data-med-filter="${id}"]`);chip?.click();}
+  if(k==="med"){medState={cat:id,sel:null,q:""};navigate("medications");}
   if(k==="edu"){navigate("education");openEduGroup(id);}
 }
 function openMenu(){buildMenuTree();const dr=$("#menuDrawer");dr.classList.remove("tree");clearTimeout(treeTimer);treeTimer=setTimeout(()=>dr.classList.add("tree"),1000);const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
@@ -1224,6 +1288,8 @@ installBackGuard(()=>{
   if($("#eduPanel")&&!$("#eduPanel").hidden){closeEduPanel();return true;}
   if(!$("#infoSheet").hidden){closeSheet();return true;}
   if(!$("#menuDrawer").hidden){closeMenu();return true;}
+  if(route==="medications"&&medState.sel&&!matchMedia("(min-width:900px)").matches){medState.sel=null;render();return true;}
+  if(route==="medications"&&(medState.cat||medState.q)){medState={cat:null,sel:null,q:""};render();return true;}
   if(route==="flowcharts"&&flowView!=="overview"){flowView="overview";render();return true;}
   if(route==="flowcharts"&&flowPicked&&session?.status!=="active"){flowPicked=false;render();return true;}
   const prev=routeStack.pop();
