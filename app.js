@@ -121,6 +121,9 @@ function render(){
   if(route!==shownRoute){if(!routeBack)routeStack.push(shownRoute);if(routeStack.length>20)routeStack.shift();shownRoute=route;}routeBack=false;
   const cockpit=route==="emergency"&&session?.status==="active";
   document.body.classList.toggle("in-cockpit",cockpit);
+  // Tab landing screens get a one-screen layout on laptops/desktops (see "Desktop fit" in styles.css).
+  document.body.dataset.route=route;
+  document.body.classList.toggle("landing",!cockpit&&!(route==="emergency"&&selectedEmergency));
   $("#clinicalNotice").hidden=settings.noticeDismissed||cockpit;
   if(route==="emergency") renderEmergency();
   if(route==="flowcharts") renderFlowcharts();
