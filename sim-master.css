@@ -320,3 +320,5 @@ main{padding-bottom:120px}
 .vs.metric.warn{border-color:#efb3bd;background:var(--red-soft)}.vs.metric.warn strong{color:var(--red)}
 @media (min-width:1100px){.vs.metric strong{font-size:30px}}
 @media (max-width:767px){.ck-vitals{grid-auto-flow:row;grid-template-columns:repeat(auto-fit,minmax(68px,1fr))!important}.vs.metric{grid-column:span 2}.vs.metric strong{font-size:16px}}
+
+.leave-opts{display:grid;gap:10px;margin-top:12px}.leave-opts .sm-btn{width:100%;min-height:56px}

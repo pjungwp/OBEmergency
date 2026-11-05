@@ -1,4 +1,5 @@
 import {installBackGuard} from "./back-guard.js";
+import {watchForUpdate} from "./update-check.js";
 import {SIM_SCENARIOS,getSimScenario,LEVELS,LEVEL_LABEL,SIM_REVIEW_STATUS} from "./sim-scenarios.js";
 import * as S from "./sim-engine.js";
 import {createLocalSync} from "./sim-sync.js";
@@ -26,7 +27,7 @@ const QUALITY=["Good","Adequate","Needs work"];
 let ui=loadUI();
 let run=load();
 if(run)ui.phase=run.phase==="prebrief"?"prebrief":run.phase==="debrief"?"debrief":"run";else ui.phase="library";
-let tick=null,lastSuggest="",lastState="",lastPrompts="";
+let tick=null,lastSuggest="",lastState="",lastPrompts="",updateReady=null;
 const sync=createLocalSync("master");
 
 function loadUI(){try{const u=JSON.parse(sessionStorage.getItem(UIKEY)||"null");if(u)return {...u,pinned:new Set(u.pinned||[]),pick:u.pick||{}};}catch{}return {phase:"library",pick:{},open:null,pinned:new Set(innerWidth>=1280?["sent","log"]:[]),sheet:null};}
@@ -69,7 +70,7 @@ function openMonitor(){window.open("sim-monitor.html","obsimmonitor","width=1100
 // ---------- render ----------
 function render(){
   document.body.dataset.phase=ui.phase;
-  $("#smTopRight").innerHTML=run&&ui.phase!=="library"?`<button class="sm-btn ghost" data-a="library">Scenarios</button>`:"";
+  $("#smTopRight").innerHTML=(updateReady&&ui.phase!=="run"?`<button class="sm-btn primary" data-a="reload">Update ready · Reload</button>`:"")+(run&&ui.phase!=="library"?`<button class="sm-btn ghost" data-a="${ui.phase==="run"?"ask-leave":"library"}">Scenarios</button>`:"");
   if(ui.phase==="library")renderLibrary();
   else if(ui.phase==="prebrief")renderPrebrief();
   else if(ui.phase==="run")renderRun();
@@ -316,6 +317,8 @@ function sheetBody(){
       ${keys.includes("BP")?f("sbp","Systolic",v.sbp)+f("dbp","Diastolic",v.dbp):""}${keys.includes("HR")?f("hr","HR",v.hr):""}${keys.includes("SpO2")?f("spo2","SpO₂",v.spo2):""}${keys.includes("RR")?f("rr","RR",v.rr):""}${keys.includes("FHR")?f("fhr","FHR",v.fhr):""}${keys.includes("Rhythm")?f("rhythm","Rhythm",v.rhythm):""}${keys.includes("QBL")?f("qblRate","Bleeding mL/min",""):""}
       </div><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Cancel</button><button class="sm-btn primary" data-a="set-vitals">Set</button></div>`;
   }
+  if(k==="leave")return `<h2>Leave the scenario?</h2><p class="muted">Nothing is lost — the log and clock are saved on this device.</p>
+    <div class="leave-opts"><button class="sm-btn primary big" data-a="close-sheet">Resume scenario</button><button class="sm-btn big" data-a="pause-leave">Pause and leave</button><button class="sm-btn ghost big" data-a="ask-end">End and debrief</button></div>`;
   if(k==="monitor"){const m=monitorStatus();return `<h2>Learner monitor</h2><p class="muted">Shows vitals and the clock only — no prompts, actions or branches. The scenario runs fine without it.</p>
     <div class="mon-opts"><button class="sm-btn big" data-a="monitor-view">On this device<small>Full-screen view; tap to return</small></button>${window.__GAS?"":`<button class="sm-btn big" data-a="monitor">Separate window<small>Drag to a second screen or TV</small></button>`}</div>
     <p class="muted small">Status: ${m.on?"a monitor window is connected":"no separate monitor connected"}.</p>`;}
@@ -396,6 +399,9 @@ document.addEventListener("click",e=>{
   if(b.dataset.role!=null&&run?.prep){const i=+b.dataset.role,l=run.prep.roles;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(b.dataset.ready!=null&&run?.prep){const i=+b.dataset.ready,l=run.prep.ready;l.includes(i)?l.splice(l.indexOf(i),1):l.push(i);save();render();return;}
   if(a==="monitor-setup"){openSheet("monitor");return;}
+  if(a==="ask-leave"){openSheet("leave");return;}
+  if(a==="pause-leave"){S.pause(run);save();ui.sheet=null;ui.phase="library";saveUI();render();window.scrollTo(0,0);toast("Paused — resume from the scenario list");return;}
+  if(a==="reload"){save();location.reload();return;}
   if(b.dataset.prompt){const id=b.dataset.prompt,st=b.dataset.pst;act(()=>S.markPrompt(run,res(),id,st,now()),st==="delivered"?"Logged as said":"Skipped");return;}
   if(a==="info"){e.preventDefault();ui.info=!ui.info;saveUI();const y=window.scrollY;render();window.scrollTo(0,y);return;}
   if(a==="monitor-view"){ui.sheet=null;renderSheet();showMonitorView();return;}
@@ -465,10 +471,12 @@ $("#smText")?.addEventListener("click",()=>{const on=!document.documentElement.c
 // Phone back button: close the sheet, then step back a screen. During a running scenario it never leaves.
 installBackGuard(()=>{
   if(ui.sheet){closeSheet();return true;}
-  if(ui.phase==="run"){toast("Scenario running — use Pause, STOP or Debrief");return true;}
+  if(ui.phase==="run"){openSheet("leave");return true;}
   if(ui.phase==="prebrief"||ui.phase==="debrief"){ui.phase="library";saveUI();render();window.scrollTo(0,0);return true;}
   return false;
 });
+document.querySelector(".sm-brand")?.addEventListener("click",e=>{if(ui.phase==="run"&&run?.clock.running){e.preventDefault();openSheet("leave");}});
+watchForUpdate(v=>{updateReady=v;if(ui.phase!=="run")render();});
 window.addEventListener("beforeunload",save);
 // Auto-pause when the facilitator leaves the app (screen off, switched apps/tabs) for over a minute.
 function away(){if(run){S.markAway(run);save();}}

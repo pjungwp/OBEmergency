@@ -1,4 +1,5 @@
 import {installBackGuard} from "./back-guard.js";
+import {watchForUpdate} from "./update-check.js";
 import {APP_VERSION,CONTENT_REVIEW_DATE,EMERGENCIES,MEDICATIONS,EDUCATION,REFERENCES,getMedication,getReference} from "./data.js";
 import {createLocalSessionStore} from "./local-session-store.js";
 import {PATHWAYS} from "./pathways.js";
@@ -127,6 +128,7 @@ function render(){
   if(route==="education") renderEducation();
   if(cockpit)refreshSideSheet();
   updateHeader();
+  if(typeof offerUpdate==="function")offerUpdate();
 }
 
 function updateHeader(){
@@ -1011,6 +1013,11 @@ installBackGuard(()=>{
 // Splash: fade once the first screen has rendered (at least ~0.8 s so it reads, never longer than needed).
 (()=>{const el=document.getElementById("splash");if(!el)return;const wait=Math.max(0,800-(Date.now()-(window.__splashAt||Date.now())));
   setTimeout(()=>{el.classList.add("done");setTimeout(()=>el.remove(),400);},wait);})();
+// New version deployed: offer a reload, but never during an active session.
+var updateReady=null;
+function offerUpdate(){if(!updateReady||session?.status==="active"||$("#updateBand"))return;const b=document.createElement("div");b.id="updateBand";b.className="update-band";b.innerHTML=`<span>New version ready (v${esc(updateReady)})</span><button data-action="reload-app">Reload</button>`;document.body.appendChild(b);}
+watchForUpdate(v=>{updateReady=v;offerUpdate();});
+document.addEventListener("click",e=>{if(e.target.closest("[data-action=reload-app]"))location.reload();});
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
 updateConnectivity();if(session?.status==="active")startClock();render();
 store.subscribe(next=>{
