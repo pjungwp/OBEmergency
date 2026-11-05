@@ -61,12 +61,15 @@ function targetOf(run,scn){
   if(run.hold)return {v:run.anchor.vals,rate:0};
   return {v:run.overrides?{...st.v,...run.overrides}:st.v||{},rate:run.overrides?.qblRate??st.qblRate??0};
 }
+export const QBL_MAX=6000; // cap so a forgotten or long-running scenario never shows impossible blood loss
+/** States in teaching order: breadth-first from the start state along the transitions. */
+export function flowOrder(scn){const seen=[scn.start],q=[scn.start];while(q.length){const st=scn.states[q.shift()];for(const n of st?.next||[])if(n.kind!=="same"&&scn.states[n.to]&&!seen.includes(n.to)){seen.push(n.to);q.push(n.to);}}for(const id of Object.keys(scn.states))if(!seen.includes(id))seen.push(id);return seen;}
 export function vitalsAt(run,scn,now){
   const t=targetOf(run,scn),a=run.anchor,dt=Math.max(0,now-a.at),f=1-Math.exp(-dt/TAU_MS);
   const out={};
   for(const k of NUMERIC){const from=a.vals[k],to=t.v[k];if(to==null)continue;const x=from==null?to:from+(to-from)*f;out[k]=Math.round(x);}
   out.rhythm=t.v.rhythm??a.vals.rhythm;
-  out.qbl=Math.round(a.qbl+t.rate*dt/60000);
+  out.qbl=Math.min(QBL_MAX,Math.round(a.qbl+t.rate*dt/60000));
   out.trend={};for(const k of NUMERIC)if(t.v[k]!=null&&a.vals[k]!=null){const d=t.v[k]-out[k];out.trend[k]=Math.abs(d)<2?0:Math.sign(d);}
   return out;
 }

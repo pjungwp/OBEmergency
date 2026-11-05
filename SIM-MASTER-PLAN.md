@@ -20,3 +20,11 @@ Source: "OB Emergency Assist — Sim Master 2.0 Master Rebuild Plan" (Nov 2026) 
 - Debrief never invents missed actions: unchecked = not documented; untriggered = not applicable.
 - Clinical content versioned and reviewable: scenario `version` + `reviewed` (null until review), shown in UI and exports.
 - Collaborative consistency through reconnection: pending phase 4.
+
+## Sim Master 3.0 — situation dashboard (Nov 2026, in progress)
+
+- Each state has a one-sentence facilitator line (`state.say`, DRAFT, needs review) shown large as "Say · Nurse/Patient".
+- Scenario flow map (states in teaching order; current, visited, and tappable next states).
+- Laptop ≥1100px: flow | script + "What happens next?" | Watch for + log, large type. Tablet: flow strip + two columns. Phone: stacked.
+- QBL capped at 6,000 mL. Tap RUNNING/PAUSED in the header to pause.
+- Next: context-aware prompts (hide cues for actions already recorded), per-state "reveal on request" findings.

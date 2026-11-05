@@ -130,14 +130,20 @@ function renderRun(){
         <span class="sim-tag">SIM</span>
         <div class="ck-title"><strong>${esc(s.title.replace(/^Postpartum hemorrhage/,"PPH"))}</strong><span>${LEVEL_LABEL[run.level]}</span></div>
         <div class="ck-clock${showEv&&s.eventClock.stopAt?" ev-first":""}"><strong id="simClock" aria-label="Scenario clock">${fmt(t)}</strong>${showEv?`<span class="ev"><small>${esc(ec.label)}</small><b id="evClock">${fmt(ec.ms)}</b></span>`:""}</div>
-        <span class="run-pill ${run.clock.running?"on":"off"}">${run.clock.running?"RUNNING":"PAUSED"}</span>
+        <button class="run-pill ${run.clock.running?"on":"off"}" data-a="pause" aria-label="${run.clock.running?"Pause":"Resume"} the scenario clock">${run.clock.running?"❚❚ RUNNING":"▶ PAUSED"}</button>
         <button class="sm-stop" data-a="stop" aria-label="Stop the simulation: real emergency">STOP</button>
       </div>
       <div class="ck-vitals" style="grid-template-columns:${r.monitor.map(k=>({BP:"1.55fr",QBL:"1.2fr",Rhythm:"1.7fr",SpO2:"1.1fr"}[k]||"1fr")).join(" ")}${stage?" auto":""}">${r.monitor.map(k=>vitalCell(k,v)).join("")}${stage?`<span class="stage s${stage}">Stage ${stage}</span>`:""}</div>
     </header>
     <div class="ck-grid">
+      <nav class="ck-col ck-flowcol" aria-label="Scenario flow">${flowHTML(r,moves)}</nav>
       <div class="ck-col ck-control">
-        <section class="ck-state"><p class="sm-eyebrow">CURRENT STATE${run.hold?` · <b class="holding">HOLDING</b>`:""}</p><h2>${esc(st.name)}</h2><p>${esc(st.text)}${st.findings?` · <span class="muted">${esc(st.findings)}</span>`:""}</p></section>
+        <section class="ck-say">
+          <p class="say-now">NOW${run.hold?` · <b class="holding">HOLDING</b>`:""}<strong>${esc(st.name)}</strong></p>
+          ${st.say?`<p class="say-who">Say · ${esc(st.say.who)}</p><blockquote>“${esc(st.say.line)}”</blockquote>`:`<blockquote>${esc(st.text)}</blockquote>`}
+          <p class="say-find">${esc(st.findings||st.text)}</p>
+        </section>
+        <p class="ck-next-h">What happens next?</p>
         <section class="ck-moves">${primaryMoves.map(moveCard).join("")}</section>
         ${sec("more","More options",null,`<div class="more-grid">
           ${hold?`<button class="sm-btn${run.hold?" primary":""}" data-next="same" data-to="${hold.to}">${run.hold?"Release hold":"Hold patient state"}</button>`:""}
@@ -151,7 +157,7 @@ function renderRun(){
         ${sec("ref","Instructor reference",null,refHTML(s,r))}
       </div>
       <div class="ck-col ck-obs">
-        <section class="ck-crit"><div class="ck-crit-h"><h3>Critical observations</h3><b>${recorded} of ${primary.length} recorded</b></div>${primary.map(obsRow).join("")}</section>
+        <section class="ck-crit"><div class="ck-crit-h"><h3>Watch for</h3><b>${recorded} of ${primary.length} recorded</b></div>${primary.map(obsRow).join("")}</section>
         ${optional.length?sec("opt","More observations",optional.length,optional.map(obsRow).join("")):""}
         ${sec("notes","Team notes",run.notes.length||"",`<div class="sm-notes">${NOTE_CHIPS.map(n=>`<button class="sm-chip" data-note="${esc(n)}">${esc(n)}</button>`).join("")}</div><div class="sm-note-row"><input id="smNote" placeholder="Note (no names or identifiers)" autocomplete="off"><button class="sm-btn" data-a="note">Add</button></div>${run.notes.length?`<ul class="mini-log">${[...run.notes].reverse().slice(0,5).map(n=>`<li><time>${fmt(n.at)}</time>${esc(n.text)}</li>`).join("")}</ul>`:""}`)}
       </div>
@@ -169,6 +175,14 @@ function renderRun(){
       <button data-a="ask-end" class="end"><b>■</b>Debrief</button>
     </nav>
     ${run.phase==="stopped"?stoppedHTML():""}`;
+}
+function flowHTML(r,moves){
+  const order=S.flowOrder(r),next=new Map(moves.map(n=>[n.to,n]));
+  const seen=new Set([r.start,...run.log.filter(e=>!e.undone&&e.kind==="state").map(e=>e.to)]);
+  return `<p class="flow-h">Scenario flow</p><ol class="ck-flow">${order.map(id=>{const x=r.states[id],n=next.get(id),now=id===run.state;
+    const cls=now?"now":n?`next ${n.kind}`:seen.has(id)?"done":"";const tag=now?"Now":n?(n.kind==="worsen"?"▼":"▲"):seen.has(id)?"✓":"";
+    const inner=`<span class="fdot" aria-hidden="true">${tag}</span><span class="fname">${esc(x.name)}</span>`;
+    return `<li class="${cls}">${n?`<button data-next="${n.kind}" data-to="${n.to}" data-label="${esc(n.label)}" aria-label="Go to ${esc(x.name)}">${inner}</button>`:`<div${now?' aria-current="step"':""}>${inner}</div>`}</li>`;}).join("")}</ol>`;
 }
 function refHTML(s,r){
   return `<div class="ref">

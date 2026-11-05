@@ -359,8 +359,28 @@ const CONTEXT={
 };
 const RECIPIENT={lab:"monitor",vitals:"monitor",confederate:"confederate",complication:"instructor"};
 export const SIM_CONTENT_VERSION="2.0";
+
+// ---------------------------------------------------------------- facilitator script (Sim Master 3.0)
+// state.say  {who, line}: the one sentence the facilitator says aloud on entering that state. DRAFT.
+const PPH_SAY={
+  atony:["Nurse","She's bleeding a lot — the pad is soaked."],
+  responding:["Nurse","It firms when I rub, but softens when I stop."],
+  controlled:["Nurse","Bleeding has really slowed down."],
+  shock:["Patient","I feel so cold… I can't catch my breath."],
+  stabilizing:["Nurse","Blood is running. Her color looks a little better."],
+  dic:["Nurse","She's oozing from her IV — the blood isn't clotting."]};
+const SAY={
+  "pph-atony":PPH_SAY,"pph-preeclampsia":PPH_SAY,
+  "pph-trauma":{firm:["Nurse","Uterus feels firm, but she's still bleeding."],found:["Examiner","There's a tear high on the side wall — it's pumping."],repaired:["Nurse","Bleeding stopped since the repair."],shock:["Patient","I feel faint… the room is spinning."]},
+  "htn-eclampsia":{severe:["Patient","My head is pounding, and I'm seeing spots."],confirmed:["Nurse","Repeat pressure is still severe range."],treated:["Nurse","Pressure is coming down."],target:["Patient","The headache is a lot better."],
+    seizure:["Nurse","She's seizing! I need help in here!"],postictal:["Nurse","Seizure stopped. She's breathing, but confused."],recurrent:["Nurse","She's seizing again — and magnesium is running!"],magtox:["Nurse","She's very hard to wake, and breathing slowly."]},
+  "shoulder":{impacted:["Nurse","The head is out but pulling back — it won't deliver."],delivered:["Nurse","Baby is out — floppy and pale. Peds is here."],pph:["Nurse","Now she's bleeding heavily."]},
+  "arrest":{arrest:["Nurse","She's not responding — I can't feel a pulse!"],noROSC:["Recorder","Four minutes of CPR. Still no pulse."],delivered:["Neonatal team","We have the baby."],rosc:["Nurse","I feel a pulse!"],afe:["Nurse","She's bleeding from everywhere — IV sites, the incision."]},
+  "trauma-abruption":{arrival:["Patient","My belly hurts where the seatbelt was. Is my baby okay?"],stable:["Nurse","She's comfortable. Baby looks good on the monitor."],abruption:["Patient","The pain is getting worse — it doesn't stop."],shock:["Nurse","Baby's heart rate is way down and not coming back!"],delivered:["Neonatal team","Baby's out — we're resuscitating."]}
+};
 for(const s of SIM_SCENARIOS){
   const c=CONTEXT[s.id]||{};
+  for(const [id,[who,line]] of Object.entries(SAY[s.id]||{}))if(s.states[id])s.states[id].say={who,line};
   s.version=s.version||"2.0";s.reviewed=s.reviewed??null;
   for(const [id,list] of Object.entries(c.states||{}))if(s.states[id])s.states[id].injects=list;
   for(const [id,extra] of Object.entries(c.actions||{})){const a=s.actions.find(x=>x.id===id);if(a)Object.assign(a,extra);}

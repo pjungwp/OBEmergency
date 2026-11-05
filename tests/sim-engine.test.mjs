@@ -162,3 +162,10 @@ test("auto-pauses at hiddenAt+grace when the app was away too long, not for a br
   assert.equal(S.simNow(x,24*60*MIN),11*MIN,"clock stops one minute after leaving");
   assert.ok(x.log.at(-1).auto);assert.equal(x.clock.hiddenAt,undefined);
 });
+
+test("every reachable state has a facilitator line; QBL is capped; flow starts at the start state",()=>{
+  for(const sc of SIM_SCENARIOS)for(const lv of LEVELS){const r=S.resolve(sc,lv);
+    for(const st of Object.values(r.states)){assert.ok(st.say?.line,`${sc.id}/${lv}/${st.id} has a say line`);assert.ok(st.say.line.split(/\s+/).length<=14,`${sc.id}/${st.id} say line is short`);}
+    const f=S.flowOrder(r);assert.equal(f[0],r.start);assert.equal(new Set(f).size,Object.keys(r.states).length);}
+  const {r,x}=run();S.resume(x,0);assert.ok(S.vitalsAt(x,r,48*60*MIN).qbl<=S.QBL_MAX);
+});

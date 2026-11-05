@@ -218,3 +218,51 @@ body:not([data-phase="run"]) .sm-dock{display:none}
 .ck-vitals .stage{justify-self:start}
 
 .sm-team-link{margin:-4px 2px 12px;color:var(--muted);font-size:14px}.sm-team-link a{color:var(--teal);font-weight:800}
+
+/* ---------- Sim Master 3.0: situation dashboard ---------- */
+.run-pill{border:0;cursor:pointer;min-height:36px}
+.ck-say{background:#fff;border:1px solid var(--line);border-left:6px solid var(--teal);border-radius:18px;padding:14px 16px}
+.say-now{margin:0 0 6px;font-size:12px;font-weight:900;letter-spacing:.1em;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.say-now strong{font-size:20px;letter-spacing:0;color:var(--navy)}
+.say-who{margin:8px 0 2px;font-size:13px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--teal)}
+.ck-say blockquote{margin:0;font-size:clamp(22px,5.6vw,30px);line-height:1.22;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.say-find{margin:10px 0 0;font-size:16px;color:var(--muted);font-weight:600}
+.ck-next-h{margin:4px 2px -2px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.flow-h{display:none;margin:0 0 6px;font-size:12px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ck-flow{list-style:none;margin:0;padding:2px 0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.ck-flow li>*{display:flex;align-items:center;gap:8px;white-space:nowrap;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px 6px 6px;font:inherit;font-weight:800;font-size:14px;color:var(--muted)}
+.ck-flow button{cursor:pointer}
+.fdot{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:900;background:#eef2f7;color:var(--muted);flex:none}
+.ck-flow li.now>*{background:var(--navy);border-color:var(--navy);color:#fff}.ck-flow li.now .fdot{background:var(--teal);color:#fff;width:auto;padding:0 7px;border-radius:999px}
+.ck-flow li.done .fdot{background:var(--green-soft);color:var(--green)}
+.ck-flow li.next>*{color:var(--ink);border-style:dashed}
+.ck-flow li.next.worsen .fdot{background:var(--red-soft);color:var(--red)}.ck-flow li.next.improve .fdot{background:var(--green-soft);color:var(--green)}
+main{padding-bottom:120px}
+
+/* Tablet: flow strip on top, then script + decisions | watch list */
+@media (min-width:768px){
+  .ck-grid{grid-template-columns:minmax(0,3fr) minmax(0,2fr);grid-template-areas:"flow flow" "main watch" "main side"}
+  .ck-flowcol{grid-area:flow}.ck-grid>.ck-control{grid-area:main}.ck-grid>.ck-obs{grid-area:watch}.ck-grid>.ck-side{grid-area:side}
+  .sm-dock{grid-template-columns:repeat(4,1fr) 1.3fr;padding-left:16px;padding-right:16px}
+  .sm-dock button{flex-direction:row;gap:8px;min-height:50px;font-size:16px}
+}
+/* Laptop: situation dashboard — flow | script + decisions | watch + side, large type */
+@media (min-width:1100px){
+  .ck-grid{grid-template-columns:240px minmax(0,1.7fr) minmax(0,1fr);grid-template-areas:"flow main watch" "flow main side";grid-template-rows:auto 1fr;gap:16px}
+  .ck-flowcol{position:sticky;top:150px;align-self:start}
+  .flow-h{display:block}
+  .ck-flow{flex-direction:column;gap:0;overflow:visible}
+  .ck-flow li{position:relative;padding:0 0 14px}
+  .ck-flow li:not(:last-child)::before{content:"";position:absolute;left:21px;top:34px;bottom:0;width:2px;background:var(--line)}
+  .ck-flow li>*{width:100%;border-radius:14px;font-size:16px;white-space:normal;text-align:left;padding:8px 10px}
+  .fdot{width:28px;height:28px;font-size:12px}
+  .vs strong{font-size:34px}.vs small{font-size:13px}
+  .ck-title strong{font-size:20px}
+  .ck-say{padding:22px 26px}
+  .say-now strong{font-size:24px}
+  .ck-say blockquote{font-size:clamp(32px,2.7vw,46px)}
+  .say-find{font-size:19px}
+  .mv{min-height:110px}.mv strong{font-size:22px}.mv-to{font-size:16px}
+  .ck-crit h3{font-size:20px}
+  .sm-dock{max-width:1100px;margin:0 auto;border-radius:18px 18px 0 0}
+}
