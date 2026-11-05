@@ -7,25 +7,37 @@ import {fileURLToPath} from "node:url";
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),"..");
 
-test("Apps Script package builds from the shared UI without a service worker dependency",()=>{
-  execFileSync(process.execPath,[path.join(root,"scripts/build-google-apps-script.mjs")],{cwd:root});
-  const html=fs.readFileSync(path.join(root,"google-apps-script/Index.html"),"utf8");
-  assert.match(html,/createWorkspaceSessionStore/);
-  assert.match(html,/google\.script\.run/);
-  assert.doesNotMatch(html,/navigator\.serviceWorker/);
-  assert.doesNotMatch(html,/manifest\.webmanifest/);
-  assert.doesNotMatch(html,/type="module"/);
+const gas=()=>{execFileSync(process.execPath,[path.join(root,"scripts/build-google-apps-script.mjs")],{cwd:root});
+  const rd=f=>fs.readFileSync(path.join(root,"dist/gas",f),"utf8");return {index:rd("Index.html"),sim:rd("SimMaster.html"),code:rd("Code.gs")};};
+const mainScript=html=>{const parts=html.split("<script>");return parts[parts.length-1].split("</script>")[0];};
+
+test("Apps Script package builds both pages from the shared source, without PWA-only features",()=>{
+  const {index,sim,code}=gas();
+  for(const html of [index,sim]){
+    assert.doesNotMatch(html,/navigator\.serviceWorker\.register/);
+    assert.doesNotMatch(html,/manifest\.webmanifest/);
+    assert.doesNotMatch(html,/type="module"/);
+    assert.doesNotMatch(html,/href="[a-z-]+\.css"/,"styles are inlined");
+    assert.match(html,/window\.__GAS=true/);
+  }
+  assert.match(index,/createWorkspaceSessionStore\(\{key/);
+  assert.match(index,/google\.script\.run/);
+  assert.match(code,/page==="sim"/,"doGet routes ?page=sim to Sim Master");
 });
 
-test("Apps Script bundle is valid JavaScript (catches $$ / replace mangling)",()=>{
-  execFileSync(process.execPath,[path.join(root,"scripts/build-google-apps-script.mjs")],{cwd:root});
-  const html=fs.readFileSync(path.join(root,"google-apps-script/Index.html"),"utf8");
-  const parts=html.split("<script>");const main=parts[parts.length-1].split("</script>")[0];
-  assert.doesNotThrow(()=>new Function(main));
-  assert.match(main,/const \$\$ =/);
-  assert.match(main,/PATHWAYS/);
-  assert.match(main,/const D=\{[^}]*answer[^}]*\}/,"decisions namespace is rebuilt for the bundle");
-  assert.match(main,/function buildChecklist/);
+test("Apps Script bundles are valid JavaScript and include every module",()=>{
+  const {index,sim}=gas();
+  const a=mainScript(index),b=mainScript(sim);
+  assert.doesNotThrow(()=>new Function(a));assert.doesNotThrow(()=>new Function(b));
+  for(const m of ["app.js","back-guard.js","data.js","pathways.js","decisions.js","google-apps-script/workspace-session-store.js","local-session-store.js"])assert.ok(a.includes(JSON.stringify(m)+":function"),`Assist bundle has ${m}`);
+  for(const m of ["sim-master.js","sim-engine.js","sim-scenarios.js","sim-sync.js","back-guard.js"])assert.ok(b.includes(JSON.stringify(m)+":function"),`Sim Master bundle has ${m}`);
+  assert.match(a,/const \$\$ =/,"no $$ replace mangling");
+});
+
+test("Apps Script pages embed their images (no static files on Apps Script)",()=>{
+  const {index}=gas();
+  assert.match(index,/"img\/splash-640\.webp":"data:image\/webp;base64,/);
+  assert.match(index,/url\(data:image\/webp;base64,/,"splash CSS background is embedded");
 });
 
 test("every Education topic has a built-in slide deck",async()=>{

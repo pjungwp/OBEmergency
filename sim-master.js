@@ -288,7 +288,7 @@ function sheetBody(){
       </div><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Cancel</button><button class="sm-btn primary" data-a="set-vitals">Set</button></div>`;
   }
   if(k==="monitor"){const m=monitorStatus();return `<h2>Learner monitor</h2><p class="muted">Shows vitals and the clock only — no prompts, actions or branches. The scenario runs fine without it.</p>
-    <div class="mon-opts"><button class="sm-btn big" data-a="monitor-view">On this device<small>Full-screen view; tap to return</small></button><button class="sm-btn big" data-a="monitor">Separate window<small>Drag to a second screen or TV</small></button></div>
+    <div class="mon-opts"><button class="sm-btn big" data-a="monitor-view">On this device<small>Full-screen view; tap to return</small></button>${window.__GAS?"":`<button class="sm-btn big" data-a="monitor">Separate window<small>Drag to a second screen or TV</small></button>`}</div>
     <p class="muted small">Status: ${m.on?"a monitor window is connected":"no separate monitor connected"}.</p>`;}
   if(k==="time")return `<h2>Advance time</h2><p class="muted">Simulation time only. Every event keeps its simulation and wall-clock time.</p><div class="seg">${[2,3,10,15].map(m=>`<button class="sm-btn" data-a="adv" data-m="${m}">+${m} min</button>`).join("")}</div>`;
   if(k==="end")return `<h2>End the scenario?</h2><p class="muted">The clock stops and the debrief opens. The log is kept.</p><div class="sm-pre-actions"><button class="sm-btn ghost" data-a="close-sheet">Keep running</button><button class="sm-btn primary big" data-a="end">End and debrief</button></div>`;

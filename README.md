@@ -55,18 +55,9 @@ npm run build:gas
 
 The tests cover duplicate-event idempotency, stale-revision rejection, timer restoration and simulation-time restoration.
 
-## Optional Google Workspace build
+## Google Workspace build (automatic)
 
-The Apps Script package is generated from the same source UI:
-
-```bash
-npm run build:gas
-cd google-apps-script
-clasp create --type webapp --title "OB Emergency Assist"
-clasp push
-```
-
-To link an existing Apps Script project instead, create a local `.clasp.json` with its Script ID, then run `clasp push`. The file is ignored by Git. In Apps Script, deploy as a web app only after approving execution identity and access settings for the intended Workspace group.
+The Apps Script web app is generated from the same source: `npm run build:gas` writes `dist/gas/` (Assist + Sim Master). GitHub Actions tests every push and deploys it to Apps Script — staging from `preview`, production from `main` after approval. Setup and details: [DEPLOYMENT.md](DEPLOYMENT.md). Never edit the generated files by hand.
 
 The Workspace adapter uses stable event IDs, revisions, Apps Script locking and polling. The server log stores coordination state only; medication details and the local timeline remain on-device. Do not enter PHI, commit Script IDs/tokens, or treat the event sheet as a medical record.
 

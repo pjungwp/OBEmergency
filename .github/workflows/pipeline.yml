@@ -1,0 +1,96 @@
+name: Test, build and deploy
+
+# One source, two platforms.
+#   Netlify deploys itself from GitHub (preview branch → preview site, main → live site).
+#   This workflow tests every push, builds the Apps Script package, and sends it to Google:
+#     push to preview → Apps Script STAGING deployment (automatic)
+#     push to main    → Apps Script PRODUCTION deployment (waits for approval in the "production" environment)
+#   Google steps are skipped, with a notice, until the one-time setup in DEPLOYMENT.md is done.
+on:
+  push:
+    branches: [main, preview]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Apps Script deployment to update
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gas-deploy
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Tests (engine, scenarios, content, Apps Script bundle)
+        run: npm test
+      - name: Build Apps Script package
+        run: npm run build:gas
+      - id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: apps-script-${{ steps.v.outputs.version }}-${{ github.sha }}
+          path: dist/gas/
+          if-no-files-found: error
+          retention-days: 30
+
+  staging:
+    needs: verify
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/preview') || (github.event_name == 'workflow_dispatch' && inputs.target == 'staging')
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: apps-script-${{ needs.verify.outputs.version }}-${{ github.sha }}
+          path: dist/gas
+      - name: Push to Apps Script (staging)
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ vars.GAS_SCRIPT_ID }}
+          DEPLOYMENT_ID: ${{ vars.GAS_STAGING_DEPLOYMENT_ID }}
+          DESC: v${{ needs.verify.outputs.version }} preview ${{ github.sha }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ] || [ -z "$SCRIPT_ID" ]; then echo "::notice::Apps Script not set up yet (see DEPLOYMENT.md) — skipped"; exit 0; fi
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '{"scriptId":"%s","rootDir":"dist/gas"}' "$SCRIPT_ID" > .clasp.json
+          npx -y @google/clasp@3 push --force
+          if [ -n "$DEPLOYMENT_ID" ]; then npx -y @google/clasp@3 update-deployment "$DEPLOYMENT_ID" --description "$DESC"; else echo "::notice::Pushed to Apps Script HEAD (test deployment). Set GAS_STAGING_DEPLOYMENT_ID for a fixed staging URL."; fi
+
+  production:
+    needs: verify
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.target == 'production')
+    runs-on: ubuntu-latest
+    environment: production   # add yourself as a required reviewer: Settings → Environments → production
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: apps-script-${{ needs.verify.outputs.version }}-${{ github.sha }}
+          path: dist/gas
+      - name: Push and update the production deployment (same URL)
+        env:
+          CLASPRC_JSON: ${{ secrets.CLASPRC_JSON }}
+          SCRIPT_ID: ${{ vars.GAS_SCRIPT_ID }}
+          DEPLOYMENT_ID: ${{ vars.GAS_DEPLOYMENT_ID }}
+          DESC: v${{ needs.verify.outputs.version }} ${{ github.sha }}
+        run: |
+          if [ -z "$CLASPRC_JSON" ] || [ -z "$SCRIPT_ID" ] || [ -z "$DEPLOYMENT_ID" ]; then echo "::notice::Apps Script production not set up yet (see DEPLOYMENT.md) — skipped"; exit 0; fi
+          printf '%s' "$CLASPRC_JSON" > ~/.clasprc.json
+          printf '{"scriptId":"%s","rootDir":"dist/gas"}' "$SCRIPT_ID" > .clasp.json
+          npx -y @google/clasp@3 push --force
+          npx -y @google/clasp@3 update-deployment "$DEPLOYMENT_ID" --description "$DESC"
+          echo "::notice::Apps Script production updated to $DESC"

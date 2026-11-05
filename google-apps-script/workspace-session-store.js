@@ -1,3 +1,4 @@
+import {createLocalSessionStore} from "../local-session-store.js";
 // Client adapter for the optional Apps Script build. The Netlify release does not use this file.
 export function createWorkspaceSessionStore({key="ob-emergency-assist.session.v1",pollMs=3000}={}){
   const local=createLocalSessionStore({key});

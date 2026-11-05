@@ -5,10 +5,10 @@
 // Chrome ignores history entries pushed without a user gesture, so the guard is armed
 // on the first tap/keypress and re-armed after each handled back.
 export function installBackGuard(onBack){
-  if(!("pushState" in history))return;
+  if(window.__GAS||!("pushState" in history))return; // Apps Script runs in a sandboxed frame: leave back alone
   try{history.replaceState({...(history.state||{}),bg:0},"");}catch{return;}
   let armed=false,leaving=false;
-  const arm=()=>{if(armed||leaving)return;armed=true;history.pushState({bg:1},"");};
+  const arm=()=>{if(armed||leaving)return;armed=true;try{history.pushState({bg:1},"");}catch{}};
   addEventListener("pointerdown",arm,true);addEventListener("keydown",arm,true);
   addEventListener("popstate",e=>{
     if(leaving||e.state?.bg!==0)return;
