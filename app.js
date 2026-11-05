@@ -167,7 +167,7 @@ function renderEmergency(){
       <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
       <span class="chevron" aria-hidden="true">›</span>
     </a>`}
-    <h2 class="home-label"><span>Emergency pathways</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
+    <h2 class="home-label"><span>Emergency scenarios</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
     <section class="emergency-grid" aria-label="Emergency pathways">
       ${Object.values(EMERGENCIES).map(e=>`
         <button class="emergency-card ${e.accent}" data-emergency="${e.id}">
@@ -592,6 +592,7 @@ function playAlert(){
 }
 
 // ---------- Flowcharts: one pathway, three views (see flowchart.js / pathways.js) ----------
+let flowPicked=false;           // Flowcharts tab opens on a landing of emergencies until one is picked
 let flowView="overview";             // overview | guided | chart — UI only, never touches session state
 const guidedStep={},guidedBranch={};  // per pathway
 const localChecks=new Set();         // reference-mode checks (no session): this screen only
@@ -605,13 +606,22 @@ function statusStripHTML(){
   const e=EMERGENCIES[session.emergencyId];const due=getDueTimers().length;const sim=session.mode==="simulation";
   return `<div class="fc-strip ${session.mode}" role="status"><span class="mode-tag">${sim?"SIM":"CLINICAL"} · ${esc(e.short.toUpperCase())}</span><strong class="live-elapsed">${fmt(currentElapsed())}</strong>${due?`<b class="overdue-count">${due} due</b>`:""}<button data-nav-jump="emergency">Actions ›</button></div>`;
 }
+function renderFlowLanding(){
+  main.innerHTML=`<section class="fc-landing">
+    <header class="fc-land-head"><h1>Flowcharts</h1><p>Pick an emergency to see its algorithm</p></header>
+    <section class="emergency-grid" aria-label="Flowcharts by emergency">${Object.values(EMERGENCIES).map(e=>`
+      <button class="emergency-card ${e.accent}" data-flow-pick="${e.id}">${emergencyIcon(e.id)}<span class="em-copy"><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span><span class="chevron" aria-hidden="true">›</span></button>`).join("")}
+    </section></section>`;
+}
 function renderFlowcharts(){
+  if(!flowPicked&&session?.status!=="active"){if(chartCtl){chartCtl.destroy();chartCtl=null;}return renderFlowLanding();}
   if(chartCtl){chartSaved=flowView==="chart"?{id:flowEmergency,...chartCtl.state()}:null;chartCtl.destroy();chartCtl=null;}
   const e=EMERGENCIES[flowEmergency],p=PATHWAYS[e.id],ctx=flowCtx(e.id);
   const drafts=Object.values(p.nodes).filter(n=>n.reviewStatus==="draft").length;
   const views={overview:"Overview",guided:"Guided",chart:"Full chart"};
   const body=flowView==="guided"?renderGuided(p,ctx):flowView==="chart"?renderChart(p,ctx):renderOverview(p,ctx);
   main.innerHTML=`${session?.status==="active"?statusStripHTML():""}
+    ${session?.status==="active"?"":`<button class="back-button fc-back" data-action="flow-landing">‹ All flowcharts</button>`}
     <section class="fc-head ${e.accent}">${emergencyIcon(e.id,52)}<div><h1>${esc(p.title)}</h1>
       <div class="fc-emerg" role="tablist" aria-label="Emergency">${Object.values(EMERGENCIES).map(x=>`<button role="tab" aria-selected="${x.id===e.id}" class="${x.id===e.id?"active":""}" data-flow-select="${x.id}">${esc(x.short)}</button>`).join("")}</div></div></section>
     <div class="fc-views" role="tablist" aria-label="View">${Object.entries(views).map(([k,v])=>`<button role="tab" aria-selected="${flowView===k}" class="${flowView===k?"active":""}" data-fview="${k}">${v}</button>`).join("")}</div>
@@ -813,7 +823,7 @@ function recordMedication(id){
   if(task){session.tasks[task.id]={status:"done",completedAt:now};if(session.branch?.pinned===task.id)session.branch.pinned=null;askDecisions(D.onTaskEvent(session,DECISIONS[e.id]||[],task.id,now));}
   saveSession({type:"MEDICATION_ADMINISTERED",taskId:task?.id||null,status:"completed",payload:{medId:id,doseNumber:r.dose.n,givenAtMs:given,recordedAtMs:now}});closeSheet();render();toast(`${m.name} recorded${m.timer?` · reassess in ${Math.max(0,Math.round(r.timer.dueAt-now/60000))} min`:""}`);
 }
-function openFlow(id){flowEmergency=id;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
+function openFlow(id){flowEmergency=id;flowPicked=true;route="flowcharts";$$(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.nav==="flowcharts"));render();}
 
 // ---------- Cockpit side panels: Flowchart · Meds · Timers · Timeline ----------
 // Wide screens: the right-hand column. Phones: the same content in a sheet. Never leaves the session.
@@ -1031,7 +1041,10 @@ function clearSession(){session=null;store.clear();selectedEmergency=null;closeS
 
 document.addEventListener("click",e=>{
   const b=e.target.closest("button,a");if(!b)return;
-  if(b.dataset.nav)navigate(b.dataset.nav);
+  if(b.dataset.nav){goRoot(b.dataset.nav);navigate(b.dataset.nav);}
+  if(b.dataset.drawerGo)drawerGo(b.dataset.drawerGo);
+  if(b.dataset.flowPick){flowEmergency=b.dataset.flowPick;flowPicked=true;flowView="overview";renderFlowcharts();window.scrollTo(0,0);}
+  if(b.dataset.action==="flow-landing"){flowPicked=false;renderFlowcharts();window.scrollTo(0,0);}
   if(b.dataset.navJump)navigate(b.dataset.navJump);
   if(b.dataset.emergency){selectedEmergency=b.dataset.emergency;render();}
   if(b.dataset.education)openEducation(b.dataset.education);
@@ -1068,7 +1081,7 @@ document.addEventListener("click",e=>{
   // Wide screens: toggle the side panel. Narrow: open the flowchart in a sheet so the cockpit stays put.
   // Wide: toggle the side overview. Narrow: open the full pathway page (status strip keeps the clock + a way back).
   if(b.dataset.side)toggleSide(b.dataset.side);
-  if(a==="open-full-flow"){closeSheet();flowEmergency=session.emergencyId;navigate("flowcharts");}
+  if(a==="open-full-flow"){closeSheet();flowEmergency=session.emergencyId;flowPicked=true;navigate("flowcharts");}
   if(a==="goto-task"){closeSheet();expandedTask=b.dataset.taskId;flowEmergency=session.emergencyId;navigate("emergency");requestAnimationFrame(()=>$(`#card-${b.dataset.taskId}`)?.scrollIntoView({block:"center",behavior:"smooth"}));}
   if(a==="expand-task"){expandedTask=b.dataset.taskId;render();requestAnimationFrame(()=>$(`#card-${expandedTask}`)?.scrollIntoView({block:"nearest",behavior:"smooth"}));}
   if(a==="collapse-task"){expandedTask=null;render();}
@@ -1123,7 +1136,38 @@ function applyTextSize(){
   $$("[data-action=toggle-text]").forEach(b=>b.setAttribute("aria-pressed",String(!!settings.largeText)));
   const st=$("#drawerTextState");if(st)st.textContent=settings.largeText?"On":"Off";
 }
-function openMenu(){const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
+// Navigation always lands on the top page of a section (not whatever was open there before).
+function goRoot(r){
+  if(r==="emergency"&&session?.status!=="active")selectedEmergency=null;
+  if(r==="flowcharts"){flowPicked=false;flowView="overview";}
+  if(r==="education"&&deck)closeDeck();
+}
+// Menu tree: every section's branches unfold a second after the menu opens, so people can jump straight in.
+function buildMenuTree(){
+  const d=$("#menuDrawer");if(!d||d.dataset.tree)return;d.dataset.tree="1";
+  const em=Object.values(EMERGENCIES);
+  const branches={
+    emergency:em.map(e=>[`em:${e.id}`,e.name]),
+    flowcharts:em.map(e=>[`fc:${e.id}`,e.name]),
+    medications:[["med:PPH","Hemorrhage"],["med:hypertension","Severe hypertension"],["med:eclampsia","Seizure & magnesium"]],
+    education:(typeof eduGroups==="function"?eduGroups():[]).map(g=>[`edu:${g.id}`,g.name])
+  };
+  Object.entries(branches).forEach(([nav,items])=>{
+    const top=d.querySelector(`:scope > [data-nav="${nav}"]`);if(!top||!items.length)return;
+    const ul=document.createElement("div");ul.className="dr-branch";ul.setAttribute("role","group");ul.setAttribute("aria-label",top.textContent.trim());
+    ul.innerHTML=items.map(([go,label])=>`<button data-drawer-go="${go}">${esc(label)}</button>`).join("");
+    top.after(ul);
+  });
+}
+let treeTimer=null;
+function drawerGo(go){
+  const [k,id]=go.split(":");closeMenu();
+  if(k==="em"){if(session?.status==="active"){navigate("emergency");toast("A session is running — end it to open another emergency","alert");return;}selectedEmergency=id;navigate("emergency");}
+  if(k==="fc"){flowEmergency=id;flowPicked=true;flowView="overview";navigate("flowcharts");}
+  if(k==="med"){navigate("medications");const chip=$(`[data-med-filter="${id}"]`);chip?.click();}
+  if(k==="edu"){navigate("education");openEduGroup(id);}
+}
+function openMenu(){buildMenuTree();const dr=$("#menuDrawer");dr.classList.remove("tree");clearTimeout(treeTimer);treeTimer=setTimeout(()=>dr.classList.add("tree"),1000);const d=$("#menuDrawer");d.hidden=false;$("#drawerBackdrop").hidden=false;requestAnimationFrame(()=>d.classList.add("open"));$("[data-action=open-menu]").setAttribute("aria-expanded","true");$$("#menuDrawer [data-nav]").forEach(b=>b.classList.toggle("active",b.dataset.nav===route));}
 function closeMenu(){const d=$("#menuDrawer");d.classList.remove("open");$("[data-action=open-menu]")?.setAttribute("aria-expanded","false");setTimeout(()=>{d.hidden=true;$("#drawerBackdrop").hidden=true;},160);}
 async function shareApp(){
   const url=location.origin+location.pathname.replace(/index\.html$/,"");
@@ -1152,6 +1196,7 @@ document.addEventListener("click",e=>{
   if(a==="show-about"&&!$("#menuDrawer").hidden)closeMenu();
 });
 document.addEventListener("click",e=>{const b=e.target.closest("#menuDrawer [data-nav], #menuDrawer a");if(b)closeMenu();});
+document.addEventListener("click",e=>{if(e.target.closest("[data-action=close-menu]"))clearTimeout(treeTimer);});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#menuDrawer").hidden)closeMenu();});
 applyTextSize();
 
@@ -1180,6 +1225,7 @@ installBackGuard(()=>{
   if(!$("#infoSheet").hidden){closeSheet();return true;}
   if(!$("#menuDrawer").hidden){closeMenu();return true;}
   if(route==="flowcharts"&&flowView!=="overview"){flowView="overview";render();return true;}
+  if(route==="flowcharts"&&flowPicked&&session?.status!=="active"){flowPicked=false;render();return true;}
   const prev=routeStack.pop();
   if(prev&&prev!==route){routeBack=true;navigate(prev);return true;}
   if(route!=="emergency"){routeBack=true;navigate("emergency");return true;}

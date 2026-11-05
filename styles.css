@@ -866,3 +866,48 @@ body.edu-panel-open{overflow:hidden}
   .ep{gap:6px;padding-top:2px;padding-bottom:4px}.ep-main{gap:6px}.ep-back{min-height:32px}.ep-list{gap:5px}.ep-basis small{display:none}
   .ep-head .em-icon img{width:44px;height:44px}.ep-list li{min-height:50px}.ep-actions .button{min-height:50px}
 }
+
+/* ---------- Flowcharts landing: same emergencies as the home screen ---------- */
+.fc-land-head{padding:14px 16px 8px}
+.fc-land-head h1{margin:0;font-size:clamp(26px,4vw,34px);line-height:1.1;color:var(--navy);letter-spacing:-.02em}
+.fc-land-head p{margin:3px 0 0;color:#2f5f86;font-size:15.5px}
+.fc-landing .emergency-grid{padding:0 12px 12px;gap:10px}
+.fc-back{display:block;padding:10px 16px 0;min-height:40px}
+@media (max-width:599px){
+  .fc-landing .emergency-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .fc-landing .emergency-card{grid-template-columns:1fr;grid-template-rows:auto 1fr;align-content:start;justify-items:start;gap:8px;min-height:0;padding:12px 12px 12px 10px}
+  .fc-landing .emergency-card .chevron{display:none}
+  .fc-landing .emergency-card strong{font-size:17px;line-height:1.2}
+  .fc-landing .emergency-card small{font-size:13.5px}
+}
+@media (min-width:1024px) and (min-aspect-ratio:4/3){
+  .fc-landing .emergency-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .fc-landing .emergency-grid .emergency-card,.fc-landing .emergency-grid .emergency-card:first-child{grid-column:auto;min-height:clamp(84px,16vh,140px)}
+}
+
+/* Menu tree: branches unfold a second after the menu opens */
+.menu-drawer>*{flex-shrink:0}
+.menu-drawer .dr-branch{display:flex;flex-direction:column;overflow:hidden;max-height:0;opacity:0;margin:0 0 0 14px;border-left:2px solid var(--line);transition:max-height .3s ease,opacity .25s ease,margin .25s ease}
+.menu-drawer.tree .dr-branch{max-height:420px;opacity:1;margin:0 0 6px 14px}
+.menu-drawer .dr-branch button{display:flex;align-items:center;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;text-align:left;font-size:15.5px;font-weight:600;color:#33465f;cursor:pointer}
+.menu-drawer .dr-branch button:hover,.menu-drawer .dr-branch button:focus-visible{background:#eef3fa;color:var(--navy)}
+.menu-drawer:not(.tree) .dr-branch button{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.menu-drawer .dr-branch{transition:none}}
+/* Short phones: tighter home and flowchart landings */
+@media (max-width:599px) and (max-height:900px){
+  body.landing[data-route=emergency] .hero-aurora{height:96px;min-height:0}
+  body.landing[data-route=emergency] .hero-copy p{display:none}
+  body.landing[data-route=emergency] .home-label{margin:8px 16px 6px}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card{padding:10px 10px 10px 9px;gap:6px}
+  .fc-landing .emergency-card{padding:10px 10px 10px 9px;gap:6px}
+}
+@media (max-width:599px) and (max-height:700px){
+  body.landing[data-route=emergency] .emergency-grid .emergency-card small,.fc-landing .emergency-card small{display:none}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card .em-icon img,.fc-landing .emergency-card .em-icon img{width:40px;height:40px}
+}
+@media (max-width:599px) and (max-height:900px){
+  body.landing[data-route=emergency] .hero-aurora{height:84px}
+  body.landing[data-route=emergency] .emergency-grid{gap:6px}
+  body.landing[data-route=emergency] .sim-door{margin-top:8px;min-height:50px}
+  .fc-land-head{padding:10px 16px 6px}.fc-landing .emergency-grid{gap:6px}
+}
