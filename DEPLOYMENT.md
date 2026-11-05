@@ -42,8 +42,9 @@ as a downloadable artifact (30 days) for rollback.
    clasp create-deployment --description "staging"      # note the deployment ID it prints
    clasp create-deployment --description "production"   # note this one too
    ```
-   In the Apps Script editor → Deploy → Manage deployments, set each to **Web app**, choose
-   *Execute as* and *Who has access* for your team, and authorize the scopes once.
+   Both are web apps that only you can open (`appsscript.json` → `webapp.access: MYSELF`). Open the
+   staging URL once in your browser and approve the permissions. To let colleagues in later, change
+   `access` to `DOMAIN` in `google-apps-script/appsscript.json` and push.
 5. **Give GitHub the keys** (repo → Settings → Secrets and variables → Actions):
    - Secret `CLASPRC_JSON`: the full contents of `~/.clasprc.json`
    - Variable `GAS_SCRIPT_ID`: the Script ID
