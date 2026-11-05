@@ -654,17 +654,37 @@ function updateMedicationList(query){
 }
 function medCard(m){return `<button class="med-card ${m.accent}" data-med-id="${m.id}"><div><small>${esc(m.context)}</small><strong>${esc(m.name)}</strong><p>${esc(m.dose)}</p></div><span>›</span></button>`;}
 
+// Short category names for the topic cards (interface labels; deck titles and content unchanged).
+const EDU_CATEGORY={teamstepps:"Teamwork",roles:"Teamwork","four-ts":"PPH","severe-htn":"Hypertension","mag-safety":"Seizure","pregnancy-status":"ED screening","shoulder-dystocia":"Time critical","t3-bleeding":"Bleeding / trauma","arrest-pregnancy":"Cardiac arrest",simulation:"Simulation"};
+// Source rows: publisher / document type above a short title. The full citation stays in the link's label and the About sheet.
+const DOC_LABEL={
+  "acog-pph-183":["ACOG / Practice Bulletin 183","Postpartum Hemorrhage"],
+  "acog-pph-device":["ACOG / Clinical practice update","Nonsurgical Hemorrhage-Control Devices"],
+  "acog-htn":["ACOG / Practice Bulletin 222","Gestational Hypertension and Preeclampsia"],
+  "acog-ed-htn":["ACOG / ED algorithm","Acute Hypertension in Pregnancy & Postpartum"],
+  "acog-ed-eclampsia":["ACOG / ED algorithm · PDF","Eclampsia Algorithm"],
+  "acog-ed-cvd":["ACOG / ED algorithm","Cardiovascular Disease in Pregnancy & Postpartum"],
+  "aha-2025-pregnancy":["AHA / 2025 Guidelines, Part 10","Cardiac Arrest in Pregnancy"],
+  "smfm-afe-9":["SMFM / Clinical Guideline 9","Amniotic Fluid Embolism"],
+  "acog-sd-178":["ACOG / Practice Bulletin 178","Shoulder Dystocia"],
+  "aafp-trauma":["Am Fam Physician / Review","Trauma in Pregnancy"],
+  "ahrq-teamstepps":["AHRQ / TeamSTEPPS","TeamSTEPPS 3.0 Curriculum"]
+};
+const EXT_ICON='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
 function renderEducation(){
-  // Topics open as built-in slide decks. Sources are links, not paragraphs.
-  const KIND={pdf:"PDF",page:"ACOG page",index:"ACOG listing"};
+  // Topics open as built-in slide decks. Sources are links, not paragraphs. One page scroll.
   const docs=REFERENCES.filter(r=>r.url);
-  main.innerHTML=`<section class="page-head compact"><h1>Education</h1><p>Short slide decks. Tap a topic, then swipe.</p></section>
-    <section class="edu-decks" aria-label="Topics">${EDUCATION.map(x=>{const n=(EDU_DECKS[x.id]||[]).length;return `<button class="edu-deck ${x.accent}" data-education="${x.id}"><span class="edu-kicker">${esc(x.kicker)}</span><strong>${esc(x.title)}</strong><span class="edu-meta">${n} slides <b aria-hidden="true">›</b></span></button>`;}).join("")}</section>
-    <section class="source-docs" aria-labelledby="srcDocsH"><h2 id="srcDocsH">Source documents</h2>
-      <div class="doc-list">${docs.map(r=>`<a class="doc-link" href="${r.url}" target="_blank" rel="noopener"><span class="doc-kind ${r.urlKind||"page"}">${KIND[r.urlKind]||"Web page"}</span><span class="doc-copy"><strong>${esc(r.title)}</strong><small>${esc(r.short)} · ${r.year}</small></span><b aria-hidden="true">↗</b></a>`).join("")}</div>
+  const docRow=r=>{const [label,title]=DOC_LABEL[r.id]||[`${r.short} · ${r.year}`,r.title];
+    return `<a class="doc-link" href="${r.url}" target="_blank" rel="noopener" aria-label="${esc(r.title)} (${esc(r.year)}), opens the publisher's site"><span class="doc-copy"><small>${esc(label)}</small><strong>${esc(title)}</strong></span>${EXT_ICON}</a>`;};
+  main.innerHTML=`<section class="edu-page">
+    <header class="edu-head"><h1>Education</h1><p>Quick teaching decks and source documents</p></header>
+    <section class="edu-decks" aria-label="Topics">${EDUCATION.map(x=>{const n=(EDU_DECKS[x.id]||[]).length;return `<button class="edu-deck ${x.accent}" data-education="${x.id}"><span class="edu-kicker">${esc(EDU_CATEGORY[x.id]||x.kicker)}</span><strong>${esc(x.title)}</strong><span class="edu-meta"><span>${n?`${n} slides`:"Open deck"}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></span></button>`;}).join("")}</section>
+    <details class="source-docs" ${WIDE.matches?"open":""}><summary><h2 id="srcDocsH">Source documents</h2><span class="src-count">${docs.length}</span></summary>
+      <div class="doc-list" aria-labelledby="srcDocsH">${docs.map(docRow).join("")}</div>
       <p class="doc-note">Opens the publisher’s site · needs internet · some ACOG documents ask for a member sign-in.</p>
-    </section>
-    <p class="home-meta">Prototype ${APP_VERSION} · content review ${CONTENT_REVIEW_DATE} · <button class="text-button" data-action="show-about">About</button></p>`;
+    </details>
+    <p class="home-meta">Prototype ${APP_VERSION} · content review ${CONTENT_REVIEW_DATE} · <button class="text-button" data-action="show-about">About</button></p>
+  </section>`;
 }
 
 // ---------- Built-in slide decks ----------
