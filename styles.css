@@ -1026,3 +1026,38 @@ details.mt-sec summary h3{margin:0}
   .mt-page.in-guide .mt-tabs{margin:0}
   .mt-guide-sub{font-size:12.5px}
 }
+
+/* ---------- Shared header brand + category heroes ---------- */
+.hdr-brand{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 6px;border:0;background:transparent;color:var(--navy);cursor:pointer;min-width:0}
+.hdr-brand img{width:32px;height:32px;border-radius:8px;flex:none}
+.hdr-brand span{font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:719px){.hdr-wide{display:none!important}}
+@media (max-width:430px){.hdr-brand span{font-size:16px}.hdr-brand img{width:28px;height:28px}.hdr-actions{gap:6px}}
+@media (max-width:370px){.hdr-brand span{display:none}}
+.tab-hero{position:relative;height:104px;overflow:hidden;background:#06204f;color:#fff}
+.tab-hero picture,.tab-hero img{position:absolute;inset:0;width:100%;height:100%}
+.tab-hero img{object-fit:cover;object-position:right center}
+.tab-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(4,22,58,.82) 0%,rgba(4,22,58,.45) 38%,rgba(4,22,58,0) 62%)}
+.tab-hero h1{position:absolute;z-index:1;left:20px;top:50%;transform:translateY(-50%);margin:0;font-size:32px;line-height:1.1;font-weight:800;letter-spacing:-.02em;color:#fff;text-shadow:0 1px 12px rgba(0,0,0,.35)}
+@media (max-width:599px){.tab-hero{height:80px}.tab-hero h1{left:16px;font-size:25px}.tab-hero::after{background:linear-gradient(90deg,rgba(4,22,58,.88) 0%,rgba(4,22,58,.55) 55%,rgba(4,22,58,.15) 100%)}}
+/* Home: six choices right under the hero; simulation as a compact secondary action */
+.home-grid{margin-top:12px}
+.home-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:10px 12px 4px}
+.sim-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:6px 14px;border:1.5px solid #9bcfc7;border-radius:999px;background:#f2fbf9;color:#0b5f58;font-weight:800;font-size:15px;text-decoration:none}
+.sim-link span{font-size:12px}
+.home-actions .hero-status{margin:0;color:#2f5f3f;background:#eaf7f1;border:1px solid #bfe6d1;font-size:13px}
+/* Education: hero spans the dashboard top */
+.edu-dash>.tab-hero{grid-column:1/-1;margin:0 -12px}
+@media (min-width:1024px){.edu-dash{grid-template-areas:"hero hero" "cats docs";padding-top:0;row-gap:12px}.edu-dash>.tab-hero{grid-area:hero}}
+.mt-landsearch{margin-top:12px}
+.fc-landing .emergency-grid{margin-top:12px}
+@media (max-width:719px){.hdr-btn[data-action=toggle-text]{display:none}.hdr-actions{flex:none}.app-header{gap:6px}}
+.hdr-brand{flex:1 1 auto;justify-content:flex-start}
+.hdr-actions{flex:0 1 auto}
+@media (max-width:599px) and (max-height:700px){body.landing[data-route=emergency] .home-grid{margin-top:8px}.home-actions{margin:6px 12px 2px}.sim-link{min-height:44px;padding:4px 12px}}
+@media (max-width:599px) and (max-height:700px){
+  .tab-hero{height:72px}.tab-hero h1{font-size:23px}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card,.fc-landing .emergency-card{padding:8px 9px;gap:4px}
+  body.landing[data-route=emergency] .emergency-grid .emergency-card strong,.fc-landing .emergency-card strong{font-size:16px}
+  .fc-landing .emergency-grid{margin-top:8px}
+}

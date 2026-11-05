@@ -149,26 +149,10 @@ function updateHeader(){
 function renderEmergency(){
   if(session?.status==="active") return renderActiveSession();
   if(selectedEmergency) return renderEmergencyPreview(selectedEmergency);
-  // Hero: text-free Clinical Aurora art with HTML title overlay (kept clear of the silhouette on the right).
   main.innerHTML=`
-    <section class="hero-aurora">
-      <picture>
-        <source type="image/webp" srcset="img/aurora-900.webp 900w, img/aurora-1600.webp 1600w" sizes="(min-width:800px) 800px, 100vw">
-        <img src="img/aurora-900.jpg" srcset="img/aurora-900.jpg 900w, img/aurora-1600.jpg 1600w" sizes="(min-width:800px) 800px, 100vw" alt="" width="1600" height="533" fetchpriority="high">
-      </picture>
-      <div class="hero-copy">
-        <h1>OB Emergency Assist</h1>
-        <p>Ready when seconds matter.</p>
-      </div>
-    </section>
+    ${tabHero("emergency","Emergency scenarios")}
     ${practice?`<section class="practice-band"><div><strong>Practice mode</strong><small>Sessions you start here are simulations, not real emergencies.</small></div><button class="text-button" data-action="exit-practice">Exit</button></section>`:""}
-    ${practice?"":`<a class="sim-door" href="sim-master.html" aria-label="Facilitate a simulation: run a practice scenario for your team">
-      <span class="sim-door-icon" aria-hidden="true">▶</span>
-      <span class="em-copy"><strong>Facilitate a simulation</strong><small>Run a practice scenario for your team: patient states, timed events, observations and debrief. Best on a tablet or laptop.</small></span>
-      <span class="chevron" aria-hidden="true">›</span>
-    </a>`}
-    <h2 class="home-label"><span>Emergency scenarios</span><span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span></h2>
-    <section class="emergency-grid" aria-label="Emergency pathways">
+    <section class="emergency-grid home-grid" aria-label="Emergency scenarios">
       ${Object.values(EMERGENCIES).map(e=>`
         <button class="emergency-card ${e.accent}" data-emergency="${e.id}">
           ${emergencyIcon(e.id)}
@@ -176,10 +160,17 @@ function renderEmergency(){
           <span class="chevron" aria-hidden="true">›</span>
         </button>`).join("")}
     </section>
-`;
+    <div class="home-actions">
+      ${practice?"":`<a class="sim-link" href="sim-master.html"><span aria-hidden="true">▶</span> Facilitate a simulation</a>`}
+      <span class="hero-status"><span id="connectionDot" class="status-dot"></span><span id="connectionLabel">Ready</span></span>
+    </div>`;
   updateConnectivity(true);
 }
 
+// Category hero under the shared header: decorative artwork (no text in the image) with the tab title as real text.
+function tabHero(tab,title){
+  return `<section class="tab-hero" data-hero="${tab}"><picture><source media="(max-width:599px)" srcset="img/hero-${tab}-640.webp"><img src="img/hero-${tab}-800.webp" srcset="img/hero-${tab}-800.webp 800w, img/hero-${tab}-1600.webp 1600w" sizes="100vw" alt="" decoding="async"></picture><h1>${title}</h1></section>`;
+}
 function renderEmergencyPreview(id){
   // One screen: identity + start on the left (top on phones), first actions beside/below. No scrolling to start.
   const e=EMERGENCIES[id];
@@ -608,7 +599,7 @@ function statusStripHTML(){
 }
 function renderFlowLanding(){
   main.innerHTML=`<section class="fc-landing">
-    <header class="fc-land-head"><h1>Flowcharts</h1><p>Pick an emergency to see its algorithm</p></header>
+    ${tabHero("flowcharts","Flowcharts")}
     <section class="emergency-grid" aria-label="Flowcharts by emergency">${Object.values(EMERGENCIES).map(e=>`
       <button class="emergency-card ${e.accent}" data-flow-pick="${e.id}">${emergencyIcon(e.id)}<span class="em-copy"><strong>${esc(e.name)}</strong><small>${esc(SHORT_SUMMARIES[e.id]||e.summary)}</small></span><span class="chevron" aria-hidden="true">›</span></button>`).join("")}
     </section></section>`;
@@ -715,7 +706,7 @@ function renderMedications(){
     body=`<div class="mt-split">${guide}${pane}</div>`;
   }
   const inGuide=!!(medState.cat||q);
-  main.innerHTML=`<section class="mt-page${inGuide?" in-guide":""}"><header class="mt-head"><h1>Medications &amp; Treatment</h1>${inGuide?"":search}</header>${inGuide?`<h1 class="sr-only">Medications &amp; Treatment</h1><div class="mt-bar">${tabs}${search}</div>`:""}${body}</section>`;
+  main.innerHTML=`${inGuide?"":tabHero("medications","Medications &amp; Treatment")}<section class="mt-page${inGuide?" in-guide":""}">${inGuide?`<h1 class="sr-only">Medications &amp; Treatment</h1><div class="mt-bar">${tabs}${search}</div>`:`<div class="mt-landsearch">${search}</div>`}${body}</section>`;
 }
 // Desktop: hovering or focusing a treatment previews its cautions and dose in the side pane before it is opened.
 document.addEventListener("pointerover",e=>{const b=e.target.closest?.("[data-med-pick]");const pane=$(".mt-pane");if(!b||!pane||pane.dataset.preview===b.dataset.medPick)return;pane.dataset.preview=b.dataset.medPick;pane.innerHTML=medDetailHTML(b.dataset.medPick);});
@@ -762,7 +753,7 @@ function renderEducation(){
   // Dashboard: category cards on the left, source documents on the right (the list scrolls inside its panel).
   const docs=REFERENCES.filter(r=>r.url);
   main.innerHTML=`<section class="edu-dash">
-    <header class="edu-head"><h1>Education</h1><p>Pick a category to see its teaching decks</p></header>
+    ${tabHero("education","Education")}
     <section class="edu-cats" aria-label="Education categories">${eduGroups().map(g=>`<button class="edu-cat ${g.accent}" data-edu-group="${g.id}" aria-haspopup="dialog">
         <span class="edu-cat-name">${esc(g.name)}</span>
         <span class="edu-meta"><span>${g.items.length} topic${g.items.length>1?"s":""}</span>${CHEV}</span></button>`).join("")}
