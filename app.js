@@ -1351,6 +1351,15 @@ store.subscribe(next=>{
     render();
   }
 });
+// Header fit: drop button labels (then the brand text) only as far as needed so nothing overflows.
+function fitHeader(){
+  const h=$(".app-header");if(!h)return;const steps=["hdr-c1","hdr-c2","hdr-c3"];
+  h.classList.remove(...steps);
+  const over=()=>h.scrollWidth>h.clientWidth+1||[...h.querySelectorAll(".hdr-btn,.hdr-brand span")].some(el=>el.scrollWidth>el.clientWidth+1);
+  for(const c of steps){if(!over())break;h.classList.add(c);}
+}
+if(typeof ResizeObserver!=="undefined")new ResizeObserver(()=>fitHeader()).observe(document.querySelector(".app-header"));
+window.addEventListener("load",fitHeader);document.fonts?.ready?.then(fitHeader);
 let lastRosterKey="";
 if(TEAM_ON)$$("[data-team-only]").forEach(el=>{el.hidden=false;});
 if(TEAM_ON){

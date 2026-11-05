@@ -1073,3 +1073,13 @@ details.mt-sec summary h3{margin:0}
 .qr-msg{position:relative;margin:0;padding:10px 14px;border-radius:12px;background:rgba(5,15,35,.75);color:#fff;font-weight:700;font-size:16px;text-align:center;max-width:420px}
 .qr-scan.err .qr-msg{background:#8b4e00}
 .qr-scan .button{position:relative;min-height:52px;min-width:240px}
+
+/* Header fit steps (set by fitHeader): 1 = utility buttons icon-only, 2 = Download icon-only, 3 = brand icon-only */
+.app-header .hdr-btn{flex:none}
+.app-header .hdr-brand{flex:1 1 0;min-width:0}
+.app-header.hdr-c1 .hdr-btn:not(.primary) .lbl{display:none}
+.app-header.hdr-c1 .hdr-btn:not(.primary){padding:0;width:44px}
+.app-header.hdr-c2 .hdr-btn.primary .lbl{display:none}
+.app-header.hdr-c2 .hdr-btn.primary{padding:0;width:44px}
+.app-header.hdr-c3 .hdr-brand span{display:none}
+@media (min-width:560px){.hdr-btn .lbl:not(.lbl-keep){display:inline}}
